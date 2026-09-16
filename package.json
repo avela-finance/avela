@@ -1,0 +1,37 @@
+{
+	"name": "avela",
+	"type": "module",
+	"private": true,
+	"version": "0.1.0",
+	"description": "The asset-based payment and commerce rail. One global account to hold, grow, and spend against the assets you already own.",
+	"keywords": [
+		"tokenized-stocks",
+		"payments",
+		"commerce",
+		"ai-agents",
+		"stablecoins",
+		"xlayer"
+	],
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"scripts": {
+		"dev": "bun run --filter '*' dev",
+		"dev:site": "bun run --cwd apps/site dev",
+		"dev:web": "bun run --cwd apps/web dev",
+		"build": "bun run --filter '*' build",
+		"lint": "biome lint .",
+		"format": "biome format --write .",
+		"check": "biome check .",
+		"test": "bun test",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.11",
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
+}
