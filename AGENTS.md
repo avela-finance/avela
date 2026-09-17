@@ -4,25 +4,29 @@ Canonical project guidance for AI agents working in this repo.
 
 ## Runtime
 
-Default to **Bun** for everything — runtime, package manager, test runner, bundler.
+**Bun** is the package manager and script runner. **Node.js** is the production runtime.
 
-- `bun <file>` not `node` / `ts-node`
 - `bun install` not `npm` / `yarn` / `pnpm`
 - `bun run <script>` not `npm run`
 - `bunx <pkg>` not `npx`
-- `bun test` not `jest` / `vitest`
-- Bun auto-loads `.env` — no `dotenv`.
+- Apps run on Node.js in production — do not depend on Bun-specific runtime APIs.
 
-## Bun APIs
+## Backend Stack
 
-Prefer built-in Bun APIs over third-party equivalents:
+- **Hono** — HTTP framework (not Express, not Bun.serve)
+- **Drizzle ORM** (`drizzle-orm` + `drizzle-kit`) — Type-safe Postgres access and migrations
+- **Zod** — Runtime validation at domain boundaries
+- **Supabase Postgres** — Managed database (`postgres` driver)
+- **Privy** (`@privy-io/server-auth`, `@privy-io/react-auth`) — Web3 wallet auth and sessions
+- **ulidx** — ULID generation for entity IDs
 
-- `Bun.serve()` — HTTP, WebSocket, routes (not `express` / `ws`)
-- `bun:sqlite` (not `better-sqlite3`)
-- `Bun.redis` (not `ioredis`)
-- `Bun.sql` for Postgres (not `pg` / `postgres.js`)
-- `Bun.file` over `node:fs` readFile/writeFile
-- `Bun.$\`cmd\`` over `execa`
+## Future Stack (noted, not yet dependencies)
+
+- **Resend** — Transactional email (payment receipts, notifications)
+- **Upstash Redis** — Rate limiting, caching
+- **Upstash QStash** — Background jobs (settlement polling, approval expiry)
+- **Zustand** — Client-side state (apps/web)
+- **TanStack Query** — Server state management (apps/web)
 
 ## Workspace
 
