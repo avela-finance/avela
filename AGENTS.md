@@ -61,10 +61,14 @@ Both `site` and `web` are Next.js apps using:
 
 ## Testing
 
-```ts
-import { test, expect } from "bun:test";
+Uses **Vitest** for production test suite. Run with `bun run test`.
 
-test("example", () => {
-  expect(1).toBe(1);
+```ts
+import { describe, it, expect } from "vitest";
+
+describe("example", () => {
+  it("works", () => {
+    expect(1).toBe(1);
+  });
 });
 ```

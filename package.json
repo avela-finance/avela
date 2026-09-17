@@ -24,12 +24,13 @@
 		"lint": "biome lint .",
 		"format": "biome format --write .",
 		"check": "biome check .",
-		"test": "bun test",
+		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.11",
-		"@types/bun": "latest"
+		"@types/bun": "latest",
+		"vitest": "^5.0.1"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
