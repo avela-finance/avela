@@ -1,12 +1,12 @@
 // packages/core/src/domain/approval.ts
 import { ulid } from "ulidx";
 import { ApprovalSnapshotMismatchError, DomainError } from "../errors.js";
-import type { AccountId, ApprovalId, ApprovalStatus, PaymentIntentId } from "../types.js";
+import type { AccountId, ApprovalId, ApprovalStatus, FundingPlan, PaymentIntentId } from "../types.js";
 
 export interface ApprovalSnapshot {
 	amount: string;
 	recipient: string;
-	fundingPlan: Record<string, unknown>;
+	fundingPlan: FundingPlan;
 }
 
 export interface ApprovalRecord {
@@ -18,7 +18,7 @@ export interface ApprovalRecord {
 	decidedAt: Date | null;
 	snapshotAmount: string;
 	snapshotRecipient: string;
-	snapshotFundingPlan: Record<string, unknown>;
+	snapshotFundingPlan: FundingPlan;
 }
 
 export interface CreateApprovalParams {
