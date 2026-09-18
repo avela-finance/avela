@@ -20,6 +20,8 @@ export type {
 export type { Database } from "./db/client.js";
 // Database
 export { createDb } from "./db/client.js";
+// Migration runner
+export { runMigrations } from "./db/migrate.js";
 export type { AgentAction, AgentPermissionData } from "./domain/agent-permission.js";
 export { checkAgentPermission } from "./domain/agent-permission.js";
 export type { ApprovalRecord, ApprovalSnapshot, CreateApprovalParams } from "./domain/approval.js";
@@ -43,9 +45,12 @@ export {
 	PolicyViolationError,
 	StaleDataError,
 } from "./errors.js";
-
 // Schema
 export * from "./schema/index.js";
+// Services
+export { AccountService } from "./services/account.service.js";
+export { PaymentService } from "./services/payment.service.js";
+export { QuoteService } from "./services/quote.service.js";
 export type {
 	AccountId,
 	AgentPermissionId,

@@ -10,7 +10,14 @@ describe("approval", () => {
 	const snapshot = {
 		amount: "500",
 		recipient: "0xabc",
-		fundingPlan: { stablecoinAmount: "500", conversionAmount: "0" },
+		fundingPlan: {
+			stablecoinAmount: "500",
+			conversionAmount: "0",
+			conversionAsset: null,
+			totalAmount: "500",
+			requiresApproval: false,
+			rulesChecked: [],
+		},
 	};
 
 	describe("createApproval", () => {
