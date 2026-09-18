@@ -140,6 +140,25 @@ export function buildFundingPlan(params: BuildFundingPlanParams): FundingPlan {
 		);
 	}
 
+	// Step 6c: Check stock balance sufficiency
+	const stockAvailable =
+		Number.parseFloat(params.stockBalance) - Number.parseFloat(params.stockLocked);
+	const stockUnitsNeeded = conversionNeeded / stockPrice;
+	const stockSufficient = stockAvailable >= stockUnitsNeeded;
+	rules.push({
+		rule: "stock_balance",
+		passed: stockSufficient,
+		reason: stockSufficient
+			? `available: ${stockAvailable} units`
+			: `need ${stockUnitsNeeded} units, have ${stockAvailable}`,
+	});
+	if (!stockSufficient) {
+		throw new PolicyViolationError(
+			"stock_balance",
+			`Insufficient stock: need ${stockUnitsNeeded} units, have ${stockAvailable}`,
+		);
+	}
+
 	// Step 7: Build mixed funding amounts
 	const stablecoinAmount = stablecoinAvailable.toString();
 	const conversionAmount = conversionNeeded.toString();

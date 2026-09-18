@@ -109,6 +109,20 @@ describe("buildFundingPlan", () => {
 		).toThrow(PolicyViolationError);
 	});
 
+	it("step 6c: rejects when insufficient stock balance for conversion", () => {
+		expect(() =>
+			buildFundingPlan({
+				...baseParams,
+				amount: "600",
+				stablecoinBalance: "100",
+				stockBalance: "0.5",
+				stockLocked: "0",
+				stockPriceUsd: "150.00",
+				policy: { ...baseParams.policy, reserveMinimum: "50" },
+			}),
+		).toThrow(PolicyViolationError);
+	});
+
 	it("records all rules checked in the plan", () => {
 		const plan = buildFundingPlan(baseParams);
 		expect(plan.rulesChecked.length).toBeGreaterThan(0);
