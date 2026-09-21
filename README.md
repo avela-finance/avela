@@ -1,12 +1,12 @@
 # Avela
 
-**The asset-based payment and commerce rail.** One global account to hold, grow, and spend against your tokenized stocks, crypto and cash — without selling.
+**A programmable spending account for tokenized stocks.** Pay from your portfolio without selling. Agents and humans both operate the account, with intelligence and messaging built in.
 
 ## What is Avela?
 
-Avela lets people, businesses, and agents use eligible portfolio value to fund real payments. Instead of manually selling assets, finding conversion routes, and managing approvals — Avela handles it under configurable spending policies.
+Avela turns tokenized stocks into spending power. Deposit, see what you can spend, and pay at checkout — your stocks stay in the market, the merchant gets paid in their currency. Programmable policies, agent permissions, and a Telegram-native messaging layer make this an account you configure, not just a card you tap.
 
-**Phase 1** brings tokenized stocks and stablecoins together on X Layer, with policy-controlled payments, approvals, settlement, and receipts.
+**Phase 1** targets OKX Dev Day 2026 (submit Sep 25, finale Oct 6–7 Singapore) with 3 wrapped xStocks on X Layer, agent spending, Telegram access, and payment links.
 
 ## Workspace
 
@@ -36,4 +36,5 @@ bun run typecheck    # typescript type check
 ## Links
 
 - [avela.xyz](https://avela.xyz)
-- [Phase 1 PRD](./docs/ideas/PRD.md)
+- [PRD](./docs/ideas/PRD.md) — product vision
+- [SPEC](./docs/ideas/SPEC.md) — MVP scope, roadmap, verified onchain data
