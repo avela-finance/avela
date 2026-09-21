@@ -487,7 +487,7 @@ git commit -m "feat(core): add watcher CRUD operations"
 
 ```ts
 // packages/core/src/domain/__tests__/watcher-evaluator.test.ts
-import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
+import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { evaluateWatcher, evaluateAllActiveWatchers } from "../watcher-evaluator.js";
 import { createWatcher } from "../watcher.js";
 import type { Watcher } from "../types.js";
@@ -499,15 +499,32 @@ const testClient = postgres(process.env.TEST_DATABASE_URL!);
 const db = drizzle(testClient, { schema });
 
 afterAll(async () => {
+	await db.delete(schema.watchers);
 	await testClient.end();
 });
 
-const mockGetSpendingPower = vi.fn();
-const mockSendAlert = vi.fn();
+type SpendingPowerResult = { totalSpendingPower: number };
+type AlertRecord = { accountId: string; message: string };
+
+let spendingPowerResponses: SpendingPowerResult[] = [];
+let alertsSent: AlertRecord[] = [];
+let spendingPowerCallCount = 0;
+
+const testGetSpendingPower = async (_db: typeof db, _accountId: string): Promise<SpendingPowerResult> => {
+	spendingPowerCallCount++;
+	return spendingPowerResponses.shift() ?? { totalSpendingPower: 0 };
+};
+
+const testSendAlert = async (accountId: string, message: string): Promise<void> => {
+	alertsSent.push({ accountId, message });
+};
 
 describe("evaluateWatcher", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
+	beforeEach(async () => {
+		await db.delete(schema.watchers);
+		spendingPowerResponses = [];
+		alertsSent = [];
+		spendingPowerCallCount = 0;
 	});
 
 	it("does not trigger when spending power is above threshold", async () => {
@@ -516,19 +533,19 @@ describe("evaluateWatcher", () => {
 			threshold: 500,
 			cooldownMinutes: 60,
 		});
-		mockGetSpendingPower.mockResolvedValueOnce({ totalSpendingPower: 600 });
+		spendingPowerResponses = [{ totalSpendingPower: 600 }];
 
 		const result = await evaluateWatcher(
 			db,
 			watcher.id,
-			mockGetSpendingPower,
-			mockSendAlert,
+			testGetSpendingPower,
+			testSendAlert,
 		);
 
 		expect(result.triggered).toBe(false);
 		expect(result.currentValue).toBe(600);
 		expect(result.threshold).toBe(500);
-		expect(mockSendAlert).not.toHaveBeenCalled();
+		expect(alertsSent).toHaveLength(0);
 	});
 
 	it("triggers when spending power drops below threshold", async () => {
@@ -537,21 +554,20 @@ describe("evaluateWatcher", () => {
 			threshold: 500,
 			cooldownMinutes: 60,
 		});
-		mockGetSpendingPower.mockResolvedValueOnce({ totalSpendingPower: 480 });
+		spendingPowerResponses = [{ totalSpendingPower: 480 }];
 
 		const result = await evaluateWatcher(
 			db,
 			watcher.id,
-			mockGetSpendingPower,
-			mockSendAlert,
+			testGetSpendingPower,
+			testSendAlert,
 		);
 
 		expect(result.triggered).toBe(true);
 		expect(result.currentValue).toBe(480);
-		expect(mockSendAlert).toHaveBeenCalledWith(
-			"01JACCOUNT000000000000001",
-			expect.stringContaining("480"),
-		);
+		expect(alertsSent).toHaveLength(1);
+		expect(alertsSent[0].accountId).toBe("01JACCOUNT000000000000001");
+		expect(alertsSent[0].message).toContain("480");
 	});
 
 	it("respects cooldown — does not re-trigger within window", async () => {
@@ -561,16 +577,17 @@ describe("evaluateWatcher", () => {
 			cooldownMinutes: 60,
 		});
 		// First trigger to set lastTriggeredAt
-		mockGetSpendingPower.mockResolvedValueOnce({ totalSpendingPower: 480 });
-		await evaluateWatcher(db, watcher.id, mockGetSpendingPower, mockSendAlert);
+		spendingPowerResponses = [{ totalSpendingPower: 480 }];
+		await evaluateWatcher(db, watcher.id, testGetSpendingPower, testSendAlert);
 
 		// Second evaluation within cooldown window
-		mockGetSpendingPower.mockResolvedValueOnce({ totalSpendingPower: 480 });
+		alertsSent = [];
+		spendingPowerResponses = [{ totalSpendingPower: 480 }];
 		const result = await evaluateWatcher(
 			db,
 			watcher.id,
-			mockGetSpendingPower,
-			mockSendAlert,
+			testGetSpendingPower,
+			testSendAlert,
 		);
 
 		expect(result.triggered).toBe(false);
@@ -582,46 +599,50 @@ describe("evaluateWatcher", () => {
 			threshold: 500,
 			cooldownMinutes: 60,
 		});
-		// Pause the watcher via updateWatcher
 		const { updateWatcher } = await import("../watcher.js");
 		await updateWatcher(db, watcher.id, { status: "paused" });
 
+		const prevCallCount = spendingPowerCallCount;
 		const result = await evaluateWatcher(
 			db,
 			watcher.id,
-			mockGetSpendingPower,
-			mockSendAlert,
+			testGetSpendingPower,
+			testSendAlert,
 		);
 
 		expect(result.triggered).toBe(false);
-		expect(mockGetSpendingPower).not.toHaveBeenCalled();
+		expect(spendingPowerCallCount).toBe(prevCallCount);
 	});
 });
 
 describe("evaluateAllActiveWatchers", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
+	beforeEach(async () => {
+		await db.delete(schema.watchers);
+		spendingPowerResponses = [];
+		alertsSent = [];
 	});
 
 	it("evaluates all active watchers", async () => {
-		const watcher1 = await createWatcher(db, {
+		await createWatcher(db, {
 			accountId: "01JACCOUNT000000000000001",
 			threshold: 500,
 			cooldownMinutes: 60,
 		});
-		const watcher2 = await createWatcher(db, {
+		await createWatcher(db, {
 			accountId: "01JACCOUNT000000000000002",
 			threshold: 500,
 			cooldownMinutes: 60,
 		});
 
-		mockGetSpendingPower.mockResolvedValueOnce({ totalSpendingPower: 600 });
-		mockGetSpendingPower.mockResolvedValueOnce({ totalSpendingPower: 400 });
+		spendingPowerResponses = [
+			{ totalSpendingPower: 600 },
+			{ totalSpendingPower: 400 },
+		];
 
 		const results = await evaluateAllActiveWatchers(
 			db,
-			mockGetSpendingPower,
-			mockSendAlert,
+			testGetSpendingPower,
+			testSendAlert,
 		);
 
 		expect(results.length).toBeGreaterThanOrEqual(2);
