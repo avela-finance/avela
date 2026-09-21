@@ -4,9 +4,9 @@
 
 ## What is Avela?
 
-Avela turns tokenized stocks into spending power. Deposit, see what you can spend, and pay at checkout — your stocks stay in the market, the merchant gets paid in their currency. Programmable policies, agent permissions, and a Telegram-native messaging layer make this an account you configure, not just a card you tap.
+Avela turns tokenized stocks into spending power. Deposit, see what you can spend, and pay at checkout — your stocks stay in the market, the merchant gets paid in their currency. Programmable policies, agent permissions, and a WhatsApp-native messaging layer make this an account you configure, not just a card you tap.
 
-**Phase 1** targets OKX Dev Day 2026 (submit Sep 25, finale Oct 6–7 Singapore) with 3 wrapped xStocks on X Layer, agent spending, Telegram access, and payment links.
+**Phase 1** targets OKX Dev Day 2026 (submit Sep 25, finale Oct 6–7 Singapore) with 3 wrapped xStocks on X Layer, agent spending, WhatsApp access, and payment links.
 
 ## Workspace
 
