@@ -131,7 +131,7 @@ The Funding Engine routes each asset through its deepest stablecoin pool. If the
 - Agent permission dashboard: user defines what agent can and cannot do
 
 **Messaging access:**
-- Telegram bot: check balance, view spending power, approve/reject pending payments
+- WhatsApp bot: check balance, view spending power, approve/reject pending payments
 - Payment notifications delivered in-conversation
 
 **Identity:**
@@ -166,28 +166,28 @@ The Funding Engine routes each asset through its deepest stablecoin pool. If the
 1. User grants agent permission: "spend up to $50/day from my portfolio, only at approved merchants"
 2. Agent discovers a service it needs (API call, data feed, compute)
 3. Agent creates payment intent within its permission scope
-4. If amount exceeds auto-approve threshold → user gets Telegram notification to approve
+4. If amount exceeds auto-approve threshold → user gets WhatsApp notification to approve
 5. Agent payment executes via Funding Engine (same path as user payment)
 6. Receipt shows: agent identity, permission used, funding source, tx hash
 
-**Flow 4: Approve via Telegram**
+**Flow 4: Approve via WhatsApp**
 
-1. Pending payment notification arrives in Telegram
+1. Pending payment notification arrives in WhatsApp
 2. User sees: "Agent wants to spend $12 from your wSPYx. Approve?"
 3. User taps Approve (or Reject)
 4. Payment executes (or is cancelled)
-5. Confirmation receipt in Telegram
+5. Confirmation receipt in WhatsApp
 
 **Flow 5: Spending power alert (watcher)**
 
 1. User sets watcher: "Alert me when spending power drops below $500"
 2. Market moves, wSPYx price drops, spending power recalculated
-3. Telegram notification: "Your spending power is now $480 (was $620). wSPYx down 8% today."
+3. WhatsApp notification: "Your spending power is now $480 (was $620). wSPYx down 8% today."
 4. User can adjust policy or deposit more from the notification
 
 **What the judge sees:**
 
-A person holds 3 tokenized stocks. They paid at checkout without selling. An AI agent independently paid for a service from the same portfolio — within permissions the user defined. The user approved a payment via Telegram. A watcher alerted them when their spending power dropped. Every action has an onchain receipt. This isn't just "pay with stocks" — it's a programmable financial account where humans and agents both operate, with intelligence built in.
+A person holds 3 tokenized stocks. They paid at checkout without selling. An AI agent independently paid for a service from the same portfolio — within permissions the user defined. The user approved a payment via WhatsApp. A watcher alerted them when their spending power dropped. Every action has an onchain receipt. This isn't just "pay with stocks" — it's a programmable financial account where humans and agents both operate, with intelligence built in.
 
 ### 2.6 Success Criteria
 
@@ -196,7 +196,7 @@ A judge (or investor, or user) can:
 1. See a multi-asset portfolio with aggregated spending power
 2. Pay at checkout — stock positions stay intact, merchant gets stablecoins
 3. See an AI agent make a real payment within defined permissions
-4. Approve a payment via Telegram without opening the app
+4. Approve a payment via WhatsApp without opening the app
 5. See a watcher fire when spending power drops below threshold
 6. See receipts with onchain proof connecting portfolio to every payment
 7. See the permission dashboard — what the agent can and cannot do
@@ -228,7 +228,7 @@ Intelligence (the differentiator):
 - Agent permission dashboard: user sets what the agent can and cannot do
 
 Messaging access:
-- Telegram bot: check balance, view spending power, approve/reject pending payments
+- WhatsApp bot: check balance, view spending power, approve/reject pending payments
 - Payment notifications in-conversation
 
 Identity:
@@ -283,7 +283,7 @@ Extensions of the account, not prerequisites:
 | **Linting** | Biome | `bun run check` — not ESLint/Prettier |
 | **Chain** | X Layer (chain ID 196) | OKX L2 |
 | **DEX** | Uniswap V3 | All xStock stablecoin pools |
-| **Messaging** | Telegram Bot API | MVP messaging surface |
+| **Messaging** | WhatsApp Business API | MVP messaging surface |
 | **Agent protocol** | MCP | Agent skill exposure |
 
 ### 4.2 Workspace Structure
@@ -334,7 +334,7 @@ Adapters (replaceable)
 +-- Liquidity / swap (Uniswap V3 on X Layer)
 +-- Settlement (USDG/USDC, conversion via pool when needed)
 +-- Identity (usernames, payment links, ENS)
-+-- Messaging (Telegram, WhatsApp)
++-- Messaging (WhatsApp, Telegram)
 +-- Agent runtime (MCP, A2MCP)
 +-- Card issuing
 +-- Local payment rails
@@ -350,7 +350,7 @@ Adapters (replaceable)
 | Wallet / custody / auth | Privy | **Documented** | Embedded wallets, agent wallets, scoped permissions |
 | Price feed / oracle (MVP) | Uniswap V3 TWAP + OKX market data API | **Available** | Chainlink Data Streams announced but VerifierProxy not deployed on X Layer yet |
 | Price feed / oracle (production) | Chainlink Data Streams | **Announced, not verified** | Equity feeds confirmed; VerifierProxy address on X Layer not public; credentials self-serve |
-| Messaging access | Telegram Bot API | **Available** | MVP: balance checks, spending power, approve/reject payments |
+| Messaging access | WhatsApp Business API | **Available** | MVP: balance checks, spending power, approve/reject payments |
 | Agent runtime | MCP + Privy agent wallets | **Available** | Scoped agent permissions, payment intent creation within bounds |
 | Identity / payment links | Custom (MVP) | **To build** | pay.avela.xyz/username, username resolution |
 | Local currency payouts | Rain | **Documented** | 80+ countries, 50+ currencies — Phase 2 |
@@ -462,7 +462,7 @@ Avela can produce focused demos for different grant/hackathon contexts without f
 
 - **Spending account (OKX Dev Day):** deposit wSPYx → spending power → checkout → settlement
 - **Agent spending (Phase 2–3):** agent discovers service → checks permissions → spends → receipt
-- **Messaging access (Phase 2):** check balance in WhatsApp → approve in Telegram → receipt
+- **Messaging access (Phase 2):** check balance in WhatsApp → approve in WhatsApp → receipt
 - **Checkout SDK (Phase 4):** "Pay with Avela" embeddable for other RWA platforms
 
 The demo context changes. The Avela account model remains.

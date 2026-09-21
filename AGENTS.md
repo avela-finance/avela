@@ -47,7 +47,7 @@ Read PRD.md and SPEC.md before making architectural decisions. They contain veri
 - **Upstash QStash** — Background jobs (settlement polling, approval expiry)
 - **Zustand** — Client-side state (apps/web)
 - **TanStack Query** — Server state management (apps/web)
-- **Telegram Bot API** — Messaging access (MVP)
+- **WhatsApp Business API** — Messaging access (MVP)
 - **MCP** — Agent skill exposure
 
 ## Workspace
