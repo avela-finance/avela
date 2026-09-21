@@ -18,6 +18,8 @@
 - X Layer chain ID: 196, RPC: `https://rpc.xlayer.tech`
 - Avela never silently sells stocks — payment fails if spending power insufficient
 - Both USDG and USDC supported, routed per-asset by pool depth
+- No mocks — real Drizzle DB for tests, typed interfaces for adapters. No `as any`, `as never`, or `as unknown`.
+- Tests require `TEST_DATABASE_URL` env var pointing to a Postgres database. Run migrations before tests.
 
 ---
 
@@ -327,7 +329,10 @@ git commit -m "feat(core): add payment_intents and settlements db schema"
 - [ ] **Step 1: Write the failing tests for CRUD operations**
 
 ```ts
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "../../db/schema.js";
 import {
 	createPaymentIntent,
 	getPaymentHistory,
@@ -335,37 +340,16 @@ import {
 	updatePaymentStatus,
 } from "../payment-intent.js";
 
-// These tests use a mock db for unit testing the function logic.
-// Integration tests with real DB are in a separate file.
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
 
-const mockInsert = vi.fn();
-const mockSelect = vi.fn();
-const mockUpdate = vi.fn();
+afterAll(async () => {
+	await testClient.end();
+});
 
 describe("createPaymentIntent", () => {
 	it("creates a payment intent with ULID id and 'created' status", async () => {
-		const mockDb = {
-			insert: mockInsert.mockReturnValue({
-				values: vi.fn().mockReturnValue({
-					returning: vi.fn().mockResolvedValue([
-						{
-							id: "01JTEST000000000000000000",
-							accountId: "01JACCOUNT0000000000000",
-							amount: "25.000000",
-							recipientAddress: "0x1234567890abcdef1234567890abcdef12345678",
-							recipientUsername: null,
-							settlementCurrency: "USDG",
-							status: "created",
-							fundingDecision: null,
-							createdAt: new Date("2026-09-21T00:00:00Z"),
-							updatedAt: new Date("2026-09-21T00:00:00Z"),
-						},
-					]),
-				}),
-			}),
-		} as unknown;
-
-		const result = await createPaymentIntent(mockDb as never, {
+		const result = await createPaymentIntent(db, {
 			accountId: "01JACCOUNT0000000000000",
 			amount: 25,
 			recipientAddress: "0x1234567890abcdef1234567890abcdef12345678",
@@ -380,31 +364,28 @@ describe("createPaymentIntent", () => {
 
 describe("getPaymentIntent", () => {
 	it("returns null when payment not found", async () => {
-		const mockDb = {
-			select: mockSelect.mockReturnValue({
-				from: vi.fn().mockReturnValue({
-					where: vi.fn().mockResolvedValue([]),
-				}),
-			}),
-		} as unknown;
-
-		const result = await getPaymentIntent(mockDb as never, "01JNOTFOUND00000000000000");
+		const result = await getPaymentIntent(db, "01JNOTFOUND00000000000000");
 		expect(result).toBeNull();
 	});
 });
 
 describe("updatePaymentStatus", () => {
 	it("throws on invalid state transition", async () => {
-		const mockDb = {
-			select: mockSelect.mockReturnValue({
-				from: vi.fn().mockReturnValue({
-					where: vi.fn().mockResolvedValue([{ status: "settled" }]),
-				}),
-			}),
-		} as unknown;
+		const intent = await createPaymentIntent(db, {
+			accountId: "01JACCOUNT0000000000000",
+			amount: 10,
+			recipientAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		});
+
+		// Transition to settled through valid path
+		await updatePaymentStatus(db, intent.id, "policy_check");
+		await updatePaymentStatus(db, intent.id, "funding");
+		await updatePaymentStatus(db, intent.id, "executing");
+		await updatePaymentStatus(db, intent.id, "settling");
+		await updatePaymentStatus(db, intent.id, "settled");
 
 		await expect(
-			updatePaymentStatus(mockDb as never, "01JTEST000000000000000000", "created"),
+			updatePaymentStatus(db, intent.id, "created"),
 		).rejects.toThrow("Invalid transition");
 	});
 });
@@ -424,8 +405,9 @@ import { eq, desc } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { ulid } from "ulidx";
 import { paymentIntents } from "../db/schema.js";
+import type * as schema from "../db/schema.js";
 
-type Db = PostgresJsDatabase;
+type Db = PostgresJsDatabase<typeof schema>;
 
 export async function createPaymentIntent(
 	db: Db,
@@ -762,21 +744,26 @@ git commit -m "feat(core): add funding source selection logic"
 - [ ] **Step 1: Write the failing test for swap adapter interface**
 
 ```ts
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { SwapAdapter, SwapQuote } from "../swap.js";
 
 describe("SwapAdapter interface", () => {
 	it("quote returns expected shape", async () => {
-		const mockAdapter: SwapAdapter = {
-			quote: vi.fn().mockResolvedValue({
+		const testAdapter: SwapAdapter = {
+			quote: async () => ({
 				amountOut: 25000000n,
 				priceImpact: 0.001,
 				route: ["0xTOKEN_IN", "0xTOKEN_OUT"],
-			} satisfies SwapQuote),
-			execute: vi.fn(),
+			}),
+			execute: async () => ({
+				txHash: "0xabc123",
+				blockNumber: 1000,
+				amountOut: 25000000n,
+				gasUsed: 150000n,
+			}),
 		};
 
-		const result = await mockAdapter.quote({
+		const result = await testAdapter.quote({
 			tokenIn: "0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
 			tokenOut: "0x4ae46a509f6b1d9056937ba4500cb143933d2dc8",
 			amountIn: 45000000000000000n,
@@ -996,29 +983,49 @@ git commit -m "feat(core): add swap adapter interface and Uniswap V3 implementat
 - [ ] **Step 1: Write the failing test for executePayment**
 
 ```ts
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "../../db/schema.js";
 import { executePayment } from "../funding-engine.js";
+import type { ExecutePaymentDeps } from "../funding-engine.js";
+import type { PaymentIntent } from "../types.js";
+import type { SpendingPower } from "../spending-power.js";
 
-describe("executePayment", () => {
-	it("orchestrates the full payment flow: policy → fund → swap → settle", async () => {
-		const mockDeps = {
-			db: {},
-			getPaymentIntent: vi.fn().mockResolvedValue({
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
+
+afterAll(async () => {
+	await testClient.end();
+});
+
+let callLog: string[] = [];
+
+function buildDeps(overrides: Partial<ExecutePaymentDeps> = {}): ExecutePaymentDeps {
+	callLog = [];
+	return {
+		db,
+		getPaymentIntent: async (_db, _id) => {
+			callLog.push("getPaymentIntent");
+			return {
 				id: "01JTEST000000000000000000",
 				accountId: "01JACCOUNT0000000000000",
 				amount: 25,
 				recipientAddress: "0xMERCHANT",
 				status: "created",
-			}),
-			updatePaymentStatus: vi.fn().mockImplementation((_db, _id, status) =>
-				Promise.resolve({ status }),
-			),
-			evaluatePolicy: vi.fn().mockResolvedValue({
-				passed: true,
-				requiresApproval: false,
-				violations: [],
-			}),
-			calculateSpendingPower: vi.fn().mockResolvedValue({
+			} as PaymentIntent;
+		},
+		updatePaymentStatus: async (_db, _id, status) => {
+			callLog.push(`updatePaymentStatus:${status}`);
+			return { status } as PaymentIntent;
+		},
+		evaluatePolicy: async () => {
+			callLog.push("evaluatePolicy");
+			return { passed: true, requiresApproval: false, violations: [] };
+		},
+		calculateSpendingPower: async () => {
+			callLog.push("calculateSpendingPower");
+			return {
 				accountId: "01JACCOUNT0000000000000",
 				perAsset: [
 					{ assetSymbol: "wSPYx", positionValue: 1400, haircut: 0.5, spendingPower: 700 },
@@ -1026,55 +1033,65 @@ describe("executePayment", () => {
 				stablecoinBalance: 100,
 				totalSpendingPower: 800,
 				calculatedAt: new Date(),
-			}),
-			swapAdapter: {
-				quote: vi.fn().mockResolvedValue({
+			};
+		},
+		swapAdapter: {
+			quote: async () => {
+				callLog.push("swapAdapter.quote");
+				return {
 					amountOut: 25000000n,
 					priceImpact: 0.001,
 					route: ["0xWTOKEN", "0xSTABLE"],
-				}),
-				execute: vi.fn().mockResolvedValue({
+				};
+			},
+			execute: async () => {
+				callLog.push("swapAdapter.execute");
+				return {
 					txHash: "0xabc123",
 					blockNumber: 1000,
 					amountOut: 25000000n,
 					gasUsed: 150000n,
-				}),
+				};
 			},
-			recordSettlement: vi.fn().mockResolvedValue({
-				txHash: "0xabc123",
-				blockNumber: 1000,
-			}),
-			getAsset: vi.fn().mockReturnValue({
-				symbol: "wSPYx",
-				address: "0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
-				decimals: 18,
-				settlementStablecoin: "USDG",
-			}),
-			getStablecoinAddress: vi.fn().mockReturnValue("0x4ae46a509f6b1d9056937ba4500cb143933d2dc8"),
-		};
+		},
+		recordSettlement: async () => {
+			callLog.push("recordSettlement");
+			return { txHash: "0xabc123", blockNumber: 1000 };
+		},
+		getAsset: () => ({
+			symbol: "wSPYx",
+			address: "0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
+			decimals: 18,
+			settlementStablecoin: "USDG",
+		}),
+		getStablecoinAddress: () => "0x4ae46a509f6b1d9056937ba4500cb143933d2dc8",
+		...overrides,
+	};
+}
 
-		const result = await executePayment(mockDeps as never, "01JTEST000000000000000000");
+describe("executePayment", () => {
+	it("orchestrates the full payment flow: policy → fund → swap → settle", async () => {
+		const deps = buildDeps();
 
-		expect(mockDeps.evaluatePolicy).toHaveBeenCalled();
-		expect(mockDeps.swapAdapter.execute).toHaveBeenCalled();
-		expect(mockDeps.recordSettlement).toHaveBeenCalled();
+		const result = await executePayment(deps, "01JTEST000000000000000000");
+
+		expect(callLog).toContain("evaluatePolicy");
+		expect(callLog).toContain("swapAdapter.execute");
+		expect(callLog).toContain("recordSettlement");
 		expect(result.status).toBe("settled");
 	});
 
 	it("fails gracefully when policy check fails", async () => {
-		const mockDeps = {
-			db: {},
-			getPaymentIntent: vi.fn().mockResolvedValue({
-				id: "01JTEST000000000000000000",
-				accountId: "01JACCOUNT0000000000000",
-				amount: 600,
-				recipientAddress: "0xMERCHANT",
-				status: "created",
-			}),
-			updatePaymentStatus: vi.fn().mockImplementation((_db, _id, status) =>
-				Promise.resolve({ status }),
-			),
-			evaluatePolicy: vi.fn().mockResolvedValue({
+		const deps = buildDeps({
+			getPaymentIntent: async () =>
+				({
+					id: "01JTEST000000000000000000",
+					accountId: "01JACCOUNT0000000000000",
+					amount: 600,
+					recipientAddress: "0xMERCHANT",
+					status: "created",
+				}) as PaymentIntent,
+			evaluatePolicy: async () => ({
 				passed: false,
 				requiresApproval: false,
 				violations: [
@@ -1086,46 +1103,33 @@ describe("executePayment", () => {
 					},
 				],
 			}),
-			calculateSpendingPower: vi.fn(),
-			swapAdapter: { quote: vi.fn(), execute: vi.fn() },
-			recordSettlement: vi.fn(),
-			getAsset: vi.fn(),
-			getStablecoinAddress: vi.fn(),
-		};
+		});
 
-		const result = await executePayment(mockDeps as never, "01JTEST000000000000000000");
+		const result = await executePayment(deps, "01JTEST000000000000000000");
 		expect(result.status).toBe("failed");
-		expect(mockDeps.swapAdapter.execute).not.toHaveBeenCalled();
+		expect(callLog).not.toContain("swapAdapter.execute");
 	});
 
 	it("routes to awaiting_approval when policy requires it", async () => {
-		const mockDeps = {
-			db: {},
-			getPaymentIntent: vi.fn().mockResolvedValue({
-				id: "01JTEST000000000000000000",
-				accountId: "01JACCOUNT0000000000000",
-				amount: 150,
-				recipientAddress: "0xMERCHANT",
-				status: "created",
-			}),
-			updatePaymentStatus: vi.fn().mockImplementation((_db, _id, status) =>
-				Promise.resolve({ status }),
-			),
-			evaluatePolicy: vi.fn().mockResolvedValue({
+		const deps = buildDeps({
+			getPaymentIntent: async () =>
+				({
+					id: "01JTEST000000000000000000",
+					accountId: "01JACCOUNT0000000000000",
+					amount: 150,
+					recipientAddress: "0xMERCHANT",
+					status: "created",
+				}) as PaymentIntent,
+			evaluatePolicy: async () => ({
 				passed: true,
 				requiresApproval: true,
 				violations: [],
 			}),
-			calculateSpendingPower: vi.fn(),
-			swapAdapter: { quote: vi.fn(), execute: vi.fn() },
-			recordSettlement: vi.fn(),
-			getAsset: vi.fn(),
-			getStablecoinAddress: vi.fn(),
-		};
+		});
 
-		const result = await executePayment(mockDeps as never, "01JTEST000000000000000000");
+		const result = await executePayment(deps, "01JTEST000000000000000000");
 		expect(result.status).toBe("awaiting_approval");
-		expect(mockDeps.swapAdapter.execute).not.toHaveBeenCalled();
+		expect(callLog).not.toContain("swapAdapter.execute");
 	});
 });
 ```
@@ -1144,11 +1148,15 @@ import type { SwapAdapter } from "../adapters/swap.js";
 import type { PaymentIntent, FundingDecision, PaymentStatus } from "./payment-intent.js";
 import { calculateAmountOutMin } from "../adapters/uniswap-v3.js";
 
-type ExecutePaymentDeps = {
-	db: unknown;
-	getPaymentIntent: (db: unknown, id: string) => Promise<PaymentIntent>;
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type * as schema from "../db/schema.js";
+type Db = PostgresJsDatabase<typeof schema>;
+
+export type ExecutePaymentDeps = {
+	db: Db;
+	getPaymentIntent: (db: Db, id: string) => Promise<PaymentIntent>;
 	updatePaymentStatus: (
-		db: unknown,
+		db: Db,
 		id: string,
 		status: PaymentStatus,
 		fundingDecision?: FundingDecision,
@@ -1160,7 +1168,7 @@ type ExecutePaymentDeps = {
 	calculateSpendingPower: (accountId: string) => Promise<SpendingPower>;
 	swapAdapter: SwapAdapter;
 	recordSettlement: (
-		db: unknown,
+		db: Db,
 		params: {
 			paymentIntentId: string;
 			txHash: string;
@@ -1376,9 +1384,10 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { eq } from "drizzle-orm";
 import { ulid } from "ulidx";
 import { settlements, paymentIntents } from "../db/schema.js";
+import type * as schema from "../db/schema.js";
 import type { FundingDecision, Receipt, Settlement } from "./payment-intent.js";
 
-type Db = PostgresJsDatabase;
+type Db = PostgresJsDatabase<typeof schema>;
 
 export async function recordSettlement(
 	db: Db,

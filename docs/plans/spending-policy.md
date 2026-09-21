@@ -16,6 +16,7 @@
 - Test with Vitest: `bun run test`
 - Lint with Biome: `bun run check`
 - Avela never silently sells stocks — payment fails if policy check fails
+- Tests require `TEST_DATABASE_URL` env var pointing to a Postgres database. Run migrations before tests.
 
 ---
 
@@ -247,33 +248,33 @@ git commit -m "feat(core): add spending_policies and daily_spending_log db schem
 - [ ] **Step 1: Write the failing tests for CRUD**
 
 ```ts
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { eq } from "drizzle-orm";
+import * as schema from "../../db/schema.js";
 import { createDefaultPolicy, getPolicy, updatePolicy } from "../spending-policy.js";
+
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
+
+afterAll(async () => {
+	await testClient.end();
+});
+
+beforeEach(async () => {
+	await db.delete(schema.spendingPolicies);
+	await db.delete(schema.accounts);
+	await db.insert(schema.accounts).values({
+		id: "01JACCOUNT0000000000000",
+		walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		status: "active",
+	});
+});
 
 describe("createDefaultPolicy", () => {
 	it("creates a policy with default values", async () => {
-		const mockDb = {
-			insert: vi.fn().mockReturnValue({
-				values: vi.fn().mockReturnValue({
-					returning: vi.fn().mockResolvedValue([
-						{
-							id: "01JPOLICY00000000000000",
-							accountId: "01JACCOUNT0000000000000",
-							dailyLimit: "500.000000",
-							approvalThreshold: "100.000000",
-							priceFloors: [],
-							minimumBalances: [],
-							fundingPriority: ["spending_power", "stablecoin_balance"],
-							enabled: true,
-							createdAt: new Date(),
-							updatedAt: new Date(),
-						},
-					]),
-				}),
-			}),
-		} as unknown;
-
-		const result = await createDefaultPolicy(mockDb as never, "01JACCOUNT0000000000000");
+		const result = await createDefaultPolicy(db, "01JACCOUNT0000000000000");
 		expect(result.dailyLimit).toBe("500.000000");
 		expect(result.approvalThreshold).toBe("100.000000");
 		expect(result.enabled).toBe(true);
@@ -282,40 +283,22 @@ describe("createDefaultPolicy", () => {
 
 describe("getPolicy", () => {
 	it("returns null when no policy exists", async () => {
-		const mockDb = {
-			select: vi.fn().mockReturnValue({
-				from: vi.fn().mockReturnValue({
-					where: vi.fn().mockResolvedValue([]),
-				}),
-			}),
-		} as unknown;
-
-		const result = await getPolicy(mockDb as never, "01JNOTFOUND0000000000000");
+		const result = await getPolicy(db, "01JACCOUNT0000000000000");
 		expect(result).toBeNull();
+	});
+
+	it("returns the policy after creation", async () => {
+		await createDefaultPolicy(db, "01JACCOUNT0000000000000");
+		const result = await getPolicy(db, "01JACCOUNT0000000000000");
+		expect(result).not.toBeNull();
+		expect(result!.dailyLimit).toBe("500.000000");
 	});
 });
 
 describe("updatePolicy", () => {
 	it("updates daily limit", async () => {
-		const mockDb = {
-			update: vi.fn().mockReturnValue({
-				set: vi.fn().mockReturnValue({
-					where: vi.fn().mockReturnValue({
-						returning: vi.fn().mockResolvedValue([
-							{
-								id: "01JPOLICY00000000000000",
-								accountId: "01JACCOUNT0000000000000",
-								dailyLimit: "1000.000000",
-								approvalThreshold: "100.000000",
-								enabled: true,
-							},
-						]),
-					}),
-				}),
-			}),
-		} as unknown;
-
-		const result = await updatePolicy(mockDb as never, "01JACCOUNT0000000000000", {
+		await createDefaultPolicy(db, "01JACCOUNT0000000000000");
+		const result = await updatePolicy(db, "01JACCOUNT0000000000000", {
 			dailyLimit: 1000,
 		});
 		expect(result.dailyLimit).toBe("1000.000000");
@@ -674,44 +657,69 @@ git commit -m "feat(core): add policy evaluation engine"
 - [ ] **Step 1: Write the failing test for daily spending**
 
 ```ts
-import { describe, expect, it, vi } from "vitest";
-import { recordSpending, getDailySpending } from "../spending-policy.js";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "../../db/schema.js";
+import {
+	createDefaultPolicy,
+	getPolicy,
+	recordSpending,
+	getDailySpending,
+} from "../spending-policy.js";
+
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
+
+afterAll(async () => {
+	await testClient.end();
+});
+
+beforeEach(async () => {
+	await db.delete(schema.dailySpendingLog);
+	await db.delete(schema.spendingPolicies);
+	await db.delete(schema.accounts);
+	await db.insert(schema.accounts).values({
+		id: "01JACCOUNT0000000000000",
+		walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		status: "active",
+	});
+	await createDefaultPolicy(db, "01JACCOUNT0000000000000");
+});
 
 describe("recordSpending", () => {
 	it("inserts a spending log entry", async () => {
-		const mockInsert = vi.fn().mockReturnValue({
-			values: vi.fn().mockResolvedValue(undefined),
-		});
-		const mockDb = { insert: mockInsert } as unknown;
+		await recordSpending(db, "01JACCOUNT0000000000000", 25);
 
-		await recordSpending(mockDb as never, "01JACCOUNT0000000000000", 25);
-		expect(mockInsert).toHaveBeenCalled();
+		const rows = await db
+			.select()
+			.from(schema.dailySpendingLog);
+		expect(rows).toHaveLength(1);
+		expect(Number(rows[0]!.amount)).toBe(25);
 	});
 });
 
 describe("getDailySpending", () => {
 	it("returns zero when no spending today", async () => {
-		const mockDb = {
-			select: vi.fn().mockReturnValue({
-				from: vi.fn().mockReturnValue({
-					where: vi.fn().mockResolvedValue([]),
-				}),
-			}),
-		} as unknown;
+		const policy = await getPolicy(db, "01JACCOUNT0000000000000");
 
-		const policy = {
-			dailyLimit: "500.000000",
-		};
-
-		const result = await getDailySpending(
-			mockDb as never,
-			"01JACCOUNT0000000000000",
-			policy as never,
-		);
+		const result = await getDailySpending(db, "01JACCOUNT0000000000000", policy!);
 
 		expect(result.total).toBe(0);
 		expect(result.limit).toBe(500);
 		expect(result.remaining).toBe(500);
+	});
+
+	it("returns correct totals after spending", async () => {
+		await recordSpending(db, "01JACCOUNT0000000000000", 100);
+		await recordSpending(db, "01JACCOUNT0000000000000", 50);
+
+		const policy = await getPolicy(db, "01JACCOUNT0000000000000");
+		const result = await getDailySpending(db, "01JACCOUNT0000000000000", policy!);
+
+		expect(result.total).toBe(150);
+		expect(result.limit).toBe(500);
+		expect(result.remaining).toBe(350);
 	});
 });
 ```
@@ -795,53 +803,65 @@ git commit -m "feat(core): add daily spending tracking"
 - [ ] **Step 1: Write the failing test for policy routes**
 
 ```ts
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { Hono } from "hono";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "@avela/core/db/schema";
+import {
+	createDefaultPolicy,
+	getPolicy,
+	updatePolicy,
+	getDailySpending,
+} from "@avela/core/domain/spending-policy";
 import { policiesRoutes } from "../policies.js";
+
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
+
+afterAll(async () => {
+	await testClient.end();
+});
+
+beforeEach(async () => {
+	await db.delete(schema.dailySpendingLog);
+	await db.delete(schema.spendingPolicies);
+	await db.delete(schema.accounts);
+	await db.insert(schema.accounts).values({
+		id: "01JACCOUNT0000000000000",
+		walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		status: "active",
+	});
+	await createDefaultPolicy(db, "01JACCOUNT0000000000000");
+});
+
+function buildApp() {
+	const app = new Hono();
+	app.route(
+		"/accounts/:accountId/policies",
+		policiesRoutes({
+			getPolicy: (accountId: string) => getPolicy(db, accountId),
+			updatePolicy: (accountId: string, updates: Record<string, unknown>) =>
+				updatePolicy(db, accountId, updates),
+			getDailySpending: (accountId: string, policy: { dailyLimit: string | null }) =>
+				getDailySpending(db, accountId, policy),
+		}),
+	);
+	return app;
+}
 
 describe("GET /accounts/:id/policies", () => {
 	it("returns policy with 200", async () => {
-		const app = new Hono();
-		const mockGetPolicy = vi.fn().mockResolvedValue({
-			id: "01JPOLICY00000000000000",
-			accountId: "01JACCOUNT0000000000000",
-			dailyLimit: "500.000000",
-			approvalThreshold: "100.000000",
-			enabled: true,
-		});
-		const mockGetDailySpending = vi.fn().mockResolvedValue({
-			total: 75,
-			limit: 500,
-			remaining: 425,
-		});
-
-		app.route(
-			"/accounts/:accountId/policies",
-			policiesRoutes({
-				getPolicy: mockGetPolicy,
-				updatePolicy: vi.fn(),
-				getDailySpending: mockGetDailySpending,
-			}),
-		);
-
+		const app = buildApp();
 		const res = await app.request("/accounts/01JACCOUNT0000000000000/policies");
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.data.policy.dailyLimit).toBe("500.000000");
-		expect(body.data.dailySpending.remaining).toBe(425);
+		expect(body.data.dailySpending.remaining).toBe(500);
 	});
 
 	it("returns 404 when no policy exists", async () => {
-		const app = new Hono();
-		app.route(
-			"/accounts/:accountId/policies",
-			policiesRoutes({
-				getPolicy: vi.fn().mockResolvedValue(null),
-				updatePolicy: vi.fn(),
-				getDailySpending: vi.fn(),
-			}),
-		);
-
+		const app = buildApp();
 		const res = await app.request("/accounts/01JNOTFOUND0000000000000/policies");
 		expect(res.status).toBe(404);
 	});
@@ -849,23 +869,7 @@ describe("GET /accounts/:id/policies", () => {
 
 describe("PUT /accounts/:id/policies", () => {
 	it("updates policy and returns 200", async () => {
-		const app = new Hono();
-		const mockUpdatePolicy = vi.fn().mockResolvedValue({
-			id: "01JPOLICY00000000000000",
-			dailyLimit: "1000.000000",
-			approvalThreshold: "200.000000",
-			enabled: true,
-		});
-
-		app.route(
-			"/accounts/:accountId/policies",
-			policiesRoutes({
-				getPolicy: vi.fn(),
-				updatePolicy: mockUpdatePolicy,
-				getDailySpending: vi.fn(),
-			}),
-		);
-
+		const app = buildApp();
 		const res = await app.request("/accounts/01JACCOUNT0000000000000/policies", {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
@@ -878,16 +882,7 @@ describe("PUT /accounts/:id/policies", () => {
 	});
 
 	it("returns 400 for invalid input", async () => {
-		const app = new Hono();
-		app.route(
-			"/accounts/:accountId/policies",
-			policiesRoutes({
-				getPolicy: vi.fn(),
-				updatePolicy: vi.fn(),
-				getDailySpending: vi.fn(),
-			}),
-		);
-
+		const app = buildApp();
 		const res = await app.request("/accounts/01JACCOUNT0000000000000/policies", {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },

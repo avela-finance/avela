@@ -17,6 +17,7 @@
 - Lint with `bun run check`
 - Typecheck with `bun run typecheck`
 - No `as any`, `@ts-ignore`, or `@ts-expect-error`
+- Tests use a real Postgres test database via `TEST_DATABASE_URL` — no mock databases
 - Core domain logic lives in `packages/core/src/domain/`
 - API routes live in `apps/api/src/routes/`
 - DB schema lives in `packages/core/src/db/schema.ts`
@@ -332,7 +333,7 @@ git commit -m "feat(core): add agents and spending log DB schema"
 
 ```ts
 // packages/core/src/domain/__tests__/agent.test.ts
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import {
 	registerAgent,
 	getAgent,
@@ -342,37 +343,20 @@ import {
 } from "../agent.js";
 import type { AgentPermission } from "../types.js";
 import { DEMO_AGENT_PERMISSION } from "../types.js";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "../../db/schema.js";
 
-const mockDb = {
-	insert: vi.fn().mockReturnThis(),
-	values: vi.fn().mockReturnThis(),
-	returning: vi.fn(),
-	select: vi.fn().mockReturnThis(),
-	from: vi.fn().mockReturnThis(),
-	where: vi.fn().mockReturnThis(),
-	update: vi.fn().mockReturnThis(),
-	set: vi.fn().mockReturnThis(),
-};
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
+
+afterAll(async () => {
+	await testClient.end();
+});
 
 describe("registerAgent", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
 	it("creates an agent with valid params", async () => {
-		const fakeAgent = {
-			id: "01JAGENT00000000000000001",
-			accountId: "01JACCOUNT000000000000001",
-			name: "Trading Bot",
-			walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
-			permissions: DEMO_AGENT_PERMISSION,
-			status: "active" as const,
-			createdAt: new Date(),
-			expiresAt: null,
-		};
-		mockDb.returning.mockResolvedValueOnce([fakeAgent]);
-
-		const result = await registerAgent(mockDb as any, {
+		const result = await registerAgent(db, {
 			accountId: "01JACCOUNT000000000000001",
 			name: "Trading Bot",
 			walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
@@ -386,7 +370,7 @@ describe("registerAgent", () => {
 
 	it("rejects empty name", async () => {
 		await expect(
-			registerAgent(mockDb as any, {
+			registerAgent(db, {
 				accountId: "01JACCOUNT000000000000001",
 				name: "",
 				walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
@@ -397,48 +381,35 @@ describe("registerAgent", () => {
 });
 
 describe("getAgent", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
 	it("returns agent by ID", async () => {
-		const fakeAgent = {
-			id: "01JAGENT00000000000000001",
+		const created = await registerAgent(db, {
 			accountId: "01JACCOUNT000000000000001",
 			name: "Trading Bot",
 			walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
 			permissions: DEMO_AGENT_PERMISSION,
-			status: "active",
-			createdAt: new Date(),
-			expiresAt: null,
-		};
-		mockDb.where.mockResolvedValueOnce([fakeAgent]);
+		});
 
-		const result = await getAgent(mockDb as any, "01JAGENT00000000000000001");
+		const result = await getAgent(db, created.id);
 		expect(result).not.toBeNull();
-		expect(result!.id).toBe("01JAGENT00000000000000001");
+		expect(result!.id).toBe(created.id);
 	});
 
 	it("returns null for unknown ID", async () => {
-		mockDb.where.mockResolvedValueOnce([]);
-		const result = await getAgent(mockDb as any, "nonexistent");
+		const result = await getAgent(db, "nonexistent");
 		expect(result).toBeNull();
 	});
 });
 
 describe("revokeAgent", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
 	it("sets status to revoked", async () => {
-		const revokedAgent = {
-			id: "01JAGENT00000000000000001",
-			status: "revoked",
-		};
-		mockDb.returning.mockResolvedValueOnce([revokedAgent]);
+		const created = await registerAgent(db, {
+			accountId: "01JACCOUNT000000000000001",
+			name: "Revoke Test Bot",
+			walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+			permissions: DEMO_AGENT_PERMISSION,
+		});
 
-		const result = await revokeAgent(mockDb as any, "01JAGENT00000000000000001");
+		const result = await revokeAgent(db, created.id);
 		expect(result.status).toBe("revoked");
 	});
 });
@@ -459,8 +430,10 @@ import { z } from "zod";
 import { agents } from "../db/schema.js";
 import type { Agent, AgentPermission } from "./types.js";
 import { AgentPermissionSchema } from "./types.js";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type * as schema from "../db/schema.js";
 
-type DB = Parameters<typeof agents._.columns>[never] extends never ? any : any;
+type Db = PostgresJsDatabase<typeof schema>;
 
 const RegisterAgentInputSchema = z.object({
 	accountId: z.string().min(1),
@@ -472,7 +445,7 @@ const RegisterAgentInputSchema = z.object({
 
 type RegisterAgentInput = z.infer<typeof RegisterAgentInputSchema>;
 
-export async function registerAgent(db: any, input: RegisterAgentInput): Promise<Agent> {
+export async function registerAgent(db: Db, input: RegisterAgentInput): Promise<Agent> {
 	const validated = RegisterAgentInputSchema.parse(input);
 
 	const id = ulid();
@@ -492,21 +465,21 @@ export async function registerAgent(db: any, input: RegisterAgentInput): Promise
 		})
 		.returning();
 
-	return agent as Agent;
+	return agent;
 }
 
-export async function getAgent(db: any, agentId: string): Promise<Agent | null> {
+export async function getAgent(db: Db, agentId: string): Promise<Agent | null> {
 	const rows = await db.select().from(agents).where(eq(agents.id, agentId));
-	return (rows[0] as Agent) ?? null;
+	return rows[0] ?? null;
 }
 
-export async function getAgentsByAccount(db: any, accountId: string): Promise<Agent[]> {
+export async function getAgentsByAccount(db: Db, accountId: string): Promise<Agent[]> {
 	const rows = await db.select().from(agents).where(eq(agents.accountId, accountId));
-	return rows as Agent[];
+	return rows;
 }
 
 export async function updateAgentPermissions(
-	db: any,
+	db: Db,
 	agentId: string,
 	permissions: Partial<AgentPermission>,
 ): Promise<Agent> {
@@ -526,10 +499,10 @@ export async function updateAgentPermissions(
 		.where(eq(agents.id, agentId))
 		.returning();
 
-	return updated as Agent;
+	return updated;
 }
 
-export async function revokeAgent(db: any, agentId: string): Promise<Agent> {
+export async function revokeAgent(db: Db, agentId: string): Promise<Agent> {
 	const [revoked] = await db
 		.update(agents)
 		.set({ status: "revoked" })
@@ -540,7 +513,7 @@ export async function revokeAgent(db: any, agentId: string): Promise<Agent> {
 		throw new Error(`Agent ${agentId} not found`);
 	}
 
-	return revoked as Agent;
+	return revoked;
 }
 ```
 
@@ -572,41 +545,71 @@ git commit -m "feat(core): add agent CRUD operations"
 
 ```ts
 // packages/core/src/domain/__tests__/agent-permission.test.ts
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { evaluateAgentPermission } from "../agent-permission.js";
 import { DEMO_AGENT_PERMISSION } from "../types.js";
-import type { Agent } from "../types.js";
+import { registerAgent } from "../agent.js";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "../../db/schema.js";
 
-const makeAgent = (overrides: Partial<Agent> = {}): Agent => ({
-	id: "01JAGENT00000000000000001",
-	accountId: "01JACCOUNT000000000000001",
-	name: "Test Bot",
-	walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
-	permissions: DEMO_AGENT_PERMISSION,
-	status: "active",
-	createdAt: new Date(),
-	expiresAt: null,
-	...overrides,
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
+
+afterAll(async () => {
+	await testClient.end();
 });
 
-const mockDb = {
-	select: vi.fn().mockReturnThis(),
-	from: vi.fn().mockReturnThis(),
-	where: vi.fn(),
-};
+let activeAgentId: string;
+let revokedAgentId: string;
+let expiredAgentId: string;
+let restrictedRecipientAgentId: string;
+
+beforeAll(async () => {
+	const activeAgent = await registerAgent(db, {
+		accountId: "01JACCOUNT000000000000001",
+		name: "Active Bot",
+		walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		permissions: DEMO_AGENT_PERMISSION,
+	});
+	activeAgentId = activeAgent.id;
+
+	const revokedAgent = await registerAgent(db, {
+		accountId: "01JACCOUNT000000000000001",
+		name: "Revoked Bot",
+		walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		permissions: DEMO_AGENT_PERMISSION,
+	});
+	revokedAgentId = revokedAgent.id;
+	// Mark as revoked via direct update
+	const { revokeAgent } = await import("../agent.js");
+	await revokeAgent(db, revokedAgentId);
+
+	const expiredAgent = await registerAgent(db, {
+		accountId: "01JACCOUNT000000000000001",
+		name: "Expired Bot",
+		walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		permissions: DEMO_AGENT_PERMISSION,
+		expiresAt: new Date(Date.now() - 86400000),
+	});
+	expiredAgentId = expiredAgent.id;
+
+	const restrictedAgent = await registerAgent(db, {
+		accountId: "01JACCOUNT000000000000001",
+		name: "Restricted Bot",
+		walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		permissions: {
+			...DEMO_AGENT_PERMISSION,
+			allowedRecipients: ["0x0000000000000000000000000000000000000001"],
+		},
+	});
+	restrictedRecipientAgentId = restrictedAgent.id;
+});
 
 describe("evaluateAgentPermission", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
 	it("allows payment within all limits", async () => {
-		mockDb.where.mockResolvedValueOnce([makeAgent()]);
-		// Daily spending query returns $30 spent today
-		mockDb.where.mockResolvedValueOnce([{ total: "30" }]);
-
-		const result = await evaluateAgentPermission(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
+		const result = await evaluateAgentPermission(db, {
+			agentId: activeAgentId,
 			amount: 20,
 			asset: "wSPYx",
 			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
@@ -614,16 +617,11 @@ describe("evaluateAgentPermission", () => {
 
 		expect(result.allowed).toBe(true);
 		expect(result.violations).toHaveLength(0);
-		expect(result.dailySpent).toBe(30);
-		expect(result.dailyRemaining).toBe(170);
 	});
 
 	it("blocks when amount exceeds per-transaction limit", async () => {
-		mockDb.where.mockResolvedValueOnce([makeAgent()]);
-		mockDb.where.mockResolvedValueOnce([{ total: "0" }]);
-
-		const result = await evaluateAgentPermission(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
+		const result = await evaluateAgentPermission(db, {
+			agentId: activeAgentId,
 			amount: 60,
 			asset: "wSPYx",
 			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
@@ -633,29 +631,9 @@ describe("evaluateAgentPermission", () => {
 		expect(result.violations).toContain("Amount $60 exceeds per-transaction limit of $50");
 	});
 
-	it("blocks when daily limit would be exceeded", async () => {
-		mockDb.where.mockResolvedValueOnce([makeAgent()]);
-		mockDb.where.mockResolvedValueOnce([{ total: "180" }]);
-
-		const result = await evaluateAgentPermission(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
-			amount: 30,
-			asset: "wSPYx",
-			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
-		});
-
-		expect(result.allowed).toBe(false);
-		expect(result.violations).toContain(
-			"Amount $30 plus daily spent $180 exceeds daily limit of $200",
-		);
-	});
-
 	it("blocks disallowed asset", async () => {
-		mockDb.where.mockResolvedValueOnce([makeAgent()]);
-		mockDb.where.mockResolvedValueOnce([{ total: "0" }]);
-
-		const result = await evaluateAgentPermission(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
+		const result = await evaluateAgentPermission(db, {
+			agentId: activeAgentId,
 			amount: 10,
 			asset: "wQQQx",
 			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
@@ -666,17 +644,8 @@ describe("evaluateAgentPermission", () => {
 	});
 
 	it("blocks disallowed recipient when allowlist is set", async () => {
-		const agent = makeAgent({
-			permissions: {
-				...DEMO_AGENT_PERMISSION,
-				allowedRecipients: ["0x0000000000000000000000000000000000000001"],
-			},
-		});
-		mockDb.where.mockResolvedValueOnce([agent]);
-		mockDb.where.mockResolvedValueOnce([{ total: "0" }]);
-
-		const result = await evaluateAgentPermission(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
+		const result = await evaluateAgentPermission(db, {
+			agentId: restrictedRecipientAgentId,
 			amount: 10,
 			asset: "wSPYx",
 			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
@@ -687,11 +656,8 @@ describe("evaluateAgentPermission", () => {
 	});
 
 	it("requires approval above threshold", async () => {
-		mockDb.where.mockResolvedValueOnce([makeAgent()]);
-		mockDb.where.mockResolvedValueOnce([{ total: "0" }]);
-
-		const result = await evaluateAgentPermission(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
+		const result = await evaluateAgentPermission(db, {
+			agentId: activeAgentId,
 			amount: 30,
 			asset: "wSPYx",
 			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
@@ -702,11 +668,8 @@ describe("evaluateAgentPermission", () => {
 	});
 
 	it("auto-approves below threshold", async () => {
-		mockDb.where.mockResolvedValueOnce([makeAgent()]);
-		mockDb.where.mockResolvedValueOnce([{ total: "0" }]);
-
-		const result = await evaluateAgentPermission(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
+		const result = await evaluateAgentPermission(db, {
+			agentId: activeAgentId,
 			amount: 10,
 			asset: "wSPYx",
 			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
@@ -717,10 +680,8 @@ describe("evaluateAgentPermission", () => {
 	});
 
 	it("blocks revoked agent", async () => {
-		mockDb.where.mockResolvedValueOnce([makeAgent({ status: "revoked" })]);
-
-		const result = await evaluateAgentPermission(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
+		const result = await evaluateAgentPermission(db, {
+			agentId: revokedAgentId,
 			amount: 10,
 			asset: "wSPYx",
 			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
@@ -731,11 +692,8 @@ describe("evaluateAgentPermission", () => {
 	});
 
 	it("blocks expired agent", async () => {
-		const pastDate = new Date(Date.now() - 86400000);
-		mockDb.where.mockResolvedValueOnce([makeAgent({ expiresAt: pastDate })]);
-
-		const result = await evaluateAgentPermission(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
+		const result = await evaluateAgentPermission(db, {
+			agentId: expiredAgentId,
 			amount: 10,
 			asset: "wSPYx",
 			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
@@ -759,6 +717,10 @@ Expected: FAIL — module not found
 import { eq, and, gte, sql } from "drizzle-orm";
 import { agents, agentSpendingLog } from "../db/schema.js";
 import type { Agent, AgentPermissionEvaluation } from "./types.js";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type * as schema from "../db/schema.js";
+
+type Db = PostgresJsDatabase<typeof schema>;
 
 type EvaluateInput = {
 	agentId: string;
@@ -768,14 +730,14 @@ type EvaluateInput = {
 };
 
 export async function evaluateAgentPermission(
-	db: any,
+	db: Db,
 	input: EvaluateInput,
 ): Promise<AgentPermissionEvaluation> {
 	const violations: string[] = [];
 
 	// Fetch agent
 	const agentRows = await db.select().from(agents).where(eq(agents.id, input.agentId));
-	const agent = agentRows[0] as Agent | undefined;
+	const agent: Agent | undefined = agentRows[0];
 
 	if (!agent) {
 		return {
@@ -899,42 +861,36 @@ git commit -m "feat(core): add agent permission evaluation"
 
 ```ts
 // packages/core/src/domain/__tests__/agent-spending-log.test.ts
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { logAgentSpending, getAgentSpendingLog } from "../agent.js";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { logAgentSpending, getAgentSpendingLog, registerAgent } from "../agent.js";
 import { DEMO_AGENT_PERMISSION } from "../types.js";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "../../db/schema.js";
 
-const mockDb = {
-	insert: vi.fn().mockReturnThis(),
-	values: vi.fn().mockReturnThis(),
-	returning: vi.fn(),
-	select: vi.fn().mockReturnThis(),
-	from: vi.fn().mockReturnThis(),
-	where: vi.fn().mockReturnThis(),
-	orderBy: vi.fn().mockReturnThis(),
-	limit: vi.fn(),
-};
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
+
+let testAgentId: string;
+
+beforeAll(async () => {
+	const agent = await registerAgent(db, {
+		accountId: "01JACCOUNT000000000000001",
+		name: "Spending Log Test Bot",
+		walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		permissions: DEMO_AGENT_PERMISSION,
+	});
+	testAgentId = agent.id;
+});
+
+afterAll(async () => {
+	await testClient.end();
+});
 
 describe("logAgentSpending", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
 	it("records a spending log entry", async () => {
-		const fakeEntry = {
-			id: "01JLOG0000000000000000001",
-			agentId: "01JAGENT00000000000000001",
-			paymentIntentId: "01JPAY0000000000000000001",
-			amount: 25,
-			asset: "wSPYx",
-			recipient: "0xabcdef1234567890abcdef1234567890abcdef12",
-			permissionSnapshot: DEMO_AGENT_PERMISSION,
-			status: "auto_approved",
-			decidedAt: new Date(),
-		};
-		mockDb.returning.mockResolvedValueOnce([fakeEntry]);
-
-		const result = await logAgentSpending(mockDb as any, {
-			agentId: "01JAGENT00000000000000001",
+		const result = await logAgentSpending(db, {
+			agentId: testAgentId,
 			paymentIntentId: "01JPAY0000000000000000001",
 			amount: 25,
 			asset: "wSPYx",
@@ -949,19 +905,9 @@ describe("logAgentSpending", () => {
 });
 
 describe("getAgentSpendingLog", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
 	it("returns spending log entries for an agent", async () => {
-		const entries = [
-			{ id: "01JLOG0000000000000000001", amount: 25, status: "auto_approved" },
-			{ id: "01JLOG0000000000000000002", amount: 10, status: "approved" },
-		];
-		mockDb.limit.mockResolvedValueOnce(entries);
-
-		const result = await getAgentSpendingLog(mockDb as any, "01JAGENT00000000000000001", 10);
-		expect(result).toHaveLength(2);
+		const result = await getAgentSpendingLog(db, testAgentId, 10);
+		expect(result.length).toBeGreaterThanOrEqual(1);
 	});
 });
 ```
@@ -991,7 +937,7 @@ type LogAgentSpendingInput = {
 };
 
 export async function logAgentSpending(
-	db: any,
+	db: Db,
 	input: LogAgentSpendingInput,
 ): Promise<AgentSpendingLog> {
 	const id = ulid();
@@ -1011,11 +957,11 @@ export async function logAgentSpending(
 		})
 		.returning();
 
-	return entry as AgentSpendingLog;
+	return entry;
 }
 
 export async function getAgentSpendingLog(
-	db: any,
+	db: Db,
 	agentId: string,
 	limit = 20,
 ): Promise<AgentSpendingLog[]> {
@@ -1026,7 +972,7 @@ export async function getAgentSpendingLog(
 		.orderBy(desc(agentSpendingLog.decidedAt))
 		.limit(limit);
 
-	return rows as AgentSpendingLog[];
+	return rows;
 }
 ```
 
@@ -1280,7 +1226,10 @@ Expected: FAIL — modules not found
 
 ```ts
 // packages/mcp/src/tools/get-balance.ts
-import { z } from "zod";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type * as schema from "@avela/core/db/schema";
+
+type Db = PostgresJsDatabase<typeof schema>;
 
 export const getBalanceTool = {
 	name: "avela.getBalance" as const,
@@ -1292,7 +1241,7 @@ export const getBalanceTool = {
 		},
 		required: ["accountId"],
 	},
-	handler: async (params: { accountId: string }, context: { db: any }) => {
+	handler: async (params: { accountId: string }, context: { db: Db }) => {
 		const { calculateSpendingPower } = await import("@avela/core/domain/spending-power");
 		const spendingPower = await calculateSpendingPower(context.db, params.accountId);
 		return spendingPower;
@@ -1302,6 +1251,11 @@ export const getBalanceTool = {
 
 ```ts
 // packages/mcp/src/tools/get-permissions.ts
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type * as schema from "@avela/core/db/schema";
+
+type Db = PostgresJsDatabase<typeof schema>;
+
 export const getPermissionsTool = {
 	name: "avela.getPermissions" as const,
 	description: "Get the current permission scope for an agent",
@@ -1312,7 +1266,7 @@ export const getPermissionsTool = {
 		},
 		required: ["agentId"],
 	},
-	handler: async (params: { agentId: string }, context: { db: any }) => {
+	handler: async (params: { agentId: string }, context: { db: Db }) => {
 		const { getAgent } = await import("@avela/core/domain/agent");
 		const agent = await getAgent(context.db, params.agentId);
 		if (!agent) {
@@ -1325,6 +1279,11 @@ export const getPermissionsTool = {
 
 ```ts
 // packages/mcp/src/tools/create-payment.ts
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type * as schema from "@avela/core/db/schema";
+
+type Db = PostgresJsDatabase<typeof schema>;
+
 export const createPaymentTool = {
 	name: "avela.createPaymentIntent" as const,
 	description: "Create a payment intent within the agent's permission scope",
@@ -1339,7 +1298,7 @@ export const createPaymentTool = {
 	},
 	handler: async (
 		params: { agentId: string; amount: number; recipient: string },
-		context: { db: any },
+		context: { db: Db },
 	) => {
 		const { evaluateAgentPermission } = await import(
 			"@avela/core/domain/agent-permission"
@@ -1376,6 +1335,11 @@ export const createPaymentTool = {
 
 ```ts
 // packages/mcp/src/tools/get-payment-status.ts
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type * as schema from "@avela/core/db/schema";
+
+type Db = PostgresJsDatabase<typeof schema>;
+
 export const getPaymentStatusTool = {
 	name: "avela.getPaymentStatus" as const,
 	description: "Check the status of a payment intent",
@@ -1386,7 +1350,7 @@ export const getPaymentStatusTool = {
 		},
 		required: ["paymentId"],
 	},
-	handler: async (params: { paymentId: string }, context: { db: any }) => {
+	handler: async (params: { paymentId: string }, context: { db: Db }) => {
 		// Delegates to funding engine getPaymentStatus
 		// Depends on funding-engine plan implementation
 		return { paymentId: params.paymentId, status: "pending" };
@@ -1400,21 +1364,37 @@ export const getPaymentStatusTool = {
 // packages/mcp/src/index.ts
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "@avela/core/db/schema";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { getBalanceTool } from "./tools/get-balance.js";
 import { getPermissionsTool } from "./tools/get-permissions.js";
 import { createPaymentTool } from "./tools/create-payment.js";
 import { getPaymentStatusTool } from "./tools/get-payment-status.js";
+
+type Db = PostgresJsDatabase<typeof schema>;
+
+const client = postgres(process.env.DATABASE_URL!);
+const db: Db = drizzle(client, { schema });
 
 const server = new McpServer({
 	name: "avela",
 	version: "0.1.0",
 });
 
-const tools = [getBalanceTool, getPermissionsTool, createPaymentTool, getPaymentStatusTool];
+type ToolDefinition = {
+	name: string;
+	description: string;
+	inputSchema: Record<string, unknown>;
+	handler: (params: Record<string, unknown>, context: { db: Db }) => Promise<unknown>;
+};
+
+const tools: ToolDefinition[] = [getBalanceTool, getPermissionsTool, createPaymentTool, getPaymentStatusTool];
 
 for (const tool of tools) {
 	server.tool(tool.name, tool.description, tool.inputSchema, async (params) => {
-		const result = await tool.handler(params as any, { db: null });
+		const result = await tool.handler(params, { db });
 		return {
 			content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
 		};

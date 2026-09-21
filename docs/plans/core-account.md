@@ -14,6 +14,8 @@
 - TypeScript strict mode, ESNext target, Preserve modules
 - All entity IDs are ULIDs via `ulidx`
 - No mocks — real DB for integration tests, real RPC for price feed tests
+- No `as any`, `@ts-ignore`, or `@ts-expect-error`
+- Tests require `TEST_DATABASE_URL` env var pointing to a Postgres database. Run migrations before tests.
 - X Layer chain ID: 196, RPC: `https://rpc.xlayer.tech`
 - Package name: `@avela/core`
 - Run `bun run check` and `bun run typecheck` before each commit
@@ -509,64 +511,52 @@ git commit -m "feat(core): add Drizzle schema for accounts, positions, balances"
 File: `packages/core/src/domain/__tests__/account.test.ts`
 
 ```ts
-import { describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { sql } from "drizzle-orm";
+import * as schema from "../../db/schema.js";
 import { createAccount, getAccount, getAccountByWallet } from "../account.js";
 
-describe("account operations (unit)", () => {
-	it("createAccount returns an Account with ULID id", async () => {
-		// This test validates the shape and logic of the function.
-		// Integration tests with a real DB are separate.
-		// For unit testing, we use a fake db object that captures the insert.
-		const inserted: unknown[] = [];
-		const fakeDb = {
-			insert: () => ({
-				values: (val: unknown) => {
-					inserted.push(val);
-					return {
-						returning: () => [val],
-					};
-				},
-			}),
-		};
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
 
-		const account = await createAccount(fakeDb as never, "0x1234567890abcdef1234567890abcdef12345678");
+afterEach(async () => {
+	await db.execute(sql`DELETE FROM positions`);
+	await db.execute(sql`DELETE FROM stablecoin_balances`);
+	await db.execute(sql`DELETE FROM accounts`);
+});
+
+afterAll(async () => {
+	await testClient.end();
+});
+
+describe("account operations", () => {
+	it("createAccount returns an Account with ULID id", async () => {
+		const account = await createAccount(db, "0x1234567890abcdef1234567890abcdef12345678");
 		expect(account.walletAddress).toBe("0x1234567890abcdef1234567890abcdef12345678");
 		expect(account.status).toBe("active");
 		expect(account.id).toMatch(/^[0-9A-Z]{26}$/i);
 	});
 
 	it("getAccount queries by id", async () => {
-		const fakeDb = {
-			select: () => ({
-				from: () => ({
-					where: () => [
-						{
-							id: "01JTEST",
-							walletAddress: "0xabc",
-							username: null,
-							status: "active",
-							createdAt: new Date(),
-							updatedAt: new Date(),
-						},
-					],
-				}),
-			}),
-		};
-		const account = await getAccount(fakeDb as never, "01JTEST");
+		const created = await createAccount(db, "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		const account = await getAccount(db, created.id);
 		expect(account).toBeDefined();
-		expect(account!.id).toBe("01JTEST");
+		expect(account!.id).toBe(created.id);
+		expect(account!.walletAddress).toBe("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 	});
 
 	it("getAccount returns null for missing id", async () => {
-		const fakeDb = {
-			select: () => ({
-				from: () => ({
-					where: () => [],
-				}),
-			}),
-		};
-		const account = await getAccount(fakeDb as never, "MISSING");
+		const account = await getAccount(db, "01JMISSING0000000000000000");
 		expect(account).toBeNull();
+	});
+
+	it("getAccountByWallet returns account by wallet address", async () => {
+		await createAccount(db, "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+		const account = await getAccountByWallet(db, "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+		expect(account).toBeDefined();
+		expect(account!.walletAddress).toBe("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 	});
 });
 ```
@@ -666,69 +656,67 @@ git commit -m "feat(core): add account CRUD operations"
 File: `packages/core/src/domain/__tests__/position.test.ts`
 
 ```ts
-import { describe, expect, it } from "vitest";
+import { afterAll, afterEach, describe, expect, it } from "vitest";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { sql } from "drizzle-orm";
+import * as schema from "../../db/schema.js";
+import { createAccount } from "../account.js";
 import {
 	getPortfolio,
 	recordDeposit,
 	type RecordDepositParams,
 } from "../position.js";
 
-describe("position operations (unit)", () => {
-	it("recordDeposit creates a position with ULID", async () => {
-		const inserted: unknown[] = [];
-		const fakeDb = {
-			insert: () => ({
-				values: (val: unknown) => {
-					inserted.push(val);
-					return { returning: () => [val] };
-				},
-			}),
-		};
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
 
+afterEach(async () => {
+	await db.execute(sql`DELETE FROM positions`);
+	await db.execute(sql`DELETE FROM stablecoin_balances`);
+	await db.execute(sql`DELETE FROM accounts`);
+});
+
+afterAll(async () => {
+	await testClient.end();
+});
+
+describe("position operations", () => {
+	it("recordDeposit creates a position with ULID", async () => {
+		const account = await createAccount(db, "0x1234567890abcdef1234567890abcdef12345678");
 		const params: RecordDepositParams = {
-			accountId: "01JACCOUNT",
+			accountId: account.id,
 			assetSymbol: "wSPYx",
 			amount: 1000000000000000000n,
-			depositTxHash: "0xabc123",
+			depositTxHash: "0xabc123def456789000000000000000000000000000000000000000000000abcd",
 		};
-		const position = await recordDeposit(fakeDb as never, params);
-		expect(position.accountId).toBe("01JACCOUNT");
+		const position = await recordDeposit(db, params);
+		expect(position.accountId).toBe(account.id);
 		expect(position.assetSymbol).toBe("wSPYx");
 		expect(position.amount).toBe(1000000000000000000n);
 		expect(position.id).toMatch(/^[0-9A-Z]{26}$/i);
 	});
 
 	it("recordDeposit rejects ineligible asset", async () => {
-		const fakeDb = {} as never;
+		const account = await createAccount(db, "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		const params: RecordDepositParams = {
-			accountId: "01JACCOUNT",
+			accountId: account.id,
 			assetSymbol: "wFAKE",
 			amount: 100n,
 			depositTxHash: "0xabc",
 		};
-		await expect(recordDeposit(fakeDb, params)).rejects.toThrow("Asset wFAKE is not eligible");
+		await expect(recordDeposit(db, params)).rejects.toThrow("Asset wFAKE is not eligible");
 	});
 
 	it("getPortfolio returns positions for account", async () => {
-		const fakePositions = [
-			{
-				id: "01JPOS1",
-				accountId: "01JACC",
-				assetSymbol: "wSPYx",
-				amount: 100n,
-				depositTxHash: "0x1",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			},
-		];
-		const fakeDb = {
-			select: () => ({
-				from: () => ({
-					where: () => fakePositions,
-				}),
-			}),
-		};
-		const positions = await getPortfolio(fakeDb as never, "01JACC");
+		const account = await createAccount(db, "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+		await recordDeposit(db, {
+			accountId: account.id,
+			assetSymbol: "wSPYx",
+			amount: 100n,
+			depositTxHash: "0x0000000000000000000000000000000000000000000000000000000000000001",
+		});
+		const positions = await getPortfolio(db, account.id);
 		expect(positions).toHaveLength(1);
 		expect(positions[0]!.assetSymbol).toBe("wSPYx");
 	});
@@ -1103,17 +1091,34 @@ git commit -m "feat(core): add price feed adapter with Uniswap V3 TWAP"
 File: `packages/core/src/domain/__tests__/spending-power.test.ts`
 
 ```ts
-import { describe, expect, it } from "vitest";
+import { afterAll, afterEach, describe, expect, it } from "vitest";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { sql } from "drizzle-orm";
+import * as schema from "../../db/schema.js";
 import { computeAssetSpendingPower, calculateSpendingPower } from "../spending-power.js";
+import { createAccount } from "../account.js";
+import { recordDeposit } from "../position.js";
 import type { PriceFeedAdapter } from "../../adapters/price-feed.js";
-import type { Position } from "../types.js";
+
+const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const db = drizzle(testClient, { schema });
+
+afterEach(async () => {
+	await db.execute(sql`DELETE FROM positions`);
+	await db.execute(sql`DELETE FROM stablecoin_balances`);
+	await db.execute(sql`DELETE FROM accounts`);
+});
+
+afterAll(async () => {
+	await testClient.end();
+});
 
 describe("spending power", () => {
 	describe("computeAssetSpendingPower", () => {
 		it("applies haircut correctly", () => {
-			// 1e18 units (1 token) at $550, 50% haircut = $275 spending power
 			const result = computeAssetSpendingPower(
-				1000000000000000000n, // 1 token (18 decimals)
+				1000000000000000000n,
 				18,
 				550.0,
 				0.5,
@@ -1130,7 +1135,6 @@ describe("spending power", () => {
 		});
 
 		it("handles fractional tokens", () => {
-			// 0.5 tokens at $1000, 50% haircut = $250
 			const result = computeAssetSpendingPower(500000000000000000n, 18, 1000.0, 0.5);
 			expect(result.positionValue).toBeCloseTo(500.0, 1);
 			expect(result.spendingPower).toBeCloseTo(250.0, 1);
@@ -1139,39 +1143,22 @@ describe("spending power", () => {
 
 	describe("calculateSpendingPower", () => {
 		it("aggregates spending power across positions", async () => {
-			const fakePositions: Position[] = [
-				{
-					id: "01JPOS1",
-					accountId: "01JACC",
-					assetSymbol: "wSPYx",
-					amount: 2000000000000000000n, // 2 tokens
-					depositTxHash: "0x1",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				},
-				{
-					id: "01JPOS2",
-					accountId: "01JACC",
-					assetSymbol: "wNVDAx",
-					amount: 5000000000000000000n, // 5 tokens
-					depositTxHash: "0x2",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				},
-			];
+			const account = await createAccount(db, "0x1234567890abcdef1234567890abcdef12345678");
 
-			const fakeDb = {
-				select: () => ({
-					from: () => ({
-						where: (condition: unknown) => {
-							// Return positions or stablecoin balances based on context
-							return fakePositions;
-						},
-					}),
-				}),
-			};
+			await recordDeposit(db, {
+				accountId: account.id,
+				assetSymbol: "wSPYx",
+				amount: 2000000000000000000n,
+				depositTxHash: "0x0000000000000000000000000000000000000000000000000000000000000001",
+			});
+			await recordDeposit(db, {
+				accountId: account.id,
+				assetSymbol: "wNVDAx",
+				amount: 5000000000000000000n,
+				depositTxHash: "0x0000000000000000000000000000000000000000000000000000000000000002",
+			});
 
-			const fakePriceFeed: PriceFeedAdapter = {
+			const testPriceFeed: PriceFeedAdapter = {
 				getPrice: async (address: string) => {
 					if (address === "0xe7e553cd128f0011777323a0b44a7b96ea1cb540") {
 						return { price: 550, source: "test", confidence: 1, timestamp: new Date() };
@@ -1183,13 +1170,13 @@ describe("spending power", () => {
 				},
 			};
 
-			const sp = await calculateSpendingPower(fakeDb as never, fakePriceFeed, "01JACC");
+			const sp = await calculateSpendingPower(db, testPriceFeed, account.id);
 			// wSPYx: 2 * 550 = 1100 value, 50% haircut = 550 SP
 			// wNVDAx: 5 * 140 = 700 value, 50% haircut = 350 SP
 			// Total = 900 SP
 			expect(sp.perAsset).toHaveLength(2);
 			expect(sp.totalSpendingPower).toBeCloseTo(900.0, 0);
-			expect(sp.accountId).toBe("01JACC");
+			expect(sp.accountId).toBe(account.id);
 		});
 	});
 });

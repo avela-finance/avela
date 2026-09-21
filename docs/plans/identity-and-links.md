@@ -16,6 +16,7 @@
 - Usernames: 3-32 chars, lowercase alphanumeric + hyphens, start/end alphanumeric
 - Reserved words: admin, avela, pay, api, app, www, help, support
 - `bun run check` and `bun run test` must pass after every task
+- Tests require `TEST_DATABASE_URL` env var pointing to a Postgres database. Run migrations before tests.
 
 ---
 
@@ -257,7 +258,7 @@ git commit -m "feat(core): add identities database schema"
 
 **Interfaces:**
 - Consumes: `identities` table, `accounts` table, `validateUsername()`, `ulid()` from ulidx
-- Produces: `createRegisterUsername(ctx)`, `createResolveUsername(ctx)`, `createIsUsernameAvailable(ctx)`
+- Produces: `createRegisterUsername(db)`, `createResolveUsername(db)`, `createIsUsernameAvailable(db)`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -297,20 +298,11 @@ Append to `packages/core/src/domain/identity.ts`:
 ```ts
 import { ulid } from "ulidx";
 import { eq } from "drizzle-orm";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { identities, accounts } from "../db/schema.js";
 import type { Identity } from "./types.js";
 
-type IdentityDbContext = {
-	db: {
-		insert: (table: unknown) => { values: (v: unknown) => { returning: () => Promise<unknown[]> } };
-		select: () => { from: (table: unknown) => { where: (cond: unknown) => Promise<unknown[]> } };
-	};
-	tables: {
-		identities: unknown;
-		accounts: unknown;
-	};
-};
-
-export function createRegisterUsername(ctx: IdentityDbContext) {
+export function createRegisterUsername(db: PostgresJsDatabase) {
 	return async function registerUsername(
 		accountId: string,
 		username: string,
@@ -322,8 +314,8 @@ export function createRegisterUsername(ctx: IdentityDbContext) {
 		}
 
 		const now = new Date();
-		const [identity] = (await ctx.db
-			.insert(ctx.tables.identities)
+		const [identity] = await db
+			.insert(identities)
 			.values({
 				id: ulid(),
 				accountId,
@@ -332,32 +324,27 @@ export function createRegisterUsername(ctx: IdentityDbContext) {
 				createdAt: now,
 				updatedAt: now,
 			})
-			.returning()) as Identity[];
+			.returning();
 
 		return identity!;
 	};
 }
 
-export function createResolveUsername(ctx: IdentityDbContext) {
+export function createResolveUsername(db: PostgresJsDatabase) {
 	return async function resolveUsername(
 		username: string,
 	): Promise<{ accountId: string; walletAddress: string } | null> {
-		const [identity] = (await ctx.db
+		const [identity] = await db
 			.select()
-			.from(ctx.tables.identities)
-			.where(
-				eq((ctx.tables.identities as any).username, username.toLowerCase()),
-			)) as Identity[];
+			.from(identities)
+			.where(eq(identities.username, username.toLowerCase()));
 
 		if (!identity) return null;
 
-		const [account] = (await ctx.db
-			.select()
-			.from(ctx.tables.accounts)
-			.where(eq((ctx.tables.accounts as any).id, identity.accountId))) as Array<{
-			id: string;
-			walletAddress: string;
-		}>;
+		const [account] = await db
+			.select({ id: accounts.id, walletAddress: accounts.walletAddress })
+			.from(accounts)
+			.where(eq(accounts.id, identity.accountId));
 
 		if (!account) return null;
 
@@ -365,17 +352,15 @@ export function createResolveUsername(ctx: IdentityDbContext) {
 	};
 }
 
-export function createIsUsernameAvailable(ctx: IdentityDbContext) {
+export function createIsUsernameAvailable(db: PostgresJsDatabase) {
 	return async function isUsernameAvailable(username: string): Promise<boolean> {
 		const validation = validateUsername(username.toLowerCase());
 		if (!validation.valid) return false;
 
-		const [existing] = (await ctx.db
+		const [existing] = await db
 			.select()
-			.from(ctx.tables.identities)
-			.where(
-				eq((ctx.tables.identities as any).username, username.toLowerCase()),
-			)) as Identity[];
+			.from(identities)
+			.where(eq(identities.username, username.toLowerCase()));
 
 		return !existing;
 	};

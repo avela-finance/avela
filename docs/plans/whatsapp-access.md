@@ -14,7 +14,8 @@
 - All IDs are ULIDs via `ulidx`
 - Zod validation at every domain boundary
 - `bun run check` and `bun run test` must pass after every task
-- No mocks — but WhatsApp API calls use a client abstraction testable with dependency injection
+- No mocks — WhatsApp API calls use a client abstraction testable with dependency injection
+- Tests require `TEST_DATABASE_URL` env var pointing to a Postgres database. Run migrations before tests.
 
 ---
 
@@ -1095,21 +1096,10 @@ export function validatePhoneNumber(phone: string): boolean {
 	return E164_REGEX.test(phone);
 }
 
-type DbContext = {
-	db: {
-		insert: (table: unknown) => { values: (v: unknown) => { returning: () => Promise<unknown[]> } };
-		select: () => { from: (table: unknown) => { where: (cond: unknown) => Promise<unknown[]> } };
-		update: (table: unknown) => {
-			set: (v: unknown) => { where: (cond: unknown) => { returning: () => Promise<unknown[]> } };
-		};
-	};
-	tables: {
-		whatsappLinks: unknown;
-		accounts: unknown;
-	};
-};
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { whatsappLinks } from "../db/schema.js";
 
-export function createLinkWhatsAppAccount(ctx: DbContext) {
+export function createLinkWhatsAppAccount(db: PostgresJsDatabase) {
 	return async function linkWhatsAppAccount(
 		accountId: string,
 		phoneNumber: string,
@@ -1119,8 +1109,8 @@ export function createLinkWhatsAppAccount(ctx: DbContext) {
 			throw new Error(`Invalid phone number: ${phoneNumber}. Must be E.164 format.`);
 		}
 
-		const [link] = (await ctx.db
-			.insert(ctx.tables.whatsappLinks)
+		const [link] = await db
+			.insert(whatsappLinks)
 			.values({
 				id: ulid(),
 				accountId,
@@ -1129,41 +1119,41 @@ export function createLinkWhatsAppAccount(ctx: DbContext) {
 				linkedAt: new Date(),
 				active: true,
 			})
-			.returning()) as WhatsAppLink[];
+			.returning();
 
 		return link!;
 	};
 }
 
-export function createGetWhatsAppLink(ctx: DbContext) {
+export function createGetWhatsAppLink(db: PostgresJsDatabase) {
 	return async function getWhatsAppLink(accountId: string): Promise<WhatsAppLink | null> {
-		const [link] = (await ctx.db
+		const [link] = await db
 			.select()
-			.from(ctx.tables.whatsappLinks)
-			.where(eq((ctx.tables.whatsappLinks as any).accountId, accountId))) as WhatsAppLink[];
+			.from(whatsappLinks)
+			.where(eq(whatsappLinks.accountId, accountId));
 
 		return link ?? null;
 	};
 }
 
-export function createUnlinkWhatsAppAccount(ctx: DbContext) {
+export function createUnlinkWhatsAppAccount(db: PostgresJsDatabase) {
 	return async function unlinkWhatsAppAccount(accountId: string): Promise<void> {
-		await ctx.db
-			.update(ctx.tables.whatsappLinks)
+		await db
+			.update(whatsappLinks)
 			.set({ active: false })
-			.where(eq((ctx.tables.whatsappLinks as any).accountId, accountId))
+			.where(eq(whatsappLinks.accountId, accountId))
 			.returning();
 	};
 }
 
-export function createGetAccountByPhoneNumber(ctx: DbContext) {
+export function createGetAccountByPhoneNumber(db: PostgresJsDatabase) {
 	return async function getAccountByPhoneNumber(
 		phoneNumber: string,
 	): Promise<{ accountId: string } | null> {
-		const [link] = (await ctx.db
+		const [link] = await db
 			.select()
-			.from(ctx.tables.whatsappLinks)
-			.where(eq((ctx.tables.whatsappLinks as any).phoneNumber, phoneNumber))) as WhatsAppLink[];
+			.from(whatsappLinks)
+			.where(eq(whatsappLinks.phoneNumber, phoneNumber));
 
 		if (!link || !link.active) return null;
 		return { accountId: link.accountId };
