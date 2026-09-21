@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { ulid } from "ulidx";
 import type { Database } from "../db/client.js";
 import { positionsTable } from "../db/schema.js";
@@ -15,6 +15,9 @@ export type RecordDepositParams = {
 export async function recordDeposit(db: Database, params: RecordDepositParams): Promise<Position> {
 	if (!isAssetEligible(params.assetSymbol)) {
 		throw new Error(`Asset ${params.assetSymbol} is not eligible`);
+	}
+	if (params.amount <= 0n) {
+		throw new Error("Deposit amount must be positive");
 	}
 
 	const now = new Date();
@@ -33,6 +36,7 @@ export async function recordDeposit(db: Database, params: RecordDepositParams): 
 }
 
 export type RecordWithdrawalParams = {
+	accountId: string;
 	positionId: string;
 	amount: bigint;
 };
@@ -41,29 +45,41 @@ export async function recordWithdrawal(
 	db: Database,
 	params: RecordWithdrawalParams,
 ): Promise<Position> {
-	const rows = await db
-		.select()
-		.from(positionsTable)
-		.where(eq(positionsTable.id, params.positionId));
-	const position = rows[0];
+	return db.transaction(async (tx) => {
+		const rows = await tx
+			.select()
+			.from(positionsTable)
+			.where(
+				and(
+					eq(positionsTable.id, params.positionId),
+					eq(positionsTable.accountId, params.accountId),
+				),
+			);
+		const position = rows[0];
 
-	if (!position) {
-		throw new Error(`Position ${params.positionId} not found`);
-	}
-	if (position.amount < params.amount) {
-		throw new Error("Withdrawal amount exceeds position balance");
-	}
+		if (!position) {
+			throw new Error(`Position ${params.positionId} not found`);
+		}
+		if (position.amount < params.amount) {
+			throw new Error("Withdrawal amount exceeds position balance");
+		}
 
-	const newAmount = position.amount - params.amount;
-	const now = new Date();
+		const newAmount = position.amount - params.amount;
+		const now = new Date();
 
-	const [updated] = await db
-		.update(positionsTable)
-		.set({ amount: newAmount, updatedAt: now })
-		.where(eq(positionsTable.id, params.positionId))
-		.returning();
+		const [updated] = await tx
+			.update(positionsTable)
+			.set({ amount: newAmount, updatedAt: now })
+			.where(
+				and(
+					eq(positionsTable.id, params.positionId),
+					eq(positionsTable.accountId, params.accountId),
+				),
+			)
+			.returning();
 
-	return updated as Position;
+		return updated as Position;
+	});
 }
 
 export async function getPortfolio(db: Database, accountId: string): Promise<Position[]> {

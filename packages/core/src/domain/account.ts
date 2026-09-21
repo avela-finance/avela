@@ -1,10 +1,14 @@
 import { eq } from "drizzle-orm";
 import { ulid } from "ulidx";
+import { isAddress } from "viem";
 import type { Database } from "../db/client.js";
 import { accountsTable } from "../db/schema.js";
 import type { Account } from "./types.js";
 
 export async function createAccount(db: Database, walletAddress: string): Promise<Account> {
+	if (!isAddress(walletAddress)) {
+		throw new Error(`Invalid wallet address: ${walletAddress}`);
+	}
 	const now = new Date();
 	const row = {
 		id: ulid(),

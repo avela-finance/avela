@@ -68,16 +68,23 @@ export function createUniswapTwapAdapter(
 			const sqrtPriceX96 = slot0Result[0];
 			const isToken0 = token0.toLowerCase() === assetAddress.toLowerCase();
 
-			// sqrtPriceX96 = sqrt(price) * 2^96
-			// price = (sqrtPriceX96 / 2^96)^2 adjusted for decimal difference
-			const sqrtPrice = Number(sqrtPriceX96) / 2 ** 96;
-			let price = sqrtPrice * sqrtPrice;
+			const Q96 = 2n ** 96n;
+			const PRECISION = 10n ** 18n;
+			const numerator = sqrtPriceX96 * sqrtPriceX96;
+			const denominator = Q96 * Q96;
 
-			// Adjust for decimal difference between token0 and token1
 			const decimalDiff = config.assetDecimals - config.stablecoinDecimals;
-			price = price * 10 ** decimalDiff;
+			const decimalScale = 10n ** BigInt(Math.abs(decimalDiff));
 
-			// If asset is token1, invert the price
+			let rawPrice: bigint;
+			if (decimalDiff >= 0) {
+				rawPrice = (numerator * PRECISION * decimalScale) / denominator;
+			} else {
+				rawPrice = (numerator * PRECISION) / (denominator * decimalScale);
+			}
+
+			let price = Number(rawPrice) / 1e18;
+
 			if (!isToken0) {
 				price = 1 / price;
 			}

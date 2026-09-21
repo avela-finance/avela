@@ -10,6 +10,7 @@ export function computeAssetSpendingPower(
 	price: number,
 	haircut: number,
 ): Omit<SpendingPowerBreakdown, "assetSymbol"> {
+	// TODO: bigint-safe arithmetic for amounts above ~9 tokens (Number.MAX_SAFE_INTEGER at 18 decimals)
 	const tokenAmount = Number(amount) / 10 ** decimals;
 	const positionValue = tokenAmount * price;
 	const spendingPower = positionValue * (1 - haircut);
@@ -28,25 +29,29 @@ export async function calculateSpendingPower(
 ): Promise<SpendingPower> {
 	const positions = await getPortfolio(db, accountId);
 
-	const perAsset: SpendingPowerBreakdown[] = [];
+	const breakdowns = await Promise.all(
+		positions.map(async (position) => {
+			const asset = getAsset(position.assetSymbol);
+			if (!asset) return null;
 
-	for (const position of positions) {
-		const asset = getAsset(position.assetSymbol);
-		if (!asset) continue;
+			const priceResult = await priceFeed.getPrice(asset.address, 196);
+			const breakdown = computeAssetSpendingPower(
+				position.amount,
+				asset.decimals,
+				priceResult.price,
+				asset.haircut,
+			);
 
-		const priceResult = await priceFeed.getPrice(asset.address, 196);
-		const breakdown = computeAssetSpendingPower(
-			position.amount,
-			asset.decimals,
-			priceResult.price,
-			asset.haircut,
-		);
+			return {
+				assetSymbol: position.assetSymbol,
+				...breakdown,
+			};
+		}),
+	);
 
-		perAsset.push({
-			assetSymbol: position.assetSymbol,
-			...breakdown,
-		});
-	}
+	const perAsset: SpendingPowerBreakdown[] = breakdowns.filter(
+		(b): b is SpendingPowerBreakdown => b !== null,
+	);
 
 	// TODO: add stablecoin balances (query stablecoinBalancesTable)
 	const stablecoinBalance = 0;
