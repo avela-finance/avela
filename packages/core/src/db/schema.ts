@@ -1,5 +1,7 @@
 import {
 	bigint,
+	boolean,
+	index,
 	integer,
 	jsonb,
 	numeric,
@@ -79,3 +81,35 @@ export const settlementsTable = pgTable("settlements", {
 	gasUsed: varchar("gas_used", { length: 78 }).notNull(),
 	settledAt: timestamp("settled_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const spendingPoliciesTable = pgTable("spending_policies", {
+	id: varchar("id", { length: 26 }).primaryKey(),
+	accountId: varchar("account_id", { length: 26 })
+		.notNull()
+		.references(() => accountsTable.id)
+		.unique(),
+	dailyLimit: numeric("daily_limit", { precision: 18, scale: 6 }),
+	approvalThreshold: numeric("approval_threshold", { precision: 18, scale: 6 }),
+	priceFloors: jsonb("price_floors").notNull().default([]),
+	minimumBalances: jsonb("minimum_balances").notNull().default([]),
+	fundingPriority: jsonb("funding_priority")
+		.notNull()
+		.default(["spending_power", "stablecoin_balance"]),
+	enabled: boolean("enabled").notNull().default(true),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const dailySpendingLogTable = pgTable(
+	"daily_spending_log",
+	{
+		id: varchar("id", { length: 26 }).primaryKey(),
+		accountId: varchar("account_id", { length: 26 })
+			.notNull()
+			.references(() => accountsTable.id),
+		amount: numeric("amount", { precision: 18, scale: 6 }).notNull(),
+		paymentIntentId: varchar("payment_intent_id", { length: 26 }),
+		spentAt: timestamp("spent_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [index("daily_spending_account_spent_idx").on(table.accountId, table.spentAt)],
+);
