@@ -1,4 +1,3 @@
-import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { errorHandler } from "./middleware/error-handler.js";
@@ -23,10 +22,6 @@ app.route("/health", healthRoutes);
 app.route("/accounts", accountRoutes);
 app.route("/assets", assetRoutes);
 app.route("/accounts/:id/portfolio", portfolioRoutes);
-
-const port = Number(process.env.PORT ?? 3001);
-console.log(`Avela API starting on port ${port}`);
-serve({ fetch: app.fetch, port });
 
 export default app;
 export type AppType = typeof app;
