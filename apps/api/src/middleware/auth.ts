@@ -1,12 +1,13 @@
 import { PrivyClient } from "@privy-io/server-auth";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
-import { env } from "../env.js";
+import { getEnv } from "../env.js";
 
 let privyClient: PrivyClient | null = null;
 
 function getPrivyClient(): PrivyClient {
 	if (!privyClient) {
+		const env = getEnv();
 		privyClient = new PrivyClient(env.PRIVY_APP_ID, env.PRIVY_APP_SECRET);
 	}
 	return privyClient;

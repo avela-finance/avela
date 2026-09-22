@@ -10,14 +10,16 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
-function loadEnv(): Env {
-	const result = envSchema.safeParse(process.env);
-	if (!result.success) {
-		const missing = result.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`);
-		console.error(`Missing or invalid environment variables:\n${missing.join("\n")}`);
-		process.exit(1);
-	}
-	return result.data;
-}
+let cached: Env | null = null;
 
-export const env = loadEnv();
+export function getEnv(): Env {
+	if (!cached) {
+		const result = envSchema.safeParse(process.env);
+		if (!result.success) {
+			const missing = result.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`);
+			throw new Error(`Missing or invalid environment variables:\n${missing.join("\n")}`);
+		}
+		cached = result.data;
+	}
+	return cached;
+}
