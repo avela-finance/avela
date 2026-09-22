@@ -1,8 +1,12 @@
 import { ulid } from "ulidx";
 import { keccak256, toHex } from "viem";
-import { getAsset } from "./asset.js";
-import type { FundingDecision } from "./payment-intent.js";
+import type { VaultAdapter } from "../adapters/vault-adapter.js";
+import type { RouterAdapter } from "../adapters/router-adapter.js";
+import type { Database } from "../db/client.js";
+import { getAsset, STABLECOINS, STABLECOIN_DECIMALS } from "./asset.js";
+import type { FundingDecision, PaymentStatus } from "./payment-intent.js";
 import type { SpendingPower } from "./types.js";
+import type { SettlementStablecoin } from "./types.js";
 
 export function generatePaymentId(): string {
 	return keccak256(toHex(ulid()));
@@ -49,4 +53,114 @@ export function selectFundingSource(params: {
 	}
 
 	throw new Error("Insufficient funds: neither spending power nor stablecoin balance covers the payment");
+}
+
+export type ExecutePaymentDeps = {
+	db: Database;
+	getPaymentIntent: (db: Database, id: string) => Promise<{
+		id: string;
+		accountId: string;
+		amount: number;
+		recipientAddress: string;
+		status: string;
+	}>;
+	updatePaymentStatus: (
+		db: Database,
+		id: string,
+		status: PaymentStatus,
+		fundingDecision?: FundingDecision,
+	) => Promise<{ status: PaymentStatus }>;
+	evaluatePolicy: (params: {
+		accountId: string;
+		amount: number;
+	}) => Promise<{ passed: boolean; requiresApproval: boolean; violations: unknown[] }>;
+	calculateSpendingPower: (accountId: string) => Promise<SpendingPower>;
+	vaultAdapter: VaultAdapter;
+	routerAdapter: RouterAdapter;
+	recordSettlement: (
+		db: Database,
+		params: {
+			paymentIntentId: string;
+			paymentId: string;
+			txHash: string;
+			blockNumber: number;
+			amountSettled: bigint;
+			settlementToken: string;
+			gasUsed: bigint;
+		},
+	) => Promise<unknown>;
+	getAccountWalletAddress: (accountId: string) => Promise<string>;
+};
+
+export async function executePayment(
+	deps: ExecutePaymentDeps,
+	intentId: string,
+): Promise<{ status: PaymentStatus }> {
+	const intent = await deps.getPaymentIntent(deps.db, intentId);
+
+	await deps.updatePaymentStatus(deps.db, intentId, "policy_check");
+	const policyResult = await deps.evaluatePolicy({
+		accountId: intent.accountId,
+		amount: intent.amount,
+	});
+
+	if (!policyResult.passed) {
+		return deps.updatePaymentStatus(deps.db, intentId, "failed");
+	}
+
+	if (policyResult.requiresApproval) {
+		return deps.updatePaymentStatus(deps.db, intentId, "awaiting_approval");
+	}
+
+	const spendingPower = await deps.calculateSpendingPower(intent.accountId);
+	const fundingDecision = selectFundingSource({
+		amount: intent.amount,
+		spendingPower,
+	});
+
+	if (fundingDecision.source === "spending_power" && fundingDecision.collateralAsset) {
+		const walletAddress = await deps.getAccountWalletAddress(intent.accountId);
+		const asset = getAsset(fundingDecision.collateralAsset)!;
+		const lockedBalance = await deps.vaultAdapter.getLockedBalance(walletAddress, asset.address);
+
+		const currentPower = await deps.calculateSpendingPower(intent.accountId);
+		const assetPower = currentPower.perAsset.find(
+			(a) => a.assetSymbol === fundingDecision.collateralAsset,
+		);
+
+		if (lockedBalance === 0n || !assetPower || assetPower.spendingPower < intent.amount) {
+			return deps.updatePaymentStatus(deps.db, intentId, "failed");
+		}
+
+		fundingDecision.collateralVerified = true;
+		fundingDecision.collateralAmount = lockedBalance;
+	}
+
+	await deps.updatePaymentStatus(deps.db, intentId, "collateral_verify", fundingDecision);
+
+	await deps.updatePaymentStatus(deps.db, intentId, "settling");
+	const walletAddress = await deps.getAccountWalletAddress(intent.accountId);
+	const stablecoinAddress = STABLECOINS[fundingDecision.settlementToken];
+	const decimals = STABLECOIN_DECIMALS[fundingDecision.settlementToken];
+	const settlementAmount = BigInt(Math.round(intent.amount * 10 ** decimals));
+
+	const result = await deps.routerAdapter.executePayment({
+		token: stablecoinAddress,
+		merchant: intent.recipientAddress,
+		amount: settlementAmount,
+		paymentId: fundingDecision.paymentId,
+		collateralOwner: walletAddress,
+	});
+
+	await deps.recordSettlement(deps.db, {
+		paymentIntentId: intentId,
+		paymentId: fundingDecision.paymentId,
+		txHash: result.txHash,
+		blockNumber: result.blockNumber,
+		amountSettled: settlementAmount,
+		settlementToken: fundingDecision.settlementToken,
+		gasUsed: result.gasUsed,
+	});
+
+	return deps.updatePaymentStatus(deps.db, intentId, "settled");
 }
