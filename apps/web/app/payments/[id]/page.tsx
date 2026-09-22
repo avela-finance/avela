@@ -35,7 +35,6 @@ export default function PaymentDetailPage() {
 	const { getAccessToken } = usePrivy();
 	const [loading, setLoading] = useState(true);
 	const [payment, setPayment] = useState<PaymentDetail | null>(null);
-	const [notFound, setNotFound] = useState(false);
 
 	useEffect(() => {
 		async function fetchPayment() {
@@ -47,15 +46,7 @@ export default function PaymentDetailPage() {
 				});
 				setPayment(response.data);
 			} catch (err: unknown) {
-				const status =
-					err && typeof err === "object" && "status" in err
-						? (err as { status: number }).status
-						: null;
-				if (status === 404) {
-					setNotFound(true);
-				} else {
-					console.error("Failed to fetch payment:", err);
-				}
+				console.error("Failed to fetch payment:", err);
 			} finally {
 				setLoading(false);
 			}
@@ -76,7 +67,7 @@ export default function PaymentDetailPage() {
 		);
 	}
 
-	if (notFound || !payment) {
+	if (!payment) {
 		return (
 			<div className="py-12 text-center">
 				<p className="text-muted-foreground">Payment not found.</p>
