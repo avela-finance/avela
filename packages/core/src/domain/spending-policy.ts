@@ -1,4 +1,4 @@
-import { and, eq, gte } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { ulid } from "ulidx";
 import type { Database } from "../db/client.js";
 import { dailySpendingLogTable, spendingPoliciesTable } from "../db/schema.js";
@@ -190,8 +190,8 @@ export async function getDailySpending(
 ) {
 	const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-	const rows = await db
-		.select({ amount: dailySpendingLogTable.amount })
+	const [row] = await db
+		.select({ total: sql<string>`COALESCE(SUM(${dailySpendingLogTable.amount}), 0)` })
 		.from(dailySpendingLogTable)
 		.where(
 			and(
@@ -200,7 +200,7 @@ export async function getDailySpending(
 			),
 		);
 
-	const total = rows.reduce((sum, row) => sum + Number(row.amount), 0);
+	const total = Number(row!.total);
 	const limit = policy.dailyLimit ? Number(policy.dailyLimit) : null;
 	const remaining = limit !== null ? Math.max(0, limit - total) : null;
 

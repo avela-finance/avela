@@ -1,6 +1,7 @@
 import {
 	bigint,
 	boolean,
+	index,
 	integer,
 	jsonb,
 	numeric,
@@ -99,12 +100,16 @@ export const spendingPoliciesTable = pgTable("spending_policies", {
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const dailySpendingLogTable = pgTable("daily_spending_log", {
-	id: varchar("id", { length: 26 }).primaryKey(),
-	accountId: varchar("account_id", { length: 26 })
-		.notNull()
-		.references(() => accountsTable.id),
-	amount: numeric("amount", { precision: 18, scale: 6 }).notNull(),
-	paymentIntentId: varchar("payment_intent_id", { length: 26 }),
-	spentAt: timestamp("spent_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const dailySpendingLogTable = pgTable(
+	"daily_spending_log",
+	{
+		id: varchar("id", { length: 26 }).primaryKey(),
+		accountId: varchar("account_id", { length: 26 })
+			.notNull()
+			.references(() => accountsTable.id),
+		amount: numeric("amount", { precision: 18, scale: 6 }).notNull(),
+		paymentIntentId: varchar("payment_intent_id", { length: 26 }),
+		spentAt: timestamp("spent_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [index("daily_spending_account_spent_idx").on(table.accountId, table.spentAt)],
+);
