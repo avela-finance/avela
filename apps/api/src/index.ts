@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requestId } from "./middleware/request-id.js";
+import { accountRoutes } from "./routes/accounts.js";
 import { healthRoutes } from "./routes/health.js";
 
 export type AppVariables = {
@@ -17,6 +18,7 @@ app.use("*", cors());
 app.onError(errorHandler);
 
 app.route("/health", healthRoutes);
+app.route("/accounts", accountRoutes);
 
 const port = Number(process.env.PORT ?? 3001);
 console.log(`Avela API starting on port ${port}`);
