@@ -1,3 +1,8 @@
+import { desc, eq } from "drizzle-orm";
+import { ulid } from "ulidx";
+import type { Database } from "../db/client.js";
+import { paymentIntentsTable } from "../db/schema.js";
+
 export const PAYMENT_STATUSES = [
 	"created",
 	"policy_check",
@@ -77,4 +82,80 @@ export function transitionStatus(current: PaymentStatus, next: PaymentStatus): P
 
 export function isTerminalStatus(status: PaymentStatus): boolean {
 	return status === "settled" || status === "failed" || status === "rejected";
+}
+
+export async function createPaymentIntent(
+	db: Database,
+	params: {
+		accountId: string;
+		amount: number;
+		recipientAddress: string;
+		recipientUsername?: string;
+	},
+) {
+	const id = ulid();
+	const [row] = await db
+		.insert(paymentIntentsTable)
+		.values({
+			id,
+			accountId: params.accountId,
+			amount: params.amount.toFixed(6),
+			recipientAddress: params.recipientAddress,
+			recipientUsername: params.recipientUsername ?? null,
+			status: "created",
+		})
+		.returning();
+
+	return row!;
+}
+
+export async function getPaymentIntent(db: Database, id: string) {
+	const [row] = await db
+		.select()
+		.from(paymentIntentsTable)
+		.where(eq(paymentIntentsTable.id, id));
+	return row ?? null;
+}
+
+export async function getPaymentHistory(db: Database, accountId: string, limit = 20) {
+	return db
+		.select()
+		.from(paymentIntentsTable)
+		.where(eq(paymentIntentsTable.accountId, accountId))
+		.orderBy(desc(paymentIntentsTable.createdAt))
+		.limit(limit);
+}
+
+export async function updatePaymentStatus(
+	db: Database,
+	id: string,
+	nextStatus: PaymentStatus,
+	fundingDecision?: FundingDecision,
+) {
+	const [current] = await db
+		.select({ status: paymentIntentsTable.status })
+		.from(paymentIntentsTable)
+		.where(eq(paymentIntentsTable.id, id));
+
+	if (!current) {
+		throw new Error(`Payment intent not found: ${id}`);
+	}
+
+	transitionStatus(current.status as PaymentStatus, nextStatus);
+
+	const updates: Record<string, unknown> = {
+		status: nextStatus,
+		updatedAt: new Date(),
+	};
+	if (fundingDecision) {
+		updates.fundingDecision = fundingDecision;
+	}
+
+	const [row] = await db
+		.update(paymentIntentsTable)
+		.set(updates)
+		.where(eq(paymentIntentsTable.id, id))
+		.returning();
+
+	return row!;
 }
