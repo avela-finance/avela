@@ -204,3 +204,19 @@ export const whatsappNotificationsTable = pgTable(
 	},
 	(table) => [index("whatsapp_notifications_account_id_idx").on(table.accountId)],
 );
+
+export const identitiesTable = pgTable(
+	"identities",
+	{
+		id: varchar("id", { length: 26 }).primaryKey(),
+		accountId: varchar("account_id", { length: 26 })
+			.notNull()
+			.references(() => accountsTable.id)
+			.unique(),
+		username: varchar("username", { length: 32 }).notNull().unique(),
+		displayName: varchar("display_name", { length: 100 }),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [index("identities_account_id_idx").on(table.accountId)],
+);
