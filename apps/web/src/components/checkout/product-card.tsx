@@ -12,9 +12,11 @@ export function ProductCard({
 	return (
 		<div className="flex flex-col rounded-xl border border-border bg-card p-6">
 			<div className="mb-4 flex h-24 items-center justify-center rounded-lg bg-muted">
-				<span className="text-3xl">
-					{product.id === "1" ? "⚡" : product.id === "2" ? "🖥️" : "📊"}
-				</span>
+				<img
+					src={product.image}
+					alt={product.name}
+					className="h-16 w-16 object-contain"
+				/>
 			</div>
 			<h3 className="text-lg font-semibold">{product.name}</h3>
 			<p className="mt-1 text-sm text-muted-foreground">{product.description}</p>

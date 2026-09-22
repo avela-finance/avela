@@ -11,7 +11,7 @@ const DEMO_MERCHANT_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 export default function PayPage() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
-	const [status, setStatus] = useState<"idle" | "confirming" | "executing" | "error">("idle");
+	const [status, setStatus] = useState<"idle" | "executing" | "error">("idle");
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const productIds = searchParams.get("products")?.split(",") ?? [];
@@ -30,7 +30,6 @@ export default function PayPage() {
 	);
 
 	async function handlePay() {
-		setStatus("confirming");
 		try {
 			setStatus("executing");
 			const response = await fetch("/api/payments/intent", {
@@ -43,11 +42,11 @@ export default function PayPage() {
 			});
 
 			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error?.message ?? "Payment failed");
+				const errorBody = (await response.json()) as { error?: { message?: string } };
+				throw new Error(errorBody.error?.message ?? "Payment failed");
 			}
 
-			const { data } = await response.json();
+			const { data } = (await response.json()) as { data: { id: string } };
 			router.push(`/checkout/receipt/${data.id}`);
 		} catch (err) {
 			setStatus("error");
@@ -97,11 +96,10 @@ export default function PayPage() {
 				<button
 					type="button"
 					onClick={handlePay}
-					disabled={status === "confirming" || status === "executing"}
+					disabled={status === "executing"}
 					className="w-full rounded-xl bg-primary py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
 				>
 					{status === "idle" && "Pay with Avela"}
-					{status === "confirming" && "Confirming..."}
 					{status === "executing" && "Executing payment..."}
 					{status === "error" && "Try Again"}
 				</button>

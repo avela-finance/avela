@@ -18,7 +18,26 @@ export default function ReceiptPage() {
 				if (!response.ok) {
 					throw new Error("Payment not found");
 				}
-				const { data: payment } = await response.json();
+				type PaymentResponse = {
+					data: {
+						id: string;
+						amount: number;
+						recipientAddress: string;
+						createdAt: string;
+						fundingDecision?: {
+							asset?: string;
+							amountIn?: string;
+							stablecoin?: string;
+							pool?: string;
+						};
+						settlement?: {
+							txHash?: string;
+							blockNumber?: number;
+							settledAt?: string;
+						};
+					};
+				};
+				const { data: payment } = (await response.json()) as PaymentResponse;
 				setData({
 					paymentId: payment.id,
 					amount: payment.amount,
