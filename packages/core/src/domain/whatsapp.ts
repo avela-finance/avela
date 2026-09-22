@@ -20,6 +20,15 @@ export function createLinkWhatsAppAccount(db: PostgresJsDatabase) {
 			throw new Error("Invalid phone number format. Must be E.164 (e.g. +1234567890).");
 		}
 
+		const [existing] = await db
+			.select()
+			.from(whatsappLinksTable)
+			.where(eq(whatsappLinksTable.phoneNumber, phoneNumber));
+
+		if (existing && existing.accountId !== accountId) {
+			throw new Error("Phone number is already linked to another account.");
+		}
+
 		const [link] = await db
 			.insert(whatsappLinksTable)
 			.values({
@@ -33,7 +42,6 @@ export function createLinkWhatsAppAccount(db: PostgresJsDatabase) {
 			.onConflictDoUpdate({
 				target: whatsappLinksTable.phoneNumber,
 				set: {
-					accountId,
 					waId,
 					linkedAt: new Date(),
 					active: true,
