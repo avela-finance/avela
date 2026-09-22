@@ -1,3 +1,9 @@
+import { eq } from "drizzle-orm";
+import { ulid } from "ulidx";
+import type { Database } from "../db/client.js";
+import { accountsTable, identitiesTable } from "../db/schema.js";
+import type { Identity } from "./types.js";
+
 export const USERNAME_RULES = {
 	minLength: 3,
 	maxLength: 32,
@@ -49,9 +55,73 @@ export function validateUsername(
 		};
 	}
 
-	if (USERNAME_RULES.reserved.includes(username)) {
+	if ((USERNAME_RULES.reserved as readonly string[]).includes(username)) {
 		return { valid: false, error: `"${username}" is reserved.` };
 	}
 
 	return { valid: true };
+}
+
+export function createRegisterUsername(db: Database) {
+	return async function registerUsername(
+		accountId: string,
+		username: string,
+		displayName?: string,
+	): Promise<Identity> {
+		const validation = validateUsername(username);
+		if (!validation.valid) {
+			throw new Error(validation.error);
+		}
+
+		const now = new Date();
+		const [identity] = await db
+			.insert(identitiesTable)
+			.values({
+				id: ulid(),
+				accountId,
+				username,
+				displayName: displayName ?? null,
+				createdAt: now,
+				updatedAt: now,
+			})
+			.returning();
+
+		return identity as Identity;
+	};
+}
+
+export function createResolveUsername(db: Database) {
+	return async function resolveUsername(
+		username: string,
+	): Promise<{ accountId: string; walletAddress: string } | null> {
+		const [identity] = await db
+			.select()
+			.from(identitiesTable)
+			.where(eq(identitiesTable.username, username.toLowerCase()));
+
+		if (!identity) return null;
+
+		const [account] = await db
+			.select({ id: accountsTable.id, walletAddress: accountsTable.walletAddress })
+			.from(accountsTable)
+			.where(eq(accountsTable.id, identity.accountId));
+
+		if (!account) return null;
+
+		return { accountId: account.id, walletAddress: account.walletAddress };
+	};
+}
+
+export function createIsUsernameAvailable(db: Database) {
+	return async function isUsernameAvailable(username: string): Promise<boolean> {
+		const validation = validateUsername(username.toLowerCase());
+		if (!validation.valid) return false;
+
+		const [existing] = await db
+			.select()
+			.from(identitiesTable)
+			.where(eq(identitiesTable.username, username.toLowerCase()));
+
+		return !existing;
+	};
 }

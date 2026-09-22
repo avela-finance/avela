@@ -19,4 +19,5 @@ export * from "./domain/spending-power.js";
 export * from "./domain/types.js";
 export * from "./domain/watcher.js";
 export * from "./domain/watcher-evaluator.js";
+export * from "./domain/identity.js";
 export * from "./domain/whatsapp.js";
