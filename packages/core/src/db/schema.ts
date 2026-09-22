@@ -149,3 +149,22 @@ export const agentSpendingLogTable = pgTable(
 	},
 	(table) => [index("agent_spending_log_agent_decided_idx").on(table.agentId, table.decidedAt)],
 );
+
+export const watchersTable = pgTable(
+	"watchers",
+	{
+		id: varchar("id", { length: 26 }).primaryKey(),
+		accountId: varchar("account_id", { length: 26 })
+			.notNull()
+			.references(() => accountsTable.id),
+		type: varchar("type", { length: 50 }).notNull().default("spending_power_threshold"),
+		config: jsonb("config").notNull().$type<import("../domain/types.js").SpendingPowerThresholdConfig>(),
+		status: varchar("status", { length: 20 }).notNull().default("active"),
+		lastEvaluatedAt: timestamp("last_evaluated_at", { withTimezone: true }),
+		lastTriggeredAt: timestamp("last_triggered_at", { withTimezone: true }),
+		cooldownMinutes: integer("cooldown_minutes").notNull().default(60),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [index("watchers_account_id_idx").on(table.accountId)],
+);

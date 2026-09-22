@@ -6,6 +6,7 @@ import {
 	paymentIntentsTable,
 	settlementsTable,
 	spendingPoliciesTable,
+	watchersTable,
 } from "../schema.js";
 
 describe("payment intent schema", () => {
@@ -76,5 +77,22 @@ describe("agent schema", () => {
 		expect(columns).toContain("permissionSnapshot");
 		expect(columns).toContain("status");
 		expect(columns).toContain("decidedAt");
+	});
+});
+
+describe("watcher schema", () => {
+	it("exports watchersTable with required columns", () => {
+		expect(watchersTable).toBeDefined();
+		const columns = Object.keys(watchersTable);
+		expect(columns).toContain("id");
+		expect(columns).toContain("accountId");
+		expect(columns).toContain("type");
+		expect(columns).toContain("config");
+		expect(columns).toContain("status");
+		expect(columns).toContain("lastEvaluatedAt");
+		expect(columns).toContain("lastTriggeredAt");
+		expect(columns).toContain("cooldownMinutes");
+		expect(columns).toContain("createdAt");
+		expect(columns).toContain("updatedAt");
 	});
 });
