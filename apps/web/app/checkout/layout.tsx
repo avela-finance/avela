@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = {
 	title: "Demo Store — Avela Checkout",
@@ -12,9 +13,7 @@ export default function CheckoutLayout({ children }: { children: ReactNode }) {
 				<div className="mx-auto flex max-w-4xl items-center justify-between">
 					<div className="flex items-center gap-2">
 						<span className="text-sm font-medium text-muted-foreground">Demo Store</span>
-						<span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-							Powered by Avela
-						</span>
+						<Badge variant="secondary">Powered by Avela</Badge>
 					</div>
 				</div>
 			</header>

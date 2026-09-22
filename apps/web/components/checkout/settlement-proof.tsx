@@ -1,5 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
 const XLAYER_EXPLORER = "https://www.okx.com/web3/explorer/xlayer/tx";
 
 export type SettlementProofData = {
@@ -20,13 +24,14 @@ export function SettlementProof({ data }: { data: SettlementProofData }) {
 
 	return (
 		<div className="space-y-6">
-			<div className="rounded-xl border border-border bg-card p-6">
-				<div className="mb-4 flex items-center gap-2">
-					<span className="text-2xl">✅</span>
-					<h2 className="text-xl font-bold">Payment Settled</h2>
-				</div>
-
-				<div className="space-y-3">
+			<Card>
+				<CardHeader>
+					<div className="flex items-center gap-2">
+						<Badge variant="secondary">Settled</Badge>
+						<CardTitle>Payment Settled</CardTitle>
+					</div>
+				</CardHeader>
+				<CardContent className="space-y-3">
 					<div className="flex justify-between">
 						<span className="text-muted-foreground">Amount</span>
 						<span className="font-semibold">${data.amount.toFixed(2)}</span>
@@ -51,19 +56,20 @@ export function SettlementProof({ data }: { data: SettlementProofData }) {
 						<span className="text-muted-foreground">Time</span>
 						<span className="text-sm">{new Date(data.timestamp).toLocaleString()}</span>
 					</div>
-				</div>
-			</div>
+				</CardContent>
+			</Card>
 
-			{/* Build a Market: Uniswap V3 swap proof */}
-			<div className="rounded-xl border border-border bg-card p-6">
-				<h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-					Onchain Proof — Market Order
-				</h3>
-				<p className="mb-4 text-sm text-muted-foreground">
-					This payment generated a real Uniswap V3 swap on X Layer. Every &ldquo;Pay with
-					Avela&rdquo; builds market volume for tokenized stock pools.
-				</p>
-				<div className="space-y-3">
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+						Onchain Proof — Market Order
+					</CardTitle>
+					<CardDescription>
+						This payment generated a real Uniswap V3 swap on X Layer. Every &ldquo;Pay with
+						Avela&rdquo; builds market volume for tokenized stock pools.
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-3">
 					<div className="flex justify-between">
 						<span className="text-muted-foreground">Swap</span>
 						<span className="font-mono text-sm">
@@ -91,24 +97,16 @@ export function SettlementProof({ data }: { data: SettlementProofData }) {
 							{data.txHash.slice(0, 10)}...{data.txHash.slice(-8)} ↗
 						</a>
 					</div>
-				</div>
-			</div>
+				</CardContent>
+			</Card>
 
 			<div className="flex gap-3">
-				<a
-					href={explorerUrl}
-					target="_blank"
-					rel="noopener noreferrer"
-					className="flex-1 rounded-lg border border-border py-2 text-center text-sm font-medium hover:bg-muted"
-				>
+				<Button variant="outline" className="flex-1" render={<a href={explorerUrl} target="_blank" rel="noopener noreferrer" />}>
 					View on Explorer
-				</a>
-				<a
-					href="/checkout"
-					className="flex-1 rounded-lg bg-primary py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90"
-				>
+				</Button>
+				<Button className="flex-1" render={<a href="/checkout" />}>
 					Back to Store
-				</a>
+				</Button>
 			</div>
 		</div>
 	);

@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ProductCard } from "@/components/checkout/product-card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { DEMO_PRODUCTS } from "@/lib/demo-products";
 
 export default function CheckoutPage() {
@@ -32,21 +34,21 @@ export default function CheckoutPage() {
 			</div>
 
 			{cart.length > 0 && (
-				<div className="mt-8 flex items-center justify-between rounded-xl border border-border bg-card p-4">
-					<div>
-						<span className="text-sm text-muted-foreground">
-							{cart.length} item{cart.length > 1 ? "s" : ""}
-						</span>
-						<span className="ml-4 text-lg font-bold">${total}</span>
-					</div>
-					<button
-						type="button"
-						onClick={() => router.push(`/checkout/pay?products=${cart.join(",")}`)}
-						className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-					>
-						Proceed to Pay
-					</button>
-				</div>
+				<Card className="mt-8">
+					<CardContent className="flex items-center justify-between">
+						<div>
+							<span className="text-sm text-muted-foreground">
+								{cart.length} item{cart.length > 1 ? "s" : ""}
+							</span>
+							<span className="ml-4 text-lg font-bold">${total}</span>
+						</div>
+						<Button
+							onClick={() => router.push(`/checkout/pay?products=${cart.join(",")}`)}
+						>
+							Proceed to Pay
+						</Button>
+					</CardContent>
+				</Card>
 			)}
 		</div>
 	);

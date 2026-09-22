@@ -5,6 +5,8 @@ import { useState, useMemo } from "react";
 import { getProduct } from "@/lib/demo-products";
 import { PaymentPreview } from "@/components/checkout/payment-preview";
 import type { PaymentPreviewData } from "@/components/checkout/payment-preview";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 const DEMO_MERCHANT_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 
@@ -69,20 +71,22 @@ export default function PayPage() {
 		<div className="mx-auto max-w-md">
 			<h1 className="mb-6 text-2xl font-bold">Pay with Avela</h1>
 
-			<div className="mb-6 space-y-2">
-				{products.map((p) => (
-					<div key={p!.id} className="flex justify-between text-sm">
-						<span>{p!.name}</span>
-						<span className="font-medium">${p!.price}</span>
+			<Card className="mb-6">
+				<CardContent className="space-y-2">
+					{products.map((p) => (
+						<div key={p!.id} className="flex justify-between text-sm">
+							<span>{p!.name}</span>
+							<span className="font-medium">${p!.price}</span>
+						</div>
+					))}
+					<div className="border-t border-border pt-2">
+						<div className="flex justify-between font-semibold">
+							<span>Total</span>
+							<span>${totalAmount}</span>
+						</div>
 					</div>
-				))}
-				<div className="border-t border-border pt-2">
-					<div className="flex justify-between font-semibold">
-						<span>Total</span>
-						<span>${totalAmount}</span>
-					</div>
-				</div>
-			</div>
+				</CardContent>
+			</Card>
 
 			<PaymentPreview data={previewData} />
 
@@ -93,16 +97,16 @@ export default function PayPage() {
 					</div>
 				)}
 
-				<button
-					type="button"
+				<Button
+					className="w-full"
+					size="lg"
 					onClick={handlePay}
 					disabled={status === "executing"}
-					className="w-full rounded-xl bg-primary py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
 				>
 					{status === "idle" && "Pay with Avela"}
 					{status === "executing" && "Executing payment..."}
 					{status === "error" && "Try Again"}
-				</button>
+				</Button>
 
 				<p className="mt-3 text-center text-xs text-muted-foreground">
 					Your stock positions stay in the market. The merchant receives stablecoins.
