@@ -42,6 +42,6 @@ describe("WhatsAppClient", () => {
 		expect(payload.type).toBe("interactive");
 		expect(payload.interactive.type).toBe("button");
 		expect(payload.interactive.action.buttons).toHaveLength(2);
-		expect(payload.interactive.action.buttons[0].reply.id).toBe("approve:123");
+		expect(payload.interactive.action.buttons[0]?.reply.id).toBe("approve:123");
 	});
 });

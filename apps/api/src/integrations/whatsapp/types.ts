@@ -1,4 +1,4 @@
-import type { InteractiveAction } from "@avela/core/domain/types";
+import type { InteractiveAction } from "@avela/core";
 
 export type WhatsAppConfig = {
 	phoneNumberId: string;

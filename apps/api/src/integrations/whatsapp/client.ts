@@ -1,4 +1,4 @@
-import type { InteractiveAction } from "@avela/core/domain/types";
+import type { InteractiveAction } from "@avela/core";
 import type {
 	WhatsAppClient,
 	WhatsAppConfig,
