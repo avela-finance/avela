@@ -13,7 +13,7 @@ describe("buildReceipt", () => {
 					source: "spending_power",
 					collateralAsset: "wSPYx",
 					collateralVerified: true,
-					collateralAmount: 1000000000000000000n,
+					collateralAmount: "1000000000000000000",
 					settlementToken: "USDG",
 					paymentId: "0x0000000000000000000000000000000000000000000000000000000000000001",
 					spendingPowerAtDecision: 800,

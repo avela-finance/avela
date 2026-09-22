@@ -85,8 +85,21 @@ export function paymentsRoutes(deps: PaymentDeps) {
 
 	app.post("/:id/reject", async (c) => {
 		const id = c.req.param("id");
-		const result = await deps.updatePaymentStatus(id, "rejected");
-		return c.json({ data: result });
+		const intent = await deps.getPaymentIntent(id);
+
+		if (!intent) {
+			return c.json({ error: { code: "NOT_FOUND", message: `Payment ${id} not found` } }, 404);
+		}
+
+		try {
+			const result = await deps.updatePaymentStatus(id, "rejected");
+			return c.json({ data: result });
+		} catch {
+			return c.json(
+				{ error: { code: "INVALID_STATE", message: "Payment cannot be rejected in its current state" } },
+				400,
+			);
+		}
 	});
 
 	return app;

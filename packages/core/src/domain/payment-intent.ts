@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { ulid } from "ulidx";
 import type { Database } from "../db/client.js";
 import { paymentIntentsTable } from "../db/schema.js";
@@ -20,7 +20,7 @@ export type FundingDecision = {
 	source: "spending_power" | "stablecoin_balance";
 	collateralAsset: string | null;
 	collateralVerified: boolean;
-	collateralAmount: bigint | null;
+	collateralAmount: string | null;
 	settlementToken: "USDG" | "USDC";
 	paymentId: string;
 	spendingPowerAtDecision: number;
@@ -151,8 +151,9 @@ export async function updatePaymentStatus(
 	const [row] = await db
 		.update(paymentIntentsTable)
 		.set(updates)
-		.where(eq(paymentIntentsTable.id, id))
+		.where(and(eq(paymentIntentsTable.id, id), eq(paymentIntentsTable.status, current.status)))
 		.returning();
 
-	return row!;
+	if (!row) throw new Error(`Concurrent modification on payment intent: ${id}`);
+	return row;
 }

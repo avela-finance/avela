@@ -65,10 +65,10 @@ export type ExecutePaymentDeps = {
 	) => Promise<{
 		id: string;
 		accountId: string;
-		amount: number;
+		amount: string | number;
 		recipientAddress: string;
 		status: string;
-	}>;
+	} | null>;
 	updatePaymentStatus: (
 		db: Database,
 		id: string,
@@ -102,11 +102,14 @@ export async function executePayment(
 	intentId: string,
 ): Promise<{ status: PaymentStatus }> {
 	const intent = await deps.getPaymentIntent(deps.db, intentId);
+	if (!intent) throw new Error(`Payment intent not found: ${intentId}`);
+
+	const intentAmount = Number(intent.amount);
 
 	await deps.updatePaymentStatus(deps.db, intentId, "policy_check");
 	const policyResult = await deps.evaluatePolicy({
 		accountId: intent.accountId,
-		amount: intent.amount,
+		amount: intentAmount,
 	});
 
 	if (!policyResult.passed) {
@@ -119,7 +122,7 @@ export async function executePayment(
 
 	const spendingPower = await deps.calculateSpendingPower(intent.accountId);
 	const fundingDecision = selectFundingSource({
-		amount: intent.amount,
+		amount: intentAmount,
 		spendingPower,
 	});
 
@@ -133,12 +136,12 @@ export async function executePayment(
 			(a) => a.assetSymbol === fundingDecision.collateralAsset,
 		);
 
-		if (lockedBalance === 0n || !assetPower || assetPower.spendingPower < intent.amount) {
+		if (lockedBalance === 0n || !assetPower || assetPower.spendingPower < intentAmount) {
 			return deps.updatePaymentStatus(deps.db, intentId, "failed");
 		}
 
 		fundingDecision.collateralVerified = true;
-		fundingDecision.collateralAmount = lockedBalance;
+		fundingDecision.collateralAmount = lockedBalance.toString();
 	}
 
 	await deps.updatePaymentStatus(deps.db, intentId, "collateral_verify", fundingDecision);
@@ -147,25 +150,29 @@ export async function executePayment(
 	const walletAddress = await deps.getAccountWalletAddress(intent.accountId);
 	const stablecoinAddress = STABLECOINS[fundingDecision.settlementToken];
 	const decimals = STABLECOIN_DECIMALS[fundingDecision.settlementToken];
-	const settlementAmount = BigInt(Math.round(intent.amount * 10 ** decimals));
+	const settlementAmount = BigInt(Math.round(intentAmount * 10 ** decimals));
 
-	const result = await deps.routerAdapter.executePayment({
-		token: stablecoinAddress,
-		merchant: intent.recipientAddress,
-		amount: settlementAmount,
-		paymentId: fundingDecision.paymentId,
-		collateralOwner: walletAddress,
-	});
+	try {
+		const result = await deps.routerAdapter.executePayment({
+			token: stablecoinAddress,
+			merchant: intent.recipientAddress,
+			amount: settlementAmount,
+			paymentId: fundingDecision.paymentId,
+			collateralOwner: walletAddress,
+		});
 
-	await deps.recordSettlement(deps.db, {
-		paymentIntentId: intentId,
-		paymentId: fundingDecision.paymentId,
-		txHash: result.txHash,
-		blockNumber: result.blockNumber,
-		amountSettled: settlementAmount,
-		settlementToken: fundingDecision.settlementToken,
-		gasUsed: result.gasUsed,
-	});
+		await deps.recordSettlement(deps.db, {
+			paymentIntentId: intentId,
+			paymentId: fundingDecision.paymentId,
+			txHash: result.txHash,
+			blockNumber: result.blockNumber,
+			amountSettled: settlementAmount,
+			settlementToken: fundingDecision.settlementToken,
+			gasUsed: result.gasUsed,
+		});
 
-	return deps.updatePaymentStatus(deps.db, intentId, "settled");
+		return deps.updatePaymentStatus(deps.db, intentId, "settled");
+	} catch {
+		return deps.updatePaymentStatus(deps.db, intentId, "failed");
+	}
 }
