@@ -15,8 +15,17 @@ const fontMono = Geist_Mono({
 });
 
 export const metadata = {
-	title: "Avela",
-	description: "Pay from your portfolio without selling",
+	title: "Avela — Programmable Spending Account",
+	description:
+		"Pay from your tokenized stock portfolio without selling. Programmable policies, agent permissions, and WhatsApp access.",
+	manifest: "/manifest.json",
+};
+
+export const viewport = {
+	themeColor: "#0a0a0a",
+	width: "device-width",
+	initialScale: 1,
+	maximumScale: 1,
 };
 
 export default function RootLayout({
