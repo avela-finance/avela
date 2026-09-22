@@ -19,6 +19,7 @@ contract DeployScript is Script {
 
         console.log("Deployer:", deployer);
         console.log("Chain ID:", block.chainid);
+        require(block.chainid == 196, "Deploy: wrong chain, expected X Layer mainnet (196)");
 
         vm.startBroadcast(deployerKey);
 

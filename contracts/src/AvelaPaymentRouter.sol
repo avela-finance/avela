@@ -50,7 +50,7 @@ contract AvelaPaymentRouter is Ownable, ReentrancyGuard {
         bytes32 paymentId,
         address collateralOwner
     ) external onlyAuthorizedSigner nonReentrant {
-        if (merchant == address(0) || collateralOwner == address(0)) revert ZeroAddress();
+        if (token == address(0) || merchant == address(0) || collateralOwner == address(0)) revert ZeroAddress();
         if (amount == 0) revert ZeroAmount();
         if (isExecuted[paymentId]) revert PaymentAlreadyExecuted(paymentId);
 
@@ -65,6 +65,7 @@ contract AvelaPaymentRouter is Ownable, ReentrancyGuard {
     }
 
     function fundReserve(address token, uint256 amount) external nonReentrant {
+        if (token == address(0)) revert ZeroAddress();
         if (amount == 0) revert ZeroAmount();
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         emit ReserveFunded(msg.sender, token, amount);
@@ -72,6 +73,7 @@ contract AvelaPaymentRouter is Ownable, ReentrancyGuard {
 
     function withdrawReserve(address token, address to, uint256 amount) external onlyOwner nonReentrant {
         if (to == address(0)) revert ZeroAddress();
+        if (amount == 0) revert ZeroAmount();
         uint256 balance = IERC20(token).balanceOf(address(this));
         if (amount > balance) revert InsufficientReserve(amount, balance);
         IERC20(token).safeTransfer(to, amount);
