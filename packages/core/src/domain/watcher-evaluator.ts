@@ -1,4 +1,4 @@
-import { inArray, eq } from "drizzle-orm";
+import { inArray, eq, asc } from "drizzle-orm";
 import type { Database } from "../db/client.js";
 import { watchersTable } from "../db/schema.js";
 import type { Watcher, WatcherEvaluation } from "./types.js";
@@ -8,34 +8,20 @@ type GetSpendingPowerFn = (db: Database, accountId: string) => Promise<SpendingP
 type SendAlertFn = (accountId: string, message: string) => Promise<void>;
 
 /**
- * WATCH → EVALUATE → DECIDE → AUTHORIZE → EXECUTE
- *
- * Evaluates a single watcher against current spending power.
- * Sends alert and updates state if threshold is breached and not in cooldown.
+ * Internal: operates on a pre-fetched watcher to avoid N+1 re-fetches.
  */
-export async function evaluateWatcher(
+async function evaluateWatcherInternal(
 	db: Database,
-	watcherId: string,
+	watcher: Watcher,
 	getSpendingPower: GetSpendingPowerFn,
 	sendAlert: SendAlertFn,
 ): Promise<WatcherEvaluation> {
 	const now = new Date();
 
-	// --- WATCH: Fetch watcher state ---
-	const rows = await db
-		.select()
-		.from(watchersTable)
-		.where(eq(watchersTable.id, watcherId));
-	const watcher = (rows[0] as Watcher) ?? undefined;
-
-	if (!watcher) {
-		return { watcherId, currentValue: 0, threshold: 0, triggered: false, evaluatedAt: now };
-	}
-
 	// Skip non-active and non-triggered watchers (paused, disabled)
 	if (watcher.status !== "active" && watcher.status !== "triggered") {
 		return {
-			watcherId,
+			watcherId: watcher.id,
 			currentValue: 0,
 			threshold: watcher.config.threshold,
 			triggered: false,
@@ -61,15 +47,9 @@ export async function evaluateWatcher(
 
 	// --- AUTHORIZE: Alert notifications are auto-authorized (no human approval needed) ---
 
-	// --- EXECUTE: Send notification and update state ---
+	// --- EXECUTE: Update state then send notification ---
 	if (shouldAlert) {
-		const message =
-			`Your spending power is now $${currentValue.toFixed(2)} ` +
-			`(threshold: $${threshold.toFixed(2)}). ` +
-			`It has dropped below your alert level.`;
-
-		await sendAlert(watcher.accountId, message);
-
+		// Update DB first to claim cooldown window (prevents duplicate alerts on retry)
 		await db
 			.update(watchersTable)
 			.set({
@@ -78,22 +58,59 @@ export async function evaluateWatcher(
 				lastTriggeredAt: now,
 				updatedAt: now,
 			})
-			.where(eq(watchersTable.id, watcherId));
+			.where(eq(watchersTable.id, watcher.id));
+
+		// Then send alert (if this fails, cooldown prevents duplicate on retry)
+		const message =
+			`Your spending power is now $${currentValue.toFixed(2)} ` +
+			`(threshold: $${threshold.toFixed(2)}). ` +
+			`It has dropped below your alert level.`;
+
+		await sendAlert(watcher.accountId, message);
 	} else {
-		// Always update lastEvaluatedAt
+		// Always update lastEvaluatedAt; reset to active if recovered from triggered state
+		const updates: Record<string, unknown> = { lastEvaluatedAt: now, updatedAt: now };
+		if (!breached && watcher.status === "triggered") {
+			updates.status = "active";
+		}
 		await db
 			.update(watchersTable)
-			.set({ lastEvaluatedAt: now, updatedAt: now })
-			.where(eq(watchersTable.id, watcherId));
+			.set(updates)
+			.where(eq(watchersTable.id, watcher.id));
 	}
 
 	return {
-		watcherId,
+		watcherId: watcher.id,
 		currentValue,
 		threshold,
 		triggered: shouldAlert,
 		evaluatedAt: now,
 	};
+}
+
+/**
+ * WATCH → EVALUATE → DECIDE → AUTHORIZE → EXECUTE
+ *
+ * Evaluates a single watcher against current spending power.
+ * Sends alert and updates state if threshold is breached and not in cooldown.
+ */
+export async function evaluateWatcher(
+	db: Database,
+	watcherId: string,
+	getSpendingPower: GetSpendingPowerFn,
+	sendAlert: SendAlertFn,
+): Promise<WatcherEvaluation> {
+	const rows = await db
+		.select()
+		.from(watchersTable)
+		.where(eq(watchersTable.id, watcherId));
+	const watcher = rows[0] as Watcher | undefined;
+
+	if (!watcher) {
+		throw new Error(`Watcher ${watcherId} not found`);
+	}
+
+	return evaluateWatcherInternal(db, watcher, getSpendingPower, sendAlert);
 }
 
 /**
@@ -104,17 +121,17 @@ export async function evaluateAllActiveWatchers(
 	getSpendingPower: GetSpendingPowerFn,
 	sendAlert: SendAlertFn,
 ): Promise<WatcherEvaluation[]> {
-	// Single query using inArray for both statuses
 	const rows = await db
 		.select()
 		.from(watchersTable)
-		.where(inArray(watchersTable.status, ["active", "triggered"]));
+		.where(inArray(watchersTable.status, ["active", "triggered"]))
+		.orderBy(asc(watchersTable.createdAt));
 
 	const allWatchers = rows as Watcher[];
 
 	const results: WatcherEvaluation[] = [];
 	for (const watcher of allWatchers) {
-		const result = await evaluateWatcher(db, watcher.id, getSpendingPower, sendAlert);
+		const result = await evaluateWatcherInternal(db, watcher, getSpendingPower, sendAlert);
 		results.push(result);
 	}
 

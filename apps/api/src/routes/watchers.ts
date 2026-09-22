@@ -20,6 +20,7 @@ type WatcherDeps = {
 		cooldownMinutes: number;
 	}) => Promise<Watcher>;
 	getWatchersByAccount: (accountId: string) => Promise<Watcher[]>;
+	getWatcher: (watcherId: string) => Promise<Watcher | null>;
 	updateWatcher: (
 		watcherId: string,
 		updates: {
@@ -38,7 +39,14 @@ export function watchersRoutes(deps: WatcherDeps) {
 	// POST / — Create watcher (accountId from parent route param)
 	app.post("/", async (c) => {
 		const accountId = c.req.param("accountId") as string;
-		const body = await c.req.json();
+
+		let body: unknown;
+		try {
+			body = await c.req.json();
+		} catch {
+			return c.json({ error: { code: "VALIDATION_ERROR", message: "Invalid JSON body" } }, 400);
+		}
+
 		const parsed = createWatcherSchema.safeParse(body);
 
 		if (!parsed.success) {
@@ -72,8 +80,21 @@ export function watchersRoutes(deps: WatcherDeps) {
 
 	// PUT /:id — Update watcher
 	app.put("/:id", async (c) => {
+		const accountId = c.req.param("accountId") as string;
 		const id = c.req.param("id");
-		const body = await c.req.json();
+
+		const existing = await deps.getWatcher(id);
+		if (!existing || existing.accountId !== accountId) {
+			return c.json({ error: { code: "NOT_FOUND", message: `Watcher ${id} not found` } }, 404);
+		}
+
+		let body: unknown;
+		try {
+			body = await c.req.json();
+		} catch {
+			return c.json({ error: { code: "VALIDATION_ERROR", message: "Invalid JSON body" } }, 400);
+		}
+
 		const parsed = updateWatcherSchema.safeParse(body);
 
 		if (!parsed.success) {
@@ -103,11 +124,20 @@ export function watchersRoutes(deps: WatcherDeps) {
 
 	// DELETE /:id — Delete watcher
 	app.delete("/:id", async (c) => {
+		const accountId = c.req.param("accountId") as string;
 		const id = c.req.param("id");
+
+		const existing = await deps.getWatcher(id);
+		if (!existing || existing.accountId !== accountId) {
+			return c.json({ error: { code: "NOT_FOUND", message: `Watcher ${id} not found` } }, 404);
+		}
+
 		await deps.deleteWatcher(id);
 		return c.json({ data: { deleted: true } });
 	});
 
+	// MVP: evaluates all active watchers across accounts (admin-only).
+	// TODO: Move to /admin/watchers/evaluate when admin auth is implemented.
 	// POST /evaluate — Trigger evaluation of all active watchers (admin endpoint)
 	app.post("/evaluate", async (c) => {
 		const results = await deps.evaluateAllActiveWatchers();

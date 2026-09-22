@@ -28,6 +28,7 @@ function makeDeps(overrides = {}) {
 	return {
 		createWatcher: vi.fn().mockResolvedValue(mockWatcher),
 		getWatchersByAccount: vi.fn().mockResolvedValue([mockWatcher]),
+		getWatcher: vi.fn().mockResolvedValue(mockWatcher),
 		updateWatcher: vi.fn().mockResolvedValue(mockWatcher),
 		deleteWatcher: vi.fn().mockResolvedValue(undefined),
 		evaluateAllActiveWatchers: vi.fn().mockResolvedValue([mockEvaluation]),
@@ -174,7 +175,7 @@ describe("PUT /accounts/:accountId/watchers/:id", () => {
 
 	it("returns 404 when watcher not found", async () => {
 		const deps = makeDeps({
-			updateWatcher: vi.fn().mockRejectedValue(new Error("Watcher 01JNOTFOUND not found")),
+			getWatcher: vi.fn().mockResolvedValue(null),
 		});
 		const app = makeApp(deps);
 
