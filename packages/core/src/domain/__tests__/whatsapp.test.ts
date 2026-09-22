@@ -15,6 +15,7 @@ describe("WhatsApp types", () => {
 			waId: "1234567890",
 			linkedAt: new Date(),
 			active: true,
+			updatedAt: new Date(),
 		};
 		expect(link.phoneNumber).toMatch(/^\+\d+$/);
 		expect(link.active).toBe(true);

@@ -22,27 +22,46 @@ export function createWebhookRoutes(handlers: WebhookHandlers): Hono {
 	});
 
 	app.post("/", async (c) => {
-		const body = await c.req.json<{ object: string; entry: WhatsAppWebhookEntry[] }>();
+		let body: unknown;
+		try {
+			body = await c.req.json();
+		} catch {
+			return c.text("Bad Request", 400);
+		}
 
-		if (body.object !== "whatsapp_business_account") {
+		if (!body || typeof body !== "object" || !("object" in body) || !("entry" in body)) {
+			return c.text("Bad Request", 400);
+		}
+
+		const payload = body as { object: string; entry: WhatsAppWebhookEntry[] };
+
+		if (payload.object !== "whatsapp_business_account") {
 			return c.text("Not Found", 404);
 		}
 
-		for (const entry of body.entry) {
+		if (!Array.isArray(payload.entry)) {
+			return c.text("Bad Request", 400);
+		}
+
+		const promises: Promise<void>[] = [];
+		for (const entry of payload.entry) {
 			for (const change of entry.changes) {
 				const messages = change.value.messages ?? [];
 				for (const msg of messages) {
 					if (msg.type === "text" && msg.text) {
-						await handlers.onTextMessage(msg.from, msg.text.body);
+						promises.push(handlers.onTextMessage(msg.from, msg.text.body));
 					} else if (
 						msg.type === "interactive" &&
 						msg.interactive?.type === "button_reply"
 					) {
-						await handlers.onButtonReply(msg.from, msg.interactive.button_reply.id);
+						promises.push(
+							handlers.onButtonReply(msg.from, msg.interactive.button_reply.id),
+						);
 					}
 				}
 			}
 		}
+		await Promise.allSettled(promises);
 
 		return c.text("OK", 200);
 	});

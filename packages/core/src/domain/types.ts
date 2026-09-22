@@ -208,6 +208,7 @@ export type WhatsAppLink = {
 	waId: string;
 	linkedAt: Date;
 	active: boolean;
+	updatedAt: Date;
 };
 
 export type WhatsAppNotification = {

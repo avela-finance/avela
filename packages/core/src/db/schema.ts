@@ -180,6 +180,7 @@ export const whatsappLinksTable = pgTable(
 		waId: varchar("wa_id", { length: 100 }).notNull(),
 		linkedAt: timestamp("linked_at", { withTimezone: true }).notNull().defaultNow(),
 		active: boolean("active").notNull().default(true),
+		updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 	},
 	(table) => [index("whatsapp_links_account_id_idx").on(table.accountId)],
 );

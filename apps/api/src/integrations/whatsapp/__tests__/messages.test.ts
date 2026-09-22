@@ -10,8 +10,8 @@ describe("message intent matching", () => {
 		expect(matchIntent("how much do I have")).toBe("balance");
 	});
 
-	it("matches 'spending' to spending_power intent", () => {
-		expect(matchIntent("spending")).toBe("spending_power");
+	it("matches 'spending power' to spending_power intent", () => {
+		expect(matchIntent("spending power")).toBe("spending_power");
 	});
 
 	it("matches 'how much can I spend' to spending_power intent", () => {

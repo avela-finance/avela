@@ -83,7 +83,7 @@ export function formatSpendingPowerMessage(params: {
 }): string {
 	const assetLines = params.perAsset.map(
 		(a) =>
-			`├ ${a.symbol}: ${formatUsd(a.value)} × ${(1 - a.haircut) * 100}% = ${formatUsd(a.spendingPower)}`,
+			`├ ${a.symbol}: ${formatUsd(a.value)} × ${Math.round((1 - a.haircut) * 100)}% = ${formatUsd(a.spendingPower)}`,
 	);
 	const lastIdx = assetLines.length - 1;
 	if (lastIdx >= 0) {

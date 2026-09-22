@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { ulid } from "ulidx";
 import { whatsappLinksTable } from "../db/schema.js";
@@ -17,7 +17,7 @@ export function createLinkWhatsAppAccount(db: PostgresJsDatabase) {
 		waId: string,
 	): Promise<WhatsAppLink> {
 		if (!validatePhoneNumber(phoneNumber)) {
-			throw new Error(`Invalid phone number: ${phoneNumber}. Must be E.164 format.`);
+			throw new Error("Invalid phone number format. Must be E.164 (e.g. +1234567890).");
 		}
 
 		const [link] = await db
@@ -29,6 +29,16 @@ export function createLinkWhatsAppAccount(db: PostgresJsDatabase) {
 				waId,
 				linkedAt: new Date(),
 				active: true,
+			})
+			.onConflictDoUpdate({
+				target: whatsappLinksTable.phoneNumber,
+				set: {
+					accountId,
+					waId,
+					linkedAt: new Date(),
+					active: true,
+					updatedAt: new Date(),
+				},
 			})
 			.returning();
 
@@ -42,7 +52,12 @@ export function createGetWhatsAppLink(db: PostgresJsDatabase) {
 		const [link] = await db
 			.select()
 			.from(whatsappLinksTable)
-			.where(eq(whatsappLinksTable.accountId, accountId));
+			.where(
+				and(
+					eq(whatsappLinksTable.accountId, accountId),
+					eq(whatsappLinksTable.active, true),
+				),
+			);
 
 		return link ?? null;
 	};
@@ -52,7 +67,7 @@ export function createUnlinkWhatsAppAccount(db: PostgresJsDatabase) {
 	return async function unlinkWhatsAppAccount(accountId: string): Promise<void> {
 		await db
 			.update(whatsappLinksTable)
-			.set({ active: false })
+			.set({ active: false, updatedAt: new Date() })
 			.where(eq(whatsappLinksTable.accountId, accountId))
 			.returning();
 	};

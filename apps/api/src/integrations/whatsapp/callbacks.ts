@@ -17,6 +17,7 @@ export function parseCallbackAction(callbackData: string): CallbackAction | null
 
 export type CallbackDeps = {
 	getAccountByPhoneNumber: (phone: string) => Promise<{ accountId: string } | null>;
+	getPaymentIntent: (id: string) => Promise<{ accountId: string } | null>;
 	authorizePayment: (paymentIntentId: string) => Promise<void>;
 	rejectPayment: (paymentIntentId: string) => Promise<void>;
 	sendTextMessage: (to: string, body: string) => Promise<void>;
@@ -39,11 +40,24 @@ export async function handleButtonCallback(
 		return;
 	}
 
-	if (parsed.action === "approve") {
-		await deps.authorizePayment(parsed.paymentIntentId);
-		await deps.sendTextMessage(from, "✅ Payment approved and executing.");
-	} else {
-		await deps.rejectPayment(parsed.paymentIntentId);
-		await deps.sendTextMessage(from, "❌ Payment rejected.");
+	const intent = await deps.getPaymentIntent(parsed.paymentIntentId);
+	if (!intent || intent.accountId !== account.accountId) {
+		await deps.sendTextMessage(from, "Payment not found or not authorized.");
+		return;
+	}
+
+	try {
+		if (parsed.action === "approve") {
+			await deps.authorizePayment(parsed.paymentIntentId);
+			await deps.sendTextMessage(from, "✅ Payment approved and executing.");
+		} else {
+			await deps.rejectPayment(parsed.paymentIntentId);
+			await deps.sendTextMessage(from, "❌ Payment rejected.");
+		}
+	} catch {
+		await deps.sendTextMessage(
+			from,
+			"Something went wrong. Please try again or visit app.avela.xyz",
+		);
 	}
 }

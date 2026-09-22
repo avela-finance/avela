@@ -3,11 +3,11 @@ export type MessageIntent = "balance" | "spending_power" | "payments" | "help" |
 const INTENT_PATTERNS: Array<{ intent: MessageIntent; patterns: RegExp[] }> = [
 	{
 		intent: "spending_power",
-		patterns: [/\bspending\b/i, /\bspend\b/i, /\bpower\b/i],
+		patterns: [/\bspending power\b/i, /\bspending limit\b/i, /\bhow much can i spend\b/i],
 	},
 	{
 		intent: "balance",
-		patterns: [/\bbalance\b/i, /\bhow much\b/i, /\bportfolio\b/i],
+		patterns: [/\bbalance\b/i, /\bportfolio\b/i, /\bhow much do i have\b/i],
 	},
 	{
 		intent: "payments",
