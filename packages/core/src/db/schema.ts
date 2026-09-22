@@ -168,3 +168,38 @@ export const watchersTable = pgTable(
 	},
 	(table) => [index("watchers_account_id_idx").on(table.accountId)],
 );
+
+export const whatsappLinksTable = pgTable(
+	"whatsapp_links",
+	{
+		id: varchar("id", { length: 26 }).primaryKey(),
+		accountId: varchar("account_id", { length: 26 })
+			.notNull()
+			.references(() => accountsTable.id),
+		phoneNumber: varchar("phone_number", { length: 50 }).notNull().unique(),
+		waId: varchar("wa_id", { length: 100 }).notNull(),
+		linkedAt: timestamp("linked_at", { withTimezone: true }).notNull().defaultNow(),
+		active: boolean("active").notNull().default(true),
+	},
+	(table) => [index("whatsapp_links_account_id_idx").on(table.accountId)],
+);
+
+export const whatsappNotificationsTable = pgTable(
+	"whatsapp_notifications",
+	{
+		id: varchar("id", { length: 26 }).primaryKey(),
+		accountId: varchar("account_id", { length: 26 })
+			.notNull()
+			.references(() => accountsTable.id),
+		phoneNumber: varchar("phone_number", { length: 50 }).notNull(),
+		type: varchar("type", { length: 50 }).notNull(),
+		paymentIntentId: varchar("payment_intent_id", { length: 26 }),
+		templateName: varchar("template_name", { length: 100 }).notNull(),
+		message: varchar("message", { length: 1000 }).notNull(),
+		interactiveActions: jsonb("interactive_actions"),
+		sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+		respondedAt: timestamp("responded_at", { withTimezone: true }),
+		response: varchar("response", { length: 1000 }),
+	},
+	(table) => [index("whatsapp_notifications_account_id_idx").on(table.accountId)],
+);
