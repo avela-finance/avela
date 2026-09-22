@@ -1,6 +1,7 @@
+import type { Identity } from "@avela/core";
+import { validateUsername } from "@avela/core";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { Identity } from "@avela/core";
 
 const registerSchema = z.object({
 	accountId: z.string().min(1),
@@ -28,21 +29,16 @@ export function createIdentityRoutes(deps: IdentityDeps) {
 		try {
 			body = await c.req.json();
 		} catch {
-			return c.json(
-				{ error: { code: "VALIDATION_ERROR", message: "Invalid JSON body" } },
-				400,
-			);
+			return c.json({ error: { code: "VALIDATION_ERROR", message: "Invalid JSON body" } }, 400);
 		}
 
 		const parsed = registerSchema.safeParse(body);
 		if (!parsed.success) {
-			return c.json(
-				{ error: { code: "VALIDATION_ERROR", message: parsed.error.message } },
-				400,
-			);
+			return c.json({ error: { code: "VALIDATION_ERROR", message: parsed.error.message } }, 400);
 		}
 
 		try {
+			// TODO(auth): Replace body.accountId with authenticated user's accountId from Privy session
 			const identity = await deps.registerUsername(
 				parsed.data.accountId,
 				parsed.data.username,
@@ -57,12 +53,20 @@ export function createIdentityRoutes(deps: IdentityDeps) {
 
 	app.get("/available/:username", async (c) => {
 		const username = c.req.param("username");
+		const validation = validateUsername(username);
+		if (!validation.valid) {
+			return c.json({ error: { code: "INVALID_USERNAME", message: validation.error } }, 400);
+		}
 		const available = await deps.isUsernameAvailable(username);
 		return c.json({ data: { username, available } });
 	});
 
 	app.get("/resolve/:username", async (c) => {
 		const username = c.req.param("username");
+		const validation = validateUsername(username);
+		if (!validation.valid) {
+			return c.json({ error: { code: "INVALID_USERNAME", message: validation.error } }, 400);
+		}
 		const result = await deps.resolveUsername(username);
 		if (!result) {
 			return c.json(
@@ -70,7 +74,7 @@ export function createIdentityRoutes(deps: IdentityDeps) {
 				404,
 			);
 		}
-		return c.json({ data: result });
+		return c.json({ data: { username, walletAddress: result.walletAddress } });
 	});
 
 	return app;

@@ -1,6 +1,15 @@
-import { describe, it, expect } from "vitest";
 import { Hono } from "hono";
+import { describe, expect, it } from "vitest";
 import { createIdentityRoutes } from "../identity.js";
+
+const mockIdentity = {
+	id: "01JTEST",
+	accountId: "01JACCOUNT",
+	username: "testuser",
+	displayName: null,
+	createdAt: new Date(),
+	updatedAt: new Date(),
+};
 
 describe("identity routes", () => {
 	it("exports createIdentityRoutes", () => {
@@ -9,14 +18,7 @@ describe("identity routes", () => {
 
 	it("creates a Hono app with routes", () => {
 		const routes = createIdentityRoutes({
-			registerUsername: async () => ({
-				id: "01JTEST",
-				accountId: "01JACCOUNT",
-				username: "testuser",
-				displayName: null,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			}),
+			registerUsername: async () => mockIdentity,
 			resolveUsername: async () => ({
 				accountId: "01JACCOUNT",
 				walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
@@ -24,6 +26,74 @@ describe("identity routes", () => {
 			isUsernameAvailable: async () => true,
 		});
 		expect(routes).toBeDefined();
+	});
+});
+
+describe("POST /register", () => {
+	function createApp(registerFn: () => Promise<typeof mockIdentity> = async () => mockIdentity) {
+		const routes = createIdentityRoutes({
+			registerUsername: registerFn,
+			resolveUsername: async () => null,
+			isUsernameAvailable: async () => true,
+		});
+		const app = new Hono();
+		app.route("/identity", routes);
+		return app;
+	}
+
+	it("returns 201 with identity data on success", async () => {
+		const app = createApp();
+		const res = await app.request("/identity/register", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				accountId: "01JACCOUNT",
+				username: "testuser",
+				displayName: "Test User",
+			}),
+		});
+		expect(res.status).toBe(201);
+		const body = (await res.json()) as { data: typeof mockIdentity };
+		expect(body.data.username).toBe("testuser");
+	});
+
+	it("returns 400 for invalid JSON body", async () => {
+		const app = createApp();
+		const res = await app.request("/identity/register", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: "not-json",
+		});
+		expect(res.status).toBe(400);
+		const body = (await res.json()) as { error: { code: string } };
+		expect(body.error.code).toBe("VALIDATION_ERROR");
+	});
+
+	it("returns 400 for validation error (short username)", async () => {
+		const app = createApp();
+		const res = await app.request("/identity/register", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ accountId: "01JACCOUNT", username: "ab" }),
+		});
+		expect(res.status).toBe(400);
+		const body = (await res.json()) as { error: { code: string } };
+		expect(body.error.code).toBe("VALIDATION_ERROR");
+	});
+
+	it("returns 400 with REGISTRATION_FAILED when dep throws", async () => {
+		const app = createApp(async () => {
+			throw new Error("Username already taken");
+		});
+		const res = await app.request("/identity/register", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ accountId: "01JACCOUNT", username: "existinguser" }),
+		});
+		expect(res.status).toBe(400);
+		const body = (await res.json()) as { error: { code: string; message: string } };
+		expect(body.error.code).toBe("REGISTRATION_FAILED");
+		expect(body.error.message).toBe("Username already taken");
 	});
 });
 
@@ -56,10 +126,18 @@ describe("GET /available/:username", () => {
 		const body = (await res.json()) as { data: { username: string; available: boolean } };
 		expect(body.data.available).toBe(false);
 	});
+
+	it("returns 400 for invalid username param", async () => {
+		const app = createApp(true);
+		const res = await app.request("/identity/available/ab");
+		expect(res.status).toBe(400);
+		const body = (await res.json()) as { error: { code: string } };
+		expect(body.error.code).toBe("INVALID_USERNAME");
+	});
 });
 
 describe("GET /resolve/:username", () => {
-	it("returns account for existing username", async () => {
+	it("returns username and walletAddress for existing username", async () => {
 		const routes = createIdentityRoutes({
 			registerUsername: async () => {
 				throw new Error("not called");
@@ -75,8 +153,12 @@ describe("GET /resolve/:username", () => {
 
 		const res = await app.request("/identity/resolve/samuel");
 		expect(res.status).toBe(200);
-		const body = (await res.json()) as { data: { accountId: string; walletAddress: string } };
+		const body = (await res.json()) as {
+			data: { username: string; walletAddress: string };
+		};
 		expect(body.data.walletAddress).toBe("0x1234567890abcdef1234567890abcdef12345678");
+		expect(body.data.username).toBe("samuel");
+		expect((body.data as Record<string, unknown>).accountId).toBeUndefined();
 	});
 
 	it("returns 404 for unknown username", async () => {
@@ -92,5 +174,22 @@ describe("GET /resolve/:username", () => {
 
 		const res = await app.request("/identity/resolve/unknown");
 		expect(res.status).toBe(404);
+	});
+
+	it("returns 400 for invalid username param", async () => {
+		const routes = createIdentityRoutes({
+			registerUsername: async () => {
+				throw new Error("not called");
+			},
+			resolveUsername: async () => null,
+			isUsernameAvailable: async () => true,
+		});
+		const app = new Hono();
+		app.route("/identity", routes);
+
+		const res = await app.request("/identity/resolve/ab");
+		expect(res.status).toBe(400);
+		const body = (await res.json()) as { error: { code: string } };
+		expect(body.error.code).toBe("INVALID_USERNAME");
 	});
 });

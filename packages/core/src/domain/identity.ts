@@ -86,7 +86,7 @@ export function createRegisterUsername(db: Database) {
 			})
 			.returning();
 
-		return identity as Identity;
+		return identity!;
 	};
 }
 
