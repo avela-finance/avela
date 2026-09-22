@@ -5,7 +5,7 @@ describe("health routes", () => {
 	it("GET /health returns 200 with status ok", async () => {
 		const res = await app.request("/health");
 		expect(res.status).toBe(200);
-		const body = await res.json();
+		const body = (await res.json()) as { status: string; version: string; requestId: string };
 		expect(body.status).toBe("ok");
 		expect(body.version).toBe("0.1.0");
 		expect(body.requestId).toBeDefined();

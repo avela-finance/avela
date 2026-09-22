@@ -24,11 +24,9 @@ app.route("/accounts", accountRoutes);
 app.route("/assets", assetRoutes);
 app.route("/accounts/:id/portfolio", portfolioRoutes);
 
-if (import.meta.main) {
-	const port = Number(process.env.PORT ?? 3001);
-	console.log(`Avela API starting on port ${port}`);
-	serve({ fetch: app.fetch, port });
-}
+const port = Number(process.env.PORT ?? 3001);
+console.log(`Avela API starting on port ${port}`);
+serve({ fetch: app.fetch, port });
 
 export default app;
 export type AppType = typeof app;
