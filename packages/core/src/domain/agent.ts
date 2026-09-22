@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { ulid } from "ulidx";
 import { z } from "zod";
 import type { Database } from "../db/client.js";
-import { agentsTable } from "../db/schema.js";
-import type { Agent, AgentPermission } from "./types.js";
+import { agentSpendingLogTable, agentsTable } from "../db/schema.js";
+import type { Agent, AgentPermission, AgentSpendingLog } from "./types.js";
 import { AgentPermissionSchema } from "./types.js";
 
 const RegisterAgentInputSchema = z.object({
@@ -84,4 +84,61 @@ export async function revokeAgent(db: Database, agentId: string): Promise<Agent>
 	}
 
 	return revoked as Agent;
+}
+
+type LogAgentSpendingInput = {
+	agentId: string;
+	paymentIntentId: string;
+	amount: number;
+	asset: string;
+	recipient: string;
+	permissionSnapshot: AgentPermission;
+	status: "approved" | "rejected" | "auto_approved" | "pending_approval";
+};
+
+export async function logAgentSpending(
+	db: Database,
+	input: LogAgentSpendingInput,
+): Promise<AgentSpendingLog> {
+	const [entry] = await db
+		.insert(agentSpendingLogTable)
+		.values({
+			id: ulid(),
+			agentId: input.agentId,
+			paymentIntentId: input.paymentIntentId,
+			amount: input.amount.toFixed(6),
+			asset: input.asset,
+			recipient: input.recipient,
+			permissionSnapshot: input.permissionSnapshot,
+			status: input.status,
+			decidedAt: new Date(),
+		})
+		.returning();
+
+	if (!entry) {
+		throw new Error("Failed to insert agent spending log entry");
+	}
+
+	return {
+		...entry,
+		amount: Number(entry.amount),
+	} as AgentSpendingLog;
+}
+
+export async function getAgentSpendingLog(
+	db: Database,
+	agentId: string,
+	limit = 20,
+): Promise<AgentSpendingLog[]> {
+	const rows = await db
+		.select()
+		.from(agentSpendingLogTable)
+		.where(eq(agentSpendingLogTable.agentId, agentId))
+		.orderBy(desc(agentSpendingLogTable.decidedAt))
+		.limit(limit);
+
+	return rows.map((row) => ({
+		...row,
+		amount: Number(row.amount),
+	})) as AgentSpendingLog[];
 }
