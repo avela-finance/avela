@@ -12,4 +12,6 @@ export * from "./domain/payment-intent.js";
 export * from "./domain/position.js";
 export * from "./domain/settlement.js";
 export * from "./domain/spending-power.js";
+export * from "./domain/policy-defaults.js";
+export * from "./domain/spending-policy.js";
 export * from "./domain/types.js";
