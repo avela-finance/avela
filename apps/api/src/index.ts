@@ -1,10 +1,18 @@
+import {
+	createDb,
+	createIsUsernameAvailable,
+	createRegisterUsername,
+	createResolveUsername,
+} from "@avela/core";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { getEnv } from "./env.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requestId } from "./middleware/request-id.js";
 import { accountRoutes } from "./routes/accounts.js";
 import { assetRoutes } from "./routes/assets.js";
 import { healthRoutes } from "./routes/health.js";
+import { createIdentityRoutes } from "./routes/identity.js";
 import { portfolioRoutes } from "./routes/portfolio.js";
 
 export type AppVariables = {
@@ -22,6 +30,17 @@ app.route("/health", healthRoutes);
 app.route("/accounts", accountRoutes);
 app.route("/assets", assetRoutes);
 app.route("/accounts/:id/portfolio", portfolioRoutes);
+
+const env = getEnv();
+const db = createDb(env.DATABASE_URL);
+app.route(
+	"/identity",
+	createIdentityRoutes({
+		registerUsername: createRegisterUsername(db),
+		resolveUsername: createResolveUsername(db),
+		isUsernameAvailable: createIsUsernameAvailable(db),
+	}),
+);
 
 export default app;
 export type AppType = typeof app;
