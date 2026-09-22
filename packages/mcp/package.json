@@ -1,0 +1,21 @@
+{
+	"name": "@avela/mcp",
+	"version": "0.1.0",
+	"type": "module",
+	"private": true,
+	"main": "src/index.ts",
+	"scripts": {
+		"dev": "node --watch src/index.ts",
+		"build": "tsc -p tsconfig.build.json",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@avela/core": "workspace:*",
+		"@modelcontextprotocol/sdk": "^1.30.0",
+		"zod": "^3.25.0"
+	},
+	"devDependencies": {
+		"vitest": "^5.0.1",
+		"typescript": "^5.0.0"
+	}
+}
