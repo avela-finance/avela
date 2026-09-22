@@ -35,11 +35,15 @@ The haircut percentage varies by asset (blue-chip vs. volatile), and the mechani
 
 ### 1.4 Core Thesis
 
-Tokenized stocks already trade on-chain. That alone does not make them more valuable than the same assets in a brokerage app. Tokenized assets become genuinely more valuable when they can participate in useful economic workflows beyond holding and trading — when ownership itself becomes usable spending power.
+Tokenized stocks already trade on-chain. That alone does not make them more valuable than the same assets in a brokerage app. The opportunity goes beyond simply putting stocks onchain. Tokenized assets become genuinely more valuable when they can participate in useful economic workflows beyond holding and trading — when ownership itself becomes usable spending power.
 
-Avela is built around that insight. It connects ownership of a tokenized asset directly to the ability to pay. The asset class we start with is tokenized equities; the thesis is broader, but the MVP stays narrow on purpose.
+Avela locks tokenized stocks as collateral and turns them into spending power — spend without selling. It connects ownership of a tokenized asset directly to the ability to pay. The asset class we start with is tokenized equities; the thesis is broader, but the MVP stays narrow on purpose.
 
 **The role of stablecoins:** Stablecoins (USDG, USDC) play two roles: (1) a holdable balance in the account — like cash alongside your stocks, and (2) the settlement backbone — they settle instantly, work globally, and bridge tokenized stocks to real commerce. The merchant can receive stablecoins directly or local currency (USD, GHS, NGN, YEN, other local currencies) via payout partners — the stablecoin routing is invisible to both sides.
+
+**The endgame: bridging tokenized stocks, local stablecoins, and fiat.** Combine tokenized stocks with fiat onramps and local stablecoins, so a user moves between them without ever thinking about the plumbing underneath. Ownership should feel simple and frictionless. A user in Accra holds wGOOGLx, pays a supplier in Lagos who receives NGN, and neither party thinks about the chain, the stablecoin, or the conversion. This is where the real value is — not in which chain the stocks live on, but in the bridge between tokenized ownership and local commerce.
+
+**Chain-agnostic by design.** Avela is not built for one chain or one ecosystem. The adapter architecture (asset engines, settlement routing, oracle abstraction) means deploying to a new chain is a configuration change — new asset addresses, new RPC, same product. X Layer is the starting point because xStocks and OKX Dev Day are the first opportunity. Base is next — Coinbase's tokenized stocks (NVDAc, etc.) trade there natively with $1B+ volume. Every chain that has liquid tokenized equities and stablecoin pools is a deployment target.
 
 This maps directly to what "Build a Market" tracks and RWA-focused programs are asking for — new ways for users and assets to interact onchain, and asset-based payment or commerce experiences by integrating tokenized stocks and RWA.
 
@@ -485,17 +489,21 @@ MVP scope, detailed roadmap, milestones, technical choices, and target events ar
 
 ### 10.1 Initial Market Entry
 
-**Beachhead:** holders of tokenized equities in Africa, Asia, and Latin America who want dollar-denominated spending power from their portfolio — markets where cross-border stablecoin commerce is strongest and traditional banking rails are weakest. Crypto-native users globally are early adopters; the beachhead markets are where the product becomes essential.
+**Beachhead:** holders of tokenized equities in Africa, Southeast Asia, and Latin America who want dollar-denominated spending power from their portfolio — markets where cross-border stablecoin commerce is strongest and traditional banking rails are weakest. Crypto-native users globally are early adopters; the beachhead markets are where the product becomes essential, not optional.
+
+**Why these markets:** In many emerging markets, access to US equities has been limited by high fees, weak infrastructure, and products that were never designed for local users. Tokenized stocks make it possible to build new experiences for users who have historically had little or no access. Avela bridges that gap — hold tokenized stocks, spend locally in GHS, NGN, KES, PHP, BRL, or any local currency via payout partners. The user never thinks about the chain or the conversion.
 
 **Wedge:** "Spend from your portfolio. Without selling."
 
 **Near-term channels:**
 
-- X Layer ecosystem (xStocks holders, OKX community)
+- X Layer ecosystem (xStocks holders, OKX community) — first deployment
+- Base ecosystem (Coinbase tokenized stocks, $1B+ volume) — second deployment
 - OKX Dev Day 2026 as launch event
+- Base "Request for Builders: Tokenized Stocks" grant programme
 - Circle Developer Grants (if stablecoin leg built on Circle/Arc)
 - Crypto-native communities holding tokenized equities
-- Founder/developer communities across Africa, Asia, and Latin America
+- Founder/developer communities across Africa, Southeast Asia, and Latin America
 
 ### 10.2 Distribution
 
@@ -588,7 +596,7 @@ Avela's moat: **programmable spending account** — policies, agent permissions,
 - A portfolio dashboard or brokerage — the portfolio powers spending, it is not the product
 - A card-first product — the card is a future surface, the account is the product
 - An AI-agent product — agents operate the account under permissions, they are not the product
-- A product defined by one chain, issuer, or provider — adapters are replaceable
+- A product defined by one chain, issuer, or provider — chain-agnostic by design, adapters are replaceable. X Layer is first, Base is next, any chain with liquid tokenized equities is a target
 
 ---
 

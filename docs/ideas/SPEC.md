@@ -257,17 +257,17 @@ Checkout:
 - "Pay with Avela" button at demo merchant checkout
 - Demo merchant storefront (simple product page → checkout → pay → receipt)
 
-**Phase 2 — Multi-currency, local rails, and merchant tools**
+**Phase 2 — Base deployment, local rails, and merchant tools**
 
-Additional wrapped xStocks (wTSLAx, wSPCXx, wMSFTx, wMETAx — wAAPLx and wGOOGLx already in MVP). Self-replenishing stablecoin reserve (batch rebalancing from vault positions). Local currency payouts via Rain (80+ countries, 50+ currencies). Merchant checkout SDK/API. Recurring payments and subscriptions. Advanced identity (ENS, cross-platform resolution). Multisig upgrade for contract operator key.
+Deploy to Base — Coinbase's tokenized stocks (NVDAc, etc.) trade natively with $1B+ volume. Same contracts, new asset registry. Additional wrapped xStocks on X Layer (wTSLAx, wSPCXx, wMSFTx, wMETAx). Self-replenishing stablecoin reserve (batch rebalancing from vault positions). Local currency payouts via Rain (80+ countries, 50+ currencies) — GHS, NGN, KES, PHP, BRL, USD. Fiat onramps so users can fund accounts without existing crypto. Merchant checkout SDK/API. Recurring payments and subscriptions. Advanced identity (ENS, cross-platform resolution). Multisig upgrade for contract operator key.
 
-**Phase 3 — Full intelligence and card spending**
+**Phase 3 — Full intelligence, card spending, and fiat bridge**
 
-Advanced watchers and triggers (portfolio rebalance alerts, auto-payments on conditions). Multi-agent orchestration. Card spending (Privy + Stripe Issuing). Fiat/cash rails and local payouts (Rain). Portable permissions across providers. Agent-to-agent commerce.
+Advanced watchers and triggers (portfolio rebalance alerts, auto-payments on conditions). Multi-agent orchestration. Card spending (Privy + Stripe Issuing). Deep fiat/local stablecoin integration — combine tokenized stocks with fiat onramps and local stablecoins so a user moves between them without thinking about the plumbing. Portable permissions across providers. Agent-to-agent commerce. This is where Avela becomes essential in Africa, Southeast Asia, and Latin America — not just a crypto tool, but a bridge between tokenized ownership and local commerce.
 
 **Phase 4 — Platform and expansion**
 
-"Pay with Avela" as embeddable checkout SDK for other RWA platforms, wallets, neobanks. Additional asset classes (tokenized commodities, credit, real estate tokens). Additional chains and rails. Business account features and B2B treasury workflows.
+"Pay with Avela" as embeddable checkout SDK for other RWA platforms, wallets, neobanks. Additional asset classes (tokenized commodities, credit, real estate tokens). Additional chains beyond X Layer and Base — any chain with liquid tokenized equities and stablecoin pools is a deployment target. Business account features and B2B treasury workflows.
 
 ### 3.2 Future Capabilities
 
@@ -275,8 +275,8 @@ Extensions of the account, not prerequisites:
 
 - Yield / Earn on idle assets
 - Additional tokenized asset classes beyond equities
-- Multi-chain support
-- Fiat settlement rails
+- Additional chains (every chain with liquid tokenized equities is a target)
+- Deep fiat/local stablecoin bridge (onramps, local currency settlement)
 - Advanced agent-to-agent commerce
 - Shared / multi-user accounts
 

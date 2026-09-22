@@ -1,12 +1,14 @@
 # Avela
 
-**A programmable spending account for tokenized stocks.** Pay from your portfolio without selling. Agents and humans both operate the account, with intelligence and messaging built in.
+**A programmable spending account for tokenized stocks.** Lock tokenized stocks as collateral, spend without selling. Agents and humans both operate the account, with intelligence and messaging built in.
 
 ## What is Avela?
 
-Avela turns tokenized stocks into spending power. Deposit, see what you can spend, and pay at checkout — your stocks stay in the market, the merchant gets paid in their currency. Programmable policies, agent permissions, and a WhatsApp-native messaging layer make this an account you configure, not just a card you tap.
+Avela turns tokenized stocks into spending power. Deposit tokenized stocks, lock them as collateral, and pay at checkout — your stocks stay in the market, the merchant gets paid in their currency. Programmable policies, agent permissions, and a WhatsApp-native messaging layer make this an account you configure, not just a card you tap.
 
-**Phase 1** targets OKX Dev Day 2026 (submit Sep 25, finale Oct 6–7 Singapore) with 3 wrapped xStocks on X Layer, agent spending, WhatsApp access, and payment links.
+Chain-agnostic by design — X Layer is the first deployment, Base is next. Any chain with liquid tokenized equities and stablecoin pools is a target. The endgame is bridging tokenized stocks with fiat onramps and local stablecoins, so users in Africa, Southeast Asia, and Latin America move between them without thinking about the plumbing.
+
+**Phase 1** targets OKX Dev Day 2026 (submit Sep 25, finale Oct 6–7 Singapore) with 5 wrapped xStocks on X Layer, agent spending, WhatsApp access, and payment links.
 
 ## Workspace
 
