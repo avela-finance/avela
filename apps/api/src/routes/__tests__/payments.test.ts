@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
+import { describe, expect, it, vi } from "vitest";
 import { paymentsRoutes } from "../payments.js";
 
 describe("POST /payments/intent", () => {
@@ -37,7 +37,7 @@ describe("POST /payments/intent", () => {
 		});
 
 		expect(res.status).toBe(201);
-		const body = await res.json();
+		const body = (await res.json()) as { data: { id: string; status: string } };
 		expect(body.data.id).toBe("01JTEST000000000000000000");
 		expect(body.data.status).toBe("created");
 	});
@@ -88,7 +88,7 @@ describe("GET /payments/:id", () => {
 
 		const res = await app.request("/payments/01JTEST000000000000000000");
 		expect(res.status).toBe(200);
-		const body = await res.json();
+		const body = (await res.json()) as { data: { id: string } };
 		expect(body.data.id).toBe("01JTEST000000000000000000");
 	});
 

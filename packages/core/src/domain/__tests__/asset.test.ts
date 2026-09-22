@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { getAsset, getSupportedAssets, isAssetEligible, STABLECOINS, STABLECOIN_DECIMALS } from "../asset.js";
+import {
+	getAsset,
+	getSupportedAssets,
+	isAssetEligible,
+	STABLECOINS,
+	STABLECOIN_DECIMALS,
+} from "../asset.js";
 
 describe("asset registry", () => {
 	it("returns 5 MVP assets", () => {
 		const assets = getSupportedAssets();
 		expect(assets).toHaveLength(5);
-		expect(assets.map((a) => a.symbol)).toEqual([
-			"wSPYx",
-			"wQQQx",
-			"wNVDAx",
-			"wGOOGLx",
-			"wAAPLx",
-		]);
+		expect(assets.map((a) => a.symbol)).toEqual(["wSPYx", "wQQQx", "wNVDAx", "wGOOGLx", "wAAPLx"]);
 	});
 
 	it("returns correct wSPYx config", () => {

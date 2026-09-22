@@ -4,9 +4,7 @@ import { z } from "zod";
 const createPaymentIntentSchema = z.object({
 	accountId: z.string().min(1),
 	amount: z.number().positive(),
-	recipientAddress: z
-		.string()
-		.regex(/^0x[a-fA-F0-9]{40}$/, "Invalid EVM address"),
+	recipientAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid EVM address"),
 	recipientUsername: z.string().optional(),
 });
 
@@ -53,10 +51,7 @@ export function paymentsRoutes(deps: PaymentDeps) {
 		const intent = await deps.getPaymentIntent(id);
 
 		if (!intent) {
-			return c.json(
-				{ error: { code: "NOT_FOUND", message: `Payment ${id} not found` } },
-				404,
-			);
+			return c.json({ error: { code: "NOT_FOUND", message: `Payment ${id} not found` } }, 404);
 		}
 
 		return c.json({ data: intent });
@@ -81,10 +76,7 @@ export function paymentsRoutes(deps: PaymentDeps) {
 		const intent = await deps.getPaymentIntent(id);
 
 		if (!intent) {
-			return c.json(
-				{ error: { code: "NOT_FOUND", message: `Payment ${id} not found` } },
-				404,
-			);
+			return c.json({ error: { code: "NOT_FOUND", message: `Payment ${id} not found` } }, 404);
 		}
 
 		const result = await deps.executePayment(id);

@@ -31,7 +31,9 @@ describe("buildReceipt", () => {
 			},
 		});
 
-		expect(receipt.paymentId).toBe("0x0000000000000000000000000000000000000000000000000000000000000001");
+		expect(receipt.paymentId).toBe(
+			"0x0000000000000000000000000000000000000000000000000000000000000001",
+		);
 		expect(receipt.accountId).toBe("01JACCOUNT0000000000000");
 		expect(receipt.amount).toBe(25);
 		expect(receipt.collateralAsset).toBe("wSPYx");

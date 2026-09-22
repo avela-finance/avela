@@ -110,10 +110,7 @@ export async function createPaymentIntent(
 }
 
 export async function getPaymentIntent(db: Database, id: string) {
-	const [row] = await db
-		.select()
-		.from(paymentIntentsTable)
-		.where(eq(paymentIntentsTable.id, id));
+	const [row] = await db.select().from(paymentIntentsTable).where(eq(paymentIntentsTable.id, id));
 	return row ?? null;
 }
 

@@ -127,9 +127,7 @@ function buildDeps(overrides: Partial<ExecutePaymentDeps> = {}): ExecutePaymentD
 			callLog.push("calculateSpendingPower");
 			return {
 				accountId: "01JACCOUNT0000000000000",
-				perAsset: [
-					{ assetSymbol: "wSPYx", positionValue: 1400, haircut: 0.5, spendingPower: 700 },
-				],
+				perAsset: [{ assetSymbol: "wSPYx", positionValue: 1400, haircut: 0.5, spendingPower: 700 }],
 				stablecoinBalance: 100,
 				totalSpendingPower: 800,
 				calculatedAt: new Date(),
@@ -180,7 +178,9 @@ describe("executePayment", () => {
 			evaluatePolicy: async () => ({
 				passed: false,
 				requiresApproval: false,
-				violations: [{ rule: "daily_limit", message: "Exceeds limit", currentValue: 600, threshold: 500 }],
+				violations: [
+					{ rule: "daily_limit", message: "Exceeds limit", currentValue: 600, threshold: 500 },
+				],
 			}),
 		});
 

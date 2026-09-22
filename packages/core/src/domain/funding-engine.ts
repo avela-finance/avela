@@ -52,12 +52,17 @@ export function selectFundingSource(params: {
 		};
 	}
 
-	throw new Error("Insufficient funds: neither spending power nor stablecoin balance covers the payment");
+	throw new Error(
+		"Insufficient funds: neither spending power nor stablecoin balance covers the payment",
+	);
 }
 
 export type ExecutePaymentDeps = {
 	db: Database;
-	getPaymentIntent: (db: Database, id: string) => Promise<{
+	getPaymentIntent: (
+		db: Database,
+		id: string,
+	) => Promise<{
 		id: string;
 		accountId: string;
 		amount: number;
