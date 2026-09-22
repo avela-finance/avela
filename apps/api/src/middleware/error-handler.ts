@@ -20,6 +20,19 @@ export const errorHandler: ErrorHandler = (err, c) => {
 		);
 	}
 
+	if (err instanceof SyntaxError) {
+		return c.json(
+			{
+				error: {
+					code: "PARSE_ERROR",
+					message: "Invalid JSON body",
+				},
+				meta: { requestId, timestamp },
+			},
+			400,
+		);
+	}
+
 	if (err instanceof HTTPException) {
 		return c.json(
 			{
