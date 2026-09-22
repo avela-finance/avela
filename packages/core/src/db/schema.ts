@@ -114,19 +114,23 @@ export const dailySpendingLogTable = pgTable(
 	(table) => [index("daily_spending_account_spent_idx").on(table.accountId, table.spentAt)],
 );
 
-export const agentsTable = pgTable("agents", {
-	id: varchar("id", { length: 26 }).primaryKey(),
-	accountId: varchar("account_id", { length: 26 })
-		.notNull()
-		.references(() => accountsTable.id),
-	name: varchar("name", { length: 100 }).notNull(),
-	walletAddress: varchar("wallet_address", { length: 42 }).notNull(),
-	permissions: jsonb("permissions").notNull(),
-	status: varchar("status", { length: 20 }).notNull().default("active"),
-	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-	expiresAt: timestamp("expires_at", { withTimezone: true }),
-});
+export const agentsTable = pgTable(
+	"agents",
+	{
+		id: varchar("id", { length: 26 }).primaryKey(),
+		accountId: varchar("account_id", { length: 26 })
+			.notNull()
+			.references(() => accountsTable.id),
+		name: varchar("name", { length: 100 }).notNull(),
+		walletAddress: varchar("wallet_address", { length: 42 }).notNull(),
+		permissions: jsonb("permissions").notNull(),
+		status: varchar("status", { length: 20 }).notNull().default("active"),
+		createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+		expiresAt: timestamp("expires_at", { withTimezone: true }),
+	},
+	(table) => [index("agents_account_id_idx").on(table.accountId)],
+);
 
 export const agentSpendingLogTable = pgTable(
 	"agent_spending_log",

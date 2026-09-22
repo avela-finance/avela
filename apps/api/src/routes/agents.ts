@@ -110,6 +110,18 @@ export function agentsRoutes(deps: AgentDeps) {
 			const updated = await deps.updateAgentPermissions(id, parsed.data);
 			return c.json({ data: updated });
 		} catch (err) {
+			if (err instanceof z.ZodError) {
+				return c.json(
+					{
+						error: {
+							code: "VALIDATION_ERROR",
+							message: "Invalid permission combination",
+							details: err.flatten(),
+						},
+					},
+					400,
+				);
+			}
 			const message = err instanceof Error ? err.message : "Unknown error";
 			if (message.includes("not found")) {
 				return c.json({ error: { code: "NOT_FOUND", message: `Agent ${id} not found` } }, 404);
@@ -135,8 +147,14 @@ export function agentsRoutes(deps: AgentDeps) {
 
 	app.get("/:id/spending-log", async (c) => {
 		const id = c.req.param("id");
-		const limitParam = c.req.query("limit");
-		const limit = limitParam ? Number.parseInt(limitParam, 10) : 20;
+		const rawLimit = c.req.query("limit");
+		const limit = rawLimit ? Number.parseInt(rawLimit, 10) : 20;
+		if (Number.isNaN(limit) || limit < 1 || limit > 100) {
+			return c.json(
+				{ error: { code: "VALIDATION_ERROR", message: "limit must be 1-100" } },
+				400,
+			);
+		}
 
 		const log = await deps.getAgentSpendingLog(id, limit);
 		return c.json({ data: log });

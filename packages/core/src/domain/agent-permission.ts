@@ -1,4 +1,4 @@
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import type { Database } from "../db/client.js";
 import { agentSpendingLogTable, agentsTable } from "../db/schema.js";
 import { AgentPermissionSchema } from "./types.js";
@@ -64,15 +64,18 @@ export async function evaluateAgentPermission(
 	}
 
 	// Check asset allowlist
-	if (input.asset && perms.allowedAssets.length > 0 && !perms.allowedAssets.includes(input.asset)) {
-		violations.push(`Asset ${input.asset} not in allowed list: ${perms.allowedAssets.join(", ")}`);
+	if (perms.allowedAssets.length > 0) {
+		if (!input.asset) {
+			violations.push("Asset is required when allowedAssets restriction is set");
+		} else if (!perms.allowedAssets.includes(input.asset)) {
+			violations.push(`Asset ${input.asset} not in allowed list: ${perms.allowedAssets.join(", ")}`);
+		}
 	}
 
 	// Check recipient allowlist (only when non-empty)
-	if (
-		perms.allowedRecipients.length > 0 &&
-		!perms.allowedRecipients.includes(input.recipient.toLowerCase())
-	) {
+	const normalizedRecipient = input.recipient.toLowerCase();
+	const normalizedAllowlist = perms.allowedRecipients.map((r) => r.toLowerCase());
+	if (normalizedAllowlist.length > 0 && !normalizedAllowlist.includes(normalizedRecipient)) {
 		violations.push(`Recipient ${input.recipient} not in allowed recipients`);
 	}
 
@@ -85,6 +88,7 @@ export async function evaluateAgentPermission(
 			and(
 				eq(agentSpendingLogTable.agentId, input.agentId),
 				gte(agentSpendingLogTable.decidedAt, oneDayAgo),
+				inArray(agentSpendingLogTable.status, ["approved", "auto_approved"]),
 			),
 		);
 
