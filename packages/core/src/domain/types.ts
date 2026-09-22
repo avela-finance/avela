@@ -224,3 +224,14 @@ export type WhatsAppNotification = {
 	respondedAt: Date | null;
 	response: "approved" | "rejected" | null;
 };
+
+// --- Identity ---
+
+export type Identity = {
+	id: string;
+	accountId: string;
+	username: string;
+	displayName: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+};
