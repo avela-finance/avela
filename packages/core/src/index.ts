@@ -6,6 +6,8 @@ export * from "./adapters/xlayer-rpc.js";
 export * from "./db/client.js";
 export * from "./db/schema.js";
 export * from "./domain/account.js";
+export * from "./domain/agent.js";
+export * from "./domain/agent-permission.js";
 export * from "./domain/asset.js";
 export * from "./domain/funding-engine.js";
 export * from "./domain/payment-intent.js";
