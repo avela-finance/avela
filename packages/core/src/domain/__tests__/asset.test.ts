@@ -2,10 +2,16 @@ import { describe, expect, it } from "vitest";
 import { getAsset, getSupportedAssets, isAssetEligible, STABLECOINS } from "../asset.js";
 
 describe("asset registry", () => {
-	it("returns 3 MVP assets", () => {
+	it("returns 5 MVP assets", () => {
 		const assets = getSupportedAssets();
-		expect(assets).toHaveLength(3);
-		expect(assets.map((a) => a.symbol)).toEqual(["wSPYx", "wQQQx", "wNVDAx"]);
+		expect(assets).toHaveLength(5);
+		expect(assets.map((a) => a.symbol)).toEqual([
+			"wSPYx",
+			"wQQQx",
+			"wNVDAx",
+			"wGOOGLx",
+			"wAAPLx",
+		]);
 	});
 
 	it("returns correct wSPYx config", () => {
@@ -29,6 +35,22 @@ describe("asset registry", () => {
 		expect(nvda).toBeDefined();
 		expect(nvda?.address).toBe("0xa8ddb5cd96b5222afe198316e9a57caa642850d5");
 		expect(nvda?.assetType).toBe("single_stock");
+	});
+
+	it("returns correct wGOOGLx config", () => {
+		const googl = getAsset("wGOOGLx");
+		expect(googl).toBeDefined();
+		expect(googl?.address).toBe("0xf8c5308f80e459bb53d9ebe689854d9cbb2caa6f");
+		expect(googl?.settlementStablecoin).toBe("USDC");
+		expect(googl?.assetType).toBe("single_stock");
+	});
+
+	it("returns correct wAAPLx config", () => {
+		const aapl = getAsset("wAAPLx");
+		expect(aapl).toBeDefined();
+		expect(aapl?.address).toBe("0x943bf64d566c32a2bcd41ac92fb63c111cc9de8f");
+		expect(aapl?.settlementStablecoin).toBe("USDG");
+		expect(aapl?.assetType).toBe("single_stock");
 	});
 
 	it("returns undefined for unknown asset", () => {

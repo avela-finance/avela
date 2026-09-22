@@ -39,7 +39,7 @@ Tokenized stocks already trade on-chain. That alone does not make them more valu
 
 Avela is built around that insight. It connects ownership of a tokenized asset directly to the ability to pay. The asset class we start with is tokenized equities; the thesis is broader, but the MVP stays narrow on purpose.
 
-**The role of stablecoins:** USDC plays two roles: (1) a holdable balance in the account — like cash alongside your stocks, and (2) the settlement backbone — it settles instantly, works globally, and bridges tokenized stocks to real commerce. The merchant can receive USDC directly or local currency (USD, GHS, NGN, YEN, other local currencies) via payout partners — the stablecoin routing is invisible to both sides.
+**The role of stablecoins:** Stablecoins (USDG, USDC) play two roles: (1) a holdable balance in the account — like cash alongside your stocks, and (2) the settlement backbone — they settle instantly, work globally, and bridge tokenized stocks to real commerce. The merchant can receive stablecoins directly or local currency (USD, GHS, NGN, YEN, other local currencies) via payout partners — the stablecoin routing is invisible to both sides.
 
 This maps directly to what "Build a Market" tracks and RWA-focused programs are asking for — new ways for users and assets to interact onchain, and asset-based payment or commerce experiences by integrating tokenized stocks and RWA.
 
@@ -110,7 +110,7 @@ Of the standard wedges (trading, investing, credit/yield, infrastructure, consum
                                     +----+----+
                                          v
                                   MERCHANT RECEIVES PAYMENT
-                                  (USDC, USD, GHS, NGN, etc.)
+                                  (stablecoins, USD, GHS, NGN, etc.)
 ```
 
 The account combines:
@@ -184,7 +184,7 @@ The account combines:
 
 **Agent-authorized spending:**
 
-- User grants agent permission: "spend up to 50 USDC/day on approved services"
+- User grants agent permission: "spend up to $50/day on approved services"
 - Agent operates within rules → draws spending power → merchant settled → receipt generated
 
 **Cross-border commerce:**
@@ -612,8 +612,8 @@ Avela's moat: **programmable spending account** — policies, agent permissions,
 
 - [X Layer](https://web3.okx.com/xlayer) — primary chain for MVP (OKX L2)
 - [Circle / Arc](https://www.circle.com/) — stablecoin issuance, settlement infrastructure, developer grants programme
-- USDC — primary settlement stablecoin
 - USDG (Global Dollar) — dominant stablecoin on X Layer for xStock pools
+- USDC — secondary settlement stablecoin (wQQQx, wGOOGLx route through USDC pools)
 
 ### Asset Issuers & Providers
 

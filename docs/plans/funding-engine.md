@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the payment intent lifecycle, funding source selection, Uniswap V3 swap execution, and settlement proof — turning "Pay with Avela" into a settled onchain payment.
+**Goal:** Build the payment intent lifecycle, collateral verification against AvelaVault, and settlement via AvelaPaymentRouter — turning "Pay with Avela" into a settled payment without selling user positions.
 
-**Architecture:** Payment intents flow through a state machine (created → policy_check → awaiting_approval → funding → executing → settling → settled | failed | rejected). The Funding Engine selects the best funding source under policy (spending power first, stablecoin fallback), picks the asset with the deepest pool, executes a Uniswap V3 swap on X Layer, and records settlement proof. Each payment generates a receipt with full audit trail.
+**Architecture:** Payment intents flow through a state machine (`created → policy_check → awaiting_approval → collateral_verify → settling → settled | failed | rejected`). The Funding Engine verifies the user's locked collateral in AvelaVault backs the payment, then settles from the pre-funded stablecoin reserve via AvelaPaymentRouter. No Uniswap swaps occur per payment — positions stay locked and intact. Each payment generates a receipt with `paymentId` linking vault and router events.
 
 **Tech Stack:** Drizzle ORM (Postgres), Zod, ulidx, viem (X Layer RPC + contract calls), Hono (API routes), Vitest
 
@@ -48,24 +48,20 @@ describe("payment intent state machine", () => {
 		expect(transitionStatus("policy_check", "awaiting_approval")).toBe("awaiting_approval");
 	});
 
-	it("transitions from policy_check to funding (auto-approved)", () => {
-		expect(transitionStatus("policy_check", "funding")).toBe("funding");
+	it("transitions from policy_check to collateral_verify (auto-approved)", () => {
+		expect(transitionStatus("policy_check", "collateral_verify")).toBe("collateral_verify");
 	});
 
-	it("transitions from awaiting_approval to funding", () => {
-		expect(transitionStatus("awaiting_approval", "funding")).toBe("funding");
+	it("transitions from awaiting_approval to collateral_verify", () => {
+		expect(transitionStatus("awaiting_approval", "collateral_verify")).toBe("collateral_verify");
 	});
 
 	it("transitions from awaiting_approval to rejected", () => {
 		expect(transitionStatus("awaiting_approval", "rejected")).toBe("rejected");
 	});
 
-	it("transitions from funding to executing", () => {
-		expect(transitionStatus("funding", "executing")).toBe("executing");
-	});
-
-	it("transitions from executing to settling", () => {
-		expect(transitionStatus("executing", "settling")).toBe("settling");
+	it("transitions from collateral_verify to settling", () => {
+		expect(transitionStatus("collateral_verify", "settling")).toBe("settling");
 	});
 
 	it("transitions from settling to settled", () => {
@@ -73,8 +69,8 @@ describe("payment intent state machine", () => {
 	});
 
 	it("transitions to failed from any non-terminal state", () => {
-		expect(transitionStatus("funding", "failed")).toBe("failed");
-		expect(transitionStatus("executing", "failed")).toBe("failed");
+		expect(transitionStatus("collateral_verify", "failed")).toBe("failed");
+		expect(transitionStatus("settling", "failed")).toBe("failed");
 	});
 
 	it("rejects invalid transitions", () => {
@@ -87,7 +83,7 @@ describe("payment intent state machine", () => {
 		expect(isTerminalStatus("failed")).toBe(true);
 		expect(isTerminalStatus("rejected")).toBe(true);
 		expect(isTerminalStatus("created")).toBe(false);
-		expect(isTerminalStatus("executing")).toBe(false);
+		expect(isTerminalStatus("collateral_verify")).toBe(false);
 	});
 });
 ```
@@ -106,8 +102,7 @@ export const PAYMENT_STATUSES = [
 	"created",
 	"policy_check",
 	"awaiting_approval",
-	"funding",
-	"executing",
+	"collateral_verify",
 	"settling",
 	"settled",
 	"failed",
@@ -118,21 +113,21 @@ export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 export type FundingDecision = {
 	source: "spending_power" | "stablecoin_balance";
-	asset: string | null;
-	amountIn: bigint;
-	amountOutMin: bigint;
-	pool: string;
-	stablecoin: "USDG" | "USDC";
-	conversionHop: boolean;
-	estimatedSlippage: number;
+	collateralAsset: string | null;
+	collateralVerified: boolean;
+	collateralAmount: bigint | null;
+	settlementToken: "USDG" | "USDC";
+	paymentId: string;
+	spendingPowerAtDecision: number;
 	decidedAt: Date;
 };
 
 export type Settlement = {
+	paymentId: string;
 	txHash: string;
 	blockNumber: number;
 	amountSettled: bigint;
-	stablecoin: "USDG" | "USDC";
+	settlementToken: "USDG" | "USDC";
 	gasUsed: bigint;
 	settledAt: Date;
 };
@@ -143,7 +138,6 @@ export type PaymentIntent = {
 	amount: number;
 	recipientAddress: string;
 	recipientUsername: string | null;
-	settlementCurrency: "USDG" | "USDC";
 	status: PaymentStatus;
 	fundingDecision: FundingDecision | null;
 	settlement: Settlement | null;
@@ -155,20 +149,18 @@ export type Receipt = {
 	paymentId: string;
 	accountId: string;
 	amount: number;
-	sourceAsset: string;
-	fundingSource: string;
+	collateralAsset: string;
+	settlementToken: string;
 	settlementTxHash: string;
-	settlementStablecoin: string;
 	recipientAddress: string;
 	timestamp: Date;
 };
 
 const VALID_TRANSITIONS: Record<PaymentStatus, PaymentStatus[]> = {
 	created: ["policy_check", "failed"],
-	policy_check: ["awaiting_approval", "funding", "failed"],
-	awaiting_approval: ["funding", "rejected", "failed"],
-	funding: ["executing", "failed"],
-	executing: ["settling", "failed"],
+	policy_check: ["awaiting_approval", "collateral_verify", "failed"],
+	awaiting_approval: ["collateral_verify", "rejected", "failed"],
+	collateral_verify: ["settling", "failed"],
 	settling: ["settled", "failed"],
 	settled: [],
 	failed: [],
@@ -191,7 +183,7 @@ export function isTerminalStatus(status: PaymentStatus): boolean {
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `bun run test packages/core/src/domain/__tests__/payment-intent.test.ts`
-Expected: PASS — all 11 tests green
+Expected: PASS — all 10 tests green
 
 - [ ] **Step 5: Commit**
 
@@ -235,6 +227,7 @@ describe("payment intent schema", () => {
 		expect(columns).toContain("paymentIntentId");
 		expect(columns).toContain("txHash");
 		expect(columns).toContain("blockNumber");
+		expect(columns).toContain("paymentId");
 	});
 });
 ```
@@ -266,8 +259,7 @@ export const paymentStatusEnum = pgEnum("payment_status", [
 	"created",
 	"policy_check",
 	"awaiting_approval",
-	"funding",
-	"executing",
+	"collateral_verify",
 	"settling",
 	"settled",
 	"failed",
@@ -280,7 +272,6 @@ export const paymentIntents = pgTable("payment_intents", {
 	amount: numeric("amount", { precision: 18, scale: 6 }).notNull(),
 	recipientAddress: varchar("recipient_address", { length: 42 }).notNull(),
 	recipientUsername: varchar("recipient_username", { length: 32 }),
-	settlementCurrency: varchar("settlement_currency", { length: 10 }).notNull(),
 	status: paymentStatusEnum("status").notNull().default("created"),
 	fundingDecision: jsonb("funding_decision"),
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -293,10 +284,11 @@ export const settlements = pgTable("settlements", {
 		.notNull()
 		.references(() => paymentIntents.id)
 		.unique(),
+	paymentId: varchar("payment_id", { length: 66 }).notNull(),
 	txHash: varchar("tx_hash", { length: 66 }).notNull(),
 	blockNumber: integer("block_number").notNull(),
 	amountSettled: varchar("amount_settled", { length: 78 }).notNull(),
-	stablecoin: varchar("stablecoin", { length: 10 }).notNull(),
+	settlementToken: varchar("settlement_token", { length: 10 }).notNull(),
 	gasUsed: varchar("gas_used", { length: 78 }).notNull(),
 	settledAt: timestamp("settled_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -377,10 +369,8 @@ describe("updatePaymentStatus", () => {
 			recipientAddress: "0x1234567890abcdef1234567890abcdef12345678",
 		});
 
-		// Transition to settled through valid path
 		await updatePaymentStatus(db, intent.id, "policy_check");
-		await updatePaymentStatus(db, intent.id, "funding");
-		await updatePaymentStatus(db, intent.id, "executing");
+		await updatePaymentStatus(db, intent.id, "collateral_verify");
 		await updatePaymentStatus(db, intent.id, "settling");
 		await updatePaymentStatus(db, intent.id, "settled");
 
@@ -416,7 +406,6 @@ export async function createPaymentIntent(
 		amount: number;
 		recipientAddress: string;
 		recipientUsername?: string;
-		settlementCurrency?: "USDG" | "USDC";
 	},
 ) {
 	const id = ulid();
@@ -428,7 +417,6 @@ export async function createPaymentIntent(
 			amount: params.amount.toFixed(6),
 			recipientAddress: params.recipientAddress,
 			recipientUsername: params.recipientUsername ?? null,
-			settlementCurrency: params.settlementCurrency ?? "USDG",
 			status: "created",
 		})
 		.returning();
@@ -507,7 +495,7 @@ git commit -m "feat(core): add payment intent CRUD operations"
 
 **Interfaces:**
 - Consumes: `calculateSpendingPower(accountId)` from `spending-power.ts`, `getAsset(symbol)` from `asset.ts`, `PaymentIntent` and `FundingDecision` from `payment-intent.ts`
-- Produces: `selectFundingSource(params): Promise<FundingDecision>`
+- Produces: `selectFundingSource(params): FundingDecision`
 
 - [ ] **Step 1: Write the failing test for funding source selection**
 
@@ -544,17 +532,16 @@ const MOCK_SPENDING_POWER: SpendingPower = {
 };
 
 describe("selectFundingSource", () => {
-	it("selects spending power first, picking asset with deepest pool", () => {
+	it("selects spending power first, picking asset with highest spending power", () => {
 		const result = selectFundingSource({
 			amount: 25,
 			spendingPower: MOCK_SPENDING_POWER,
-			fundingPriority: ["spending_power", "stablecoin_balance"],
 		});
 
 		expect(result.source).toBe("spending_power");
-		expect(result.asset).toBe("wSPYx");
-		expect(result.stablecoin).toBe("USDG");
-		expect(result.conversionHop).toBe(false);
+		expect(result.collateralAsset).toBe("wSPYx");
+		expect(result.settlementToken).toBe("USDG");
+		expect(result.collateralVerified).toBe(false);
 	});
 
 	it("falls back to stablecoin balance when spending power insufficient", () => {
@@ -571,11 +558,10 @@ describe("selectFundingSource", () => {
 		const result = selectFundingSource({
 			amount: 25,
 			spendingPower: lowSpendingPower,
-			fundingPriority: ["spending_power", "stablecoin_balance"],
 		});
 
 		expect(result.source).toBe("stablecoin_balance");
-		expect(result.asset).toBeNull();
+		expect(result.collateralAsset).toBeNull();
 	});
 
 	it("throws when neither source covers the amount", () => {
@@ -590,37 +576,26 @@ describe("selectFundingSource", () => {
 			selectFundingSource({
 				amount: 25,
 				spendingPower: emptyPower,
-				fundingPriority: ["spending_power", "stablecoin_balance"],
 			}),
 		).toThrow("Insufficient funds");
 	});
 
-	it("adds conversion hop when settlement currency differs from pool stablecoin", () => {
+	it("records spendingPowerAtDecision", () => {
 		const result = selectFundingSource({
 			amount: 25,
 			spendingPower: MOCK_SPENDING_POWER,
-			fundingPriority: ["spending_power", "stablecoin_balance"],
-			requiredSettlementCurrency: "USDC",
 		});
 
-		expect(result.source).toBe("spending_power");
-		expect(result.asset).toBe("wSPYx");
-		expect(result.stablecoin).toBe("USDG");
-		expect(result.conversionHop).toBe(true);
+		expect(result.spendingPowerAtDecision).toBe(1700);
 	});
 
-	it("prefers asset whose pool already matches settlement currency", () => {
+	it("generates a paymentId as bytes32 hex", () => {
 		const result = selectFundingSource({
 			amount: 25,
 			spendingPower: MOCK_SPENDING_POWER,
-			fundingPriority: ["spending_power", "stablecoin_balance"],
-			requiredSettlementCurrency: "USDC",
-			preferDirectSettlement: true,
 		});
 
-		expect(result.asset).toBe("wQQQx");
-		expect(result.stablecoin).toBe("USDC");
-		expect(result.conversionHop).toBe(false);
+		expect(result.paymentId).toMatch(/^0x[a-f0-9]{64}$/);
 	});
 });
 ```
@@ -635,81 +610,54 @@ Expected: FAIL — module not found
 ```ts
 // packages/core/src/domain/funding-engine.ts
 
+import { ulid } from "ulidx";
+import { keccak256, toHex } from "viem";
+import { getAsset } from "./asset.js";
 import type { FundingDecision } from "./payment-intent.js";
 import type { SpendingPower } from "./spending-power.js";
 
-type FundingSource = "spending_power" | "stablecoin_balance";
-
-const ASSET_POOL_CONFIG: Record<string, { stablecoin: "USDG" | "USDC"; liquidityUsd: number }> = {
-	wSPYx: { stablecoin: "USDG", liquidityUsd: 1_890_000 },
-	wQQQx: { stablecoin: "USDC", liquidityUsd: 738_000 },
-	wNVDAx: { stablecoin: "USDG", liquidityUsd: 623_000 },
-};
+export function generatePaymentId(): string {
+	return keccak256(toHex(ulid()));
+}
 
 export function selectFundingSource(params: {
 	amount: number;
 	spendingPower: SpendingPower;
-	fundingPriority: FundingSource[];
-	requiredSettlementCurrency?: "USDG" | "USDC";
-	preferDirectSettlement?: boolean;
 }): FundingDecision {
-	const { amount, spendingPower, fundingPriority, requiredSettlementCurrency, preferDirectSettlement } = params;
+	const { amount, spendingPower } = params;
+	const paymentId = generatePaymentId();
 
-	for (const source of fundingPriority) {
-		if (source === "spending_power") {
-			const eligible = spendingPower.perAsset
-				.filter((a) => a.spendingPower >= amount)
-				.filter((a) => ASSET_POOL_CONFIG[a.assetSymbol] !== undefined);
+	const eligible = spendingPower.perAsset
+		.filter((a) => a.spendingPower >= amount)
+		.filter((a) => getAsset(a.assetSymbol) !== undefined);
 
-			if (eligible.length === 0) continue;
+	if (eligible.length > 0) {
+		const selected = eligible.sort((a, b) => b.spendingPower - a.spendingPower)[0]!;
+		const asset = getAsset(selected.assetSymbol)!;
 
-			let selected;
-			if (preferDirectSettlement && requiredSettlementCurrency) {
-				const directMatch = eligible.find(
-					(a) => ASSET_POOL_CONFIG[a.assetSymbol]!.stablecoin === requiredSettlementCurrency,
-				);
-				selected = directMatch ?? eligible[0]!;
-			} else {
-				selected = eligible.sort(
-					(a, b) =>
-						(ASSET_POOL_CONFIG[b.assetSymbol]?.liquidityUsd ?? 0) -
-						(ASSET_POOL_CONFIG[a.assetSymbol]?.liquidityUsd ?? 0),
-				)[0]!;
-			}
+		return {
+			source: "spending_power",
+			collateralAsset: selected.assetSymbol,
+			collateralVerified: false,
+			collateralAmount: null,
+			settlementToken: asset.settlementStablecoin,
+			paymentId,
+			spendingPowerAtDecision: spendingPower.totalSpendingPower,
+			decidedAt: new Date(),
+		};
+	}
 
-			const poolConfig = ASSET_POOL_CONFIG[selected.assetSymbol]!;
-			const needsHop =
-				requiredSettlementCurrency !== undefined &&
-				poolConfig.stablecoin !== requiredSettlementCurrency;
-
-			return {
-				source: "spending_power",
-				asset: selected.assetSymbol,
-				amountIn: 0n,
-				amountOutMin: 0n,
-				pool: selected.assetSymbol,
-				stablecoin: poolConfig.stablecoin,
-				conversionHop: needsHop,
-				estimatedSlippage: 0,
-				decidedAt: new Date(),
-			};
-		}
-
-		if (source === "stablecoin_balance") {
-			if (spendingPower.stablecoinBalance >= amount) {
-				return {
-					source: "stablecoin_balance",
-					asset: null,
-					amountIn: 0n,
-					amountOutMin: 0n,
-					pool: "",
-					stablecoin: requiredSettlementCurrency ?? "USDC",
-					conversionHop: false,
-					estimatedSlippage: 0,
-					decidedAt: new Date(),
-				};
-			}
-		}
+	if (spendingPower.stablecoinBalance >= amount) {
+		return {
+			source: "stablecoin_balance",
+			collateralAsset: null,
+			collateralVerified: false,
+			collateralAmount: null,
+			settlementToken: "USDG",
+			paymentId,
+			spendingPowerAtDecision: spendingPower.totalSpendingPower,
+			decidedAt: new Date(),
+		};
 	}
 
 	throw new Error("Insufficient funds: neither spending power nor stablecoin balance covers the payment");
@@ -725,293 +673,308 @@ Expected: PASS — all 5 tests green
 
 ```bash
 git add packages/core/src/domain/funding-engine.ts packages/core/src/domain/__tests__/funding-engine.test.ts
-git commit -m "feat(core): add funding source selection logic"
+git commit -m "feat(core): add funding source selection with vault model"
 ```
 
 ---
 
-### Task 5: Swap Adapter Interface and Uniswap V3 Implementation
+### Task 5: Vault Adapter Interface and Implementation
 
 **Files:**
-- Create: `packages/core/src/adapters/swap.ts`
-- Create: `packages/core/src/adapters/uniswap-v3.ts`
-- Test: `packages/core/src/adapters/__tests__/swap.test.ts`
+- Create: `packages/core/src/adapters/vault-adapter.ts`
+- Test: `packages/core/src/adapters/__tests__/vault-adapter.test.ts`
 
 **Interfaces:**
-- Consumes: viem `PublicClient` and `WalletClient` for X Layer
-- Produces: `SwapAdapter` interface, `UniswapV3SwapAdapter` class, `createUniswapV3Adapter(publicClient, walletClient): SwapAdapter`
+- Consumes: viem `PublicClient` for X Layer, AvelaVault contract ABI
+- Produces: `VaultAdapter` interface, `createVaultAdapter(publicClient, vaultAddress): VaultAdapter`
 
-- [ ] **Step 1: Write the failing test for swap adapter interface**
+- [ ] **Step 1: Write the failing test for vault adapter interface**
 
 ```ts
 import { describe, expect, it } from "vitest";
-import type { SwapAdapter, SwapQuote } from "../swap.js";
+import type { VaultAdapter } from "../vault-adapter.js";
 
-describe("SwapAdapter interface", () => {
-	it("quote returns expected shape", async () => {
-		const testAdapter: SwapAdapter = {
-			quote: async () => ({
-				amountOut: 25000000n,
-				priceImpact: 0.001,
-				route: ["0xTOKEN_IN", "0xTOKEN_OUT"],
-			}),
-			execute: async () => ({
-				txHash: "0xabc123",
-				blockNumber: 1000,
-				amountOut: 25000000n,
-				gasUsed: 150000n,
-			}),
+describe("VaultAdapter interface", () => {
+	it("getLockedBalance returns expected shape", async () => {
+		const testAdapter: VaultAdapter = {
+			getLockedBalance: async () => 1000000000000000000n,
 		};
 
-		const result = await testAdapter.quote({
-			tokenIn: "0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
-			tokenOut: "0x4ae46a509f6b1d9056937ba4500cb143933d2dc8",
-			amountIn: 45000000000000000n,
-			chainId: 196,
-		});
+		const balance = await testAdapter.getLockedBalance(
+			"0x1234567890abcdef1234567890abcdef12345678",
+			"0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
+		);
 
-		expect(result.amountOut).toBe(25000000n);
-		expect(result.priceImpact).toBeLessThan(0.01);
+		expect(balance).toBe(1000000000000000000n);
 	});
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun run test packages/core/src/adapters/__tests__/swap.test.ts`
+Run: `bun run test packages/core/src/adapters/__tests__/vault-adapter.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write swap adapter interface**
+- [ ] **Step 3: Write vault adapter interface and implementation**
 
 ```ts
-// packages/core/src/adapters/swap.ts
+// packages/core/src/adapters/vault-adapter.ts
 
-export type SwapQuoteParams = {
-	tokenIn: string;
-	tokenOut: string;
-	amountIn: bigint;
-	chainId: number;
-};
+import type { PublicClient } from "viem";
 
-export type SwapQuote = {
-	amountOut: bigint;
-	priceImpact: number;
-	route: string[];
-};
-
-export type SwapExecuteParams = {
-	tokenIn: string;
-	tokenOut: string;
-	amountIn: bigint;
-	amountOutMin: bigint;
-	recipient: string;
-	chainId: number;
-};
-
-export type SwapResult = {
-	txHash: string;
-	blockNumber: number;
-	amountOut: bigint;
-	gasUsed: bigint;
-};
-
-export interface SwapAdapter {
-	quote(params: SwapQuoteParams): Promise<SwapQuote>;
-	execute(params: SwapExecuteParams): Promise<SwapResult>;
+export interface VaultAdapter {
+	getLockedBalance(depositor: string, token: string): Promise<bigint>;
 }
-```
 
-- [ ] **Step 4: Write Uniswap V3 adapter implementation**
-
-```ts
-// packages/core/src/adapters/uniswap-v3.ts
-
-import type { PublicClient, WalletClient } from "viem";
-import type { SwapAdapter, SwapExecuteParams, SwapQuoteParams, SwapQuote, SwapResult } from "./swap.js";
-
-const UNISWAP_V3_QUOTER_ADDRESS = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6" as const;
-const UNISWAP_V3_ROUTER_ADDRESS = "0xE592427A0AEce92De3Edee1F18E0157C05861564" as const;
-
-const QUOTER_ABI = [
+const VAULT_ABI = [
 	{
 		inputs: [
-			{ name: "tokenIn", type: "address" },
-			{ name: "tokenOut", type: "address" },
-			{ name: "fee", type: "uint24" },
-			{ name: "amountIn", type: "uint256" },
-			{ name: "sqrtPriceLimitX96", type: "uint160" },
+			{ name: "depositor", type: "address" },
+			{ name: "token", type: "address" },
 		],
-		name: "quoteExactInputSingle",
-		outputs: [{ name: "amountOut", type: "uint256" }],
-		stateMutability: "nonpayable",
+		name: "getLockedBalance",
+		outputs: [{ name: "", type: "uint256" }],
+		stateMutability: "view",
 		type: "function",
 	},
 ] as const;
 
-const ROUTER_ABI = [
-	{
-		inputs: [
-			{
-				components: [
-					{ name: "tokenIn", type: "address" },
-					{ name: "tokenOut", type: "address" },
-					{ name: "fee", type: "uint24" },
-					{ name: "recipient", type: "address" },
-					{ name: "deadline", type: "uint256" },
-					{ name: "amountIn", type: "uint256" },
-					{ name: "amountOutMinimum", type: "uint256" },
-					{ name: "sqrtPriceLimitX96", type: "uint160" },
-				],
-				name: "params",
-				type: "tuple",
-			},
-		],
-		name: "exactInputSingle",
-		outputs: [{ name: "amountOut", type: "uint256" }],
-		stateMutability: "payable",
-		type: "function",
-	},
-] as const;
-
-const DEFAULT_FEE = 3000; // 0.3% fee tier
-const DEFAULT_SLIPPAGE_BPS = 100; // 1%
-const DEADLINE_SECONDS = 300; // 5 minutes
-
-export class UniswapV3SwapAdapter implements SwapAdapter {
-	constructor(
-		private publicClient: PublicClient,
-		private walletClient: WalletClient,
-	) {}
-
-	async quote(params: SwapQuoteParams): Promise<SwapQuote> {
-		const amountOut = await this.publicClient.readContract({
-			address: UNISWAP_V3_QUOTER_ADDRESS,
-			abi: QUOTER_ABI,
-			functionName: "quoteExactInputSingle",
-			args: [
-				params.tokenIn as `0x${string}`,
-				params.tokenOut as `0x${string}`,
-				DEFAULT_FEE,
-				params.amountIn,
-				0n,
-			],
-		});
-
-		const priceImpact = Number(params.amountIn - amountOut) / Number(params.amountIn);
-
-		return {
-			amountOut,
-			priceImpact: Math.abs(priceImpact),
-			route: [params.tokenIn, params.tokenOut],
-		};
-	}
-
-	async execute(params: SwapExecuteParams): Promise<SwapResult> {
-		const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECONDS);
-		const account = this.walletClient.account;
-		if (!account) {
-			throw new Error("Wallet client has no account");
-		}
-
-		const hash = await this.walletClient.writeContract({
-			address: UNISWAP_V3_ROUTER_ADDRESS,
-			abi: ROUTER_ABI,
-			functionName: "exactInputSingle",
-			args: [
-				{
-					tokenIn: params.tokenIn as `0x${string}`,
-					tokenOut: params.tokenOut as `0x${string}`,
-					fee: DEFAULT_FEE,
-					recipient: params.recipient as `0x${string}`,
-					deadline,
-					amountIn: params.amountIn,
-					amountOutMinimum: params.amountOutMin,
-					sqrtPriceLimitX96: 0n,
-				},
-			],
-			account,
-			chain: null,
-		});
-
-		const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
-
-		return {
-			txHash: hash,
-			blockNumber: Number(receipt.blockNumber),
-			amountOut: params.amountIn,
-			gasUsed: receipt.gasUsed,
-		};
-	}
-}
-
-export function createUniswapV3Adapter(
+export function createVaultAdapter(
 	publicClient: PublicClient,
-	walletClient: WalletClient,
-): SwapAdapter {
-	return new UniswapV3SwapAdapter(publicClient, walletClient);
-}
-
-export function calculateAmountOutMin(amountOut: bigint, slippageBps = DEFAULT_SLIPPAGE_BPS): bigint {
-	return amountOut - (amountOut * BigInt(slippageBps)) / 10000n;
+	vaultAddress: string,
+): VaultAdapter {
+	return {
+		async getLockedBalance(depositor: string, token: string): Promise<bigint> {
+			const balance = await publicClient.readContract({
+				address: vaultAddress as `0x${string}`,
+				abi: VAULT_ABI,
+				functionName: "getLockedBalance",
+				args: [depositor as `0x${string}`, token as `0x${string}`],
+			});
+			return balance;
+		},
+	};
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [ ] **Step 4: Run test to verify it passes**
 
-Run: `bun run test packages/core/src/adapters/__tests__/swap.test.ts`
+Run: `bun run test packages/core/src/adapters/__tests__/vault-adapter.test.ts`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add packages/core/src/adapters/swap.ts packages/core/src/adapters/uniswap-v3.ts packages/core/src/adapters/__tests__/swap.test.ts
-git commit -m "feat(core): add swap adapter interface and Uniswap V3 implementation"
+git add packages/core/src/adapters/vault-adapter.ts packages/core/src/adapters/__tests__/vault-adapter.test.ts
+git commit -m "feat(core): add vault adapter interface for AvelaVault"
 ```
 
 ---
 
-### Task 6: Payment Execution Orchestrator
+### Task 6: Router Adapter Interface and Implementation
+
+**Files:**
+- Create: `packages/core/src/adapters/router-adapter.ts`
+- Test: `packages/core/src/adapters/__tests__/router-adapter.test.ts`
+
+**Interfaces:**
+- Consumes: viem `PublicClient` and `WalletClient` for X Layer, AvelaPaymentRouter contract ABI
+- Produces: `RouterAdapter` interface, `createRouterAdapter(publicClient, walletClient, routerAddress): RouterAdapter`
+
+- [ ] **Step 1: Write the failing test for router adapter interface**
+
+```ts
+import { describe, expect, it } from "vitest";
+import type { RouterAdapter } from "../router-adapter.js";
+
+describe("RouterAdapter interface", () => {
+	it("executePayment returns expected shape", async () => {
+		const testAdapter: RouterAdapter = {
+			executePayment: async () => ({
+				txHash: "0xabc123",
+				blockNumber: 1000,
+				gasUsed: 150000n,
+			}),
+			isPaymentExecuted: async () => false,
+		};
+
+		const result = await testAdapter.executePayment({
+			token: "0x4ae46a509f6b1d9056937ba4500cb143933d2dc8",
+			merchant: "0x1234567890abcdef1234567890abcdef12345678",
+			amount: 25000000n,
+			paymentId: "0x0000000000000000000000000000000000000000000000000000000000000001",
+			collateralOwner: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+		});
+
+		expect(result.txHash).toBe("0xabc123");
+		expect(result.gasUsed).toBe(150000n);
+	});
+
+	it("isPaymentExecuted returns boolean", async () => {
+		const testAdapter: RouterAdapter = {
+			executePayment: async () => ({
+				txHash: "0x",
+				blockNumber: 0,
+				gasUsed: 0n,
+			}),
+			isPaymentExecuted: async () => true,
+		};
+
+		const result = await testAdapter.isPaymentExecuted(
+			"0x0000000000000000000000000000000000000000000000000000000000000001",
+		);
+		expect(result).toBe(true);
+	});
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `bun run test packages/core/src/adapters/__tests__/router-adapter.test.ts`
+Expected: FAIL — module not found
+
+- [ ] **Step 3: Write router adapter interface and implementation**
+
+```ts
+// packages/core/src/adapters/router-adapter.ts
+
+import type { PublicClient, WalletClient } from "viem";
+
+export type ExecutePaymentParams = {
+	token: string;
+	merchant: string;
+	amount: bigint;
+	paymentId: string;
+	collateralOwner: string;
+};
+
+export type ExecutePaymentResult = {
+	txHash: string;
+	blockNumber: number;
+	gasUsed: bigint;
+};
+
+export interface RouterAdapter {
+	executePayment(params: ExecutePaymentParams): Promise<ExecutePaymentResult>;
+	isPaymentExecuted(paymentId: string): Promise<boolean>;
+}
+
+const ROUTER_ABI = [
+	{
+		inputs: [
+			{ name: "token", type: "address" },
+			{ name: "merchant", type: "address" },
+			{ name: "amount", type: "uint256" },
+			{ name: "paymentId", type: "bytes32" },
+			{ name: "collateralOwner", type: "address" },
+		],
+		name: "executePayment",
+		outputs: [],
+		stateMutability: "nonpayable",
+		type: "function",
+	},
+	{
+		inputs: [{ name: "paymentId", type: "bytes32" }],
+		name: "isExecuted",
+		outputs: [{ name: "", type: "bool" }],
+		stateMutability: "view",
+		type: "function",
+	},
+] as const;
+
+export function createRouterAdapter(
+	publicClient: PublicClient,
+	walletClient: WalletClient,
+	routerAddress: string,
+): RouterAdapter {
+	return {
+		async executePayment(params: ExecutePaymentParams): Promise<ExecutePaymentResult> {
+			const account = walletClient.account;
+			if (!account) {
+				throw new Error("Wallet client has no account");
+			}
+
+			const hash = await walletClient.writeContract({
+				address: routerAddress as `0x${string}`,
+				abi: ROUTER_ABI,
+				functionName: "executePayment",
+				args: [
+					params.token as `0x${string}`,
+					params.merchant as `0x${string}`,
+					params.amount,
+					params.paymentId as `0x${string}`,
+					params.collateralOwner as `0x${string}`,
+				],
+				account,
+				chain: null,
+			});
+
+			const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+			return {
+				txHash: hash,
+				blockNumber: Number(receipt.blockNumber),
+				gasUsed: receipt.gasUsed,
+			};
+		},
+
+		async isPaymentExecuted(paymentId: string): Promise<boolean> {
+			return publicClient.readContract({
+				address: routerAddress as `0x${string}`,
+				abi: ROUTER_ABI,
+				functionName: "isExecuted",
+				args: [paymentId as `0x${string}`],
+			});
+		},
+	};
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `bun run test packages/core/src/adapters/__tests__/router-adapter.test.ts`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/core/src/adapters/router-adapter.ts packages/core/src/adapters/__tests__/router-adapter.test.ts
+git commit -m "feat(core): add router adapter interface for AvelaPaymentRouter"
+```
+
+---
+
+### Task 7: Payment Execution Orchestrator
 
 **Files:**
 - Modify: `packages/core/src/domain/funding-engine.ts` (add `executePayment`)
 - Test: `packages/core/src/domain/__tests__/funding-engine.test.ts` (extend)
 
 **Interfaces:**
-- Consumes: `updatePaymentStatus` from `payment-intent.ts`, `selectFundingSource` from this file, `evaluatePolicy` from `spending-policy.ts`, `SwapAdapter` from `adapters/swap.ts`, `calculateSpendingPower` from `spending-power.ts`
+- Consumes: `updatePaymentStatus` from `payment-intent.ts`, `selectFundingSource` from this file, `evaluatePolicy` from `spending-policy.ts`, `VaultAdapter` from `adapters/vault-adapter.ts`, `RouterAdapter` from `adapters/router-adapter.ts`, `calculateSpendingPower` from `spending-power.ts`
 - Produces: `executePayment(deps, intentId): Promise<PaymentIntent>`
 
 - [ ] **Step 1: Write the failing test for executePayment**
 
 ```ts
-import { afterAll, describe, expect, it } from "vitest";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import * as schema from "../../db/schema.js";
+import { describe, expect, it } from "vitest";
 import { executePayment } from "../funding-engine.js";
 import type { ExecutePaymentDeps } from "../funding-engine.js";
-import type { PaymentIntent } from "../types.js";
-import type { SpendingPower } from "../spending-power.js";
-
-const testClient = postgres(process.env.TEST_DATABASE_URL!);
-const db = drizzle(testClient, { schema });
-
-afterAll(async () => {
-	await testClient.end();
-});
+import type { PaymentIntent } from "../payment-intent.js";
 
 let callLog: string[] = [];
 
 function buildDeps(overrides: Partial<ExecutePaymentDeps> = {}): ExecutePaymentDeps {
 	callLog = [];
 	return {
-		db,
-		getPaymentIntent: async (_db, _id) => {
+		db: {} as ExecutePaymentDeps["db"],
+		getPaymentIntent: async () => {
 			callLog.push("getPaymentIntent");
 			return {
 				id: "01JTEST000000000000000000",
 				accountId: "01JACCOUNT0000000000000",
 				amount: 25,
-				recipientAddress: "0xMERCHANT",
+				recipientAddress: "0x1234567890abcdef1234567890abcdef12345678",
 				status: "created",
 			} as PaymentIntent;
 		},
@@ -1035,91 +998,62 @@ function buildDeps(overrides: Partial<ExecutePaymentDeps> = {}): ExecutePaymentD
 				calculatedAt: new Date(),
 			};
 		},
-		swapAdapter: {
-			quote: async () => {
-				callLog.push("swapAdapter.quote");
-				return {
-					amountOut: 25000000n,
-					priceImpact: 0.001,
-					route: ["0xWTOKEN", "0xSTABLE"],
-				};
+		vaultAdapter: {
+			getLockedBalance: async () => {
+				callLog.push("vaultAdapter.getLockedBalance");
+				return 1000000000000000000n;
 			},
-			execute: async () => {
-				callLog.push("swapAdapter.execute");
+		},
+		routerAdapter: {
+			executePayment: async () => {
+				callLog.push("routerAdapter.executePayment");
 				return {
 					txHash: "0xabc123",
 					blockNumber: 1000,
-					amountOut: 25000000n,
 					gasUsed: 150000n,
 				};
 			},
+			isPaymentExecuted: async () => false,
 		},
 		recordSettlement: async () => {
 			callLog.push("recordSettlement");
-			return { txHash: "0xabc123", blockNumber: 1000 };
+			return {};
 		},
-		getAsset: () => ({
-			symbol: "wSPYx",
-			address: "0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
-			decimals: 18,
-			settlementStablecoin: "USDG",
-		}),
-		getStablecoinAddress: () => "0x4ae46a509f6b1d9056937ba4500cb143933d2dc8",
+		getAccountWalletAddress: async () => {
+			return "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd";
+		},
 		...overrides,
 	};
 }
 
 describe("executePayment", () => {
-	it("orchestrates the full payment flow: policy → fund → swap → settle", async () => {
+	it("orchestrates: policy → collateral verify → settle", async () => {
 		const deps = buildDeps();
-
 		const result = await executePayment(deps, "01JTEST000000000000000000");
 
 		expect(callLog).toContain("evaluatePolicy");
-		expect(callLog).toContain("swapAdapter.execute");
+		expect(callLog).toContain("vaultAdapter.getLockedBalance");
+		expect(callLog).toContain("routerAdapter.executePayment");
 		expect(callLog).toContain("recordSettlement");
 		expect(result.status).toBe("settled");
 	});
 
-	it("fails gracefully when policy check fails", async () => {
+	it("fails when policy check fails", async () => {
 		const deps = buildDeps({
-			getPaymentIntent: async () =>
-				({
-					id: "01JTEST000000000000000000",
-					accountId: "01JACCOUNT0000000000000",
-					amount: 600,
-					recipientAddress: "0xMERCHANT",
-					status: "created",
-				}) as PaymentIntent,
 			evaluatePolicy: async () => ({
 				passed: false,
 				requiresApproval: false,
-				violations: [
-					{
-						rule: "daily_limit",
-						message: "Exceeds daily limit of $500",
-						currentValue: 600,
-						threshold: 500,
-					},
-				],
+				violations: [{ rule: "daily_limit", message: "Exceeds limit", currentValue: 600, threshold: 500 }],
 			}),
 		});
 
 		const result = await executePayment(deps, "01JTEST000000000000000000");
 		expect(result.status).toBe("failed");
-		expect(callLog).not.toContain("swapAdapter.execute");
+		expect(callLog).not.toContain("routerAdapter.executePayment");
 	});
 
 	it("routes to awaiting_approval when policy requires it", async () => {
 		const deps = buildDeps({
-			getPaymentIntent: async () =>
-				({
-					id: "01JTEST000000000000000000",
-					accountId: "01JACCOUNT0000000000000",
-					amount: 150,
-					recipientAddress: "0xMERCHANT",
-					status: "created",
-				}) as PaymentIntent,
 			evaluatePolicy: async () => ({
 				passed: true,
 				requiresApproval: true,
@@ -1129,7 +1063,19 @@ describe("executePayment", () => {
 
 		const result = await executePayment(deps, "01JTEST000000000000000000");
 		expect(result.status).toBe("awaiting_approval");
-		expect(callLog).not.toContain("swapAdapter.execute");
+		expect(callLog).not.toContain("routerAdapter.executePayment");
+	});
+
+	it("fails when collateral verification returns zero", async () => {
+		const deps = buildDeps({
+			vaultAdapter: {
+				getLockedBalance: async () => 0n,
+			},
+		});
+
+		const result = await executePayment(deps, "01JTEST000000000000000000");
+		expect(result.status).toBe("failed");
+		expect(callLog).not.toContain("routerAdapter.executePayment");
 	});
 });
 ```
@@ -1144,12 +1090,14 @@ Expected: FAIL — executePayment not exported
 Add to `packages/core/src/domain/funding-engine.ts`:
 
 ```ts
-import type { SwapAdapter } from "../adapters/swap.js";
+import type { VaultAdapter } from "../adapters/vault-adapter.js";
+import type { RouterAdapter } from "../adapters/router-adapter.js";
+import { STABLECOINS } from "./asset.js";
 import type { PaymentIntent, FundingDecision, PaymentStatus } from "./payment-intent.js";
-import { calculateAmountOutMin } from "../adapters/uniswap-v3.js";
-
+import type { SpendingPower } from "./spending-power.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type * as schema from "../db/schema.js";
+
 type Db = PostgresJsDatabase<typeof schema>;
 
 export type ExecutePaymentDeps = {
@@ -1166,25 +1114,21 @@ export type ExecutePaymentDeps = {
 		amount: number;
 	}) => Promise<{ passed: boolean; requiresApproval: boolean; violations: unknown[] }>;
 	calculateSpendingPower: (accountId: string) => Promise<SpendingPower>;
-	swapAdapter: SwapAdapter;
+	vaultAdapter: VaultAdapter;
+	routerAdapter: RouterAdapter;
 	recordSettlement: (
 		db: Db,
 		params: {
 			paymentIntentId: string;
+			paymentId: string;
 			txHash: string;
 			blockNumber: number;
 			amountSettled: bigint;
-			stablecoin: string;
+			settlementToken: string;
 			gasUsed: bigint;
 		},
 	) => Promise<unknown>;
-	getAsset: (symbol: string) => {
-		symbol: string;
-		address: string;
-		decimals: number;
-		settlementStablecoin: "USDG" | "USDC";
-	};
-	getStablecoinAddress: (symbol: "USDG" | "USDC") => string;
+	getAccountWalletAddress: (accountId: string) => Promise<string>;
 };
 
 export async function executePayment(
@@ -1208,57 +1152,53 @@ export async function executePayment(
 		return deps.updatePaymentStatus(deps.db, intentId, "awaiting_approval");
 	}
 
-	// Phase 2: Funding source selection
-	await deps.updatePaymentStatus(deps.db, intentId, "funding");
+	// Phase 2: Funding source selection + collateral verification
 	const spendingPower = await deps.calculateSpendingPower(intent.accountId);
 	const fundingDecision = selectFundingSource({
 		amount: intent.amount,
 		spendingPower,
-		fundingPriority: ["spending_power", "stablecoin_balance"],
 	});
 
-	await deps.updatePaymentStatus(deps.db, intentId, "executing", fundingDecision);
+	if (fundingDecision.source === "spending_power" && fundingDecision.collateralAsset) {
+		const walletAddress = await deps.getAccountWalletAddress(intent.accountId);
+		const asset = getAsset(fundingDecision.collateralAsset)!;
+		const lockedBalance = await deps.vaultAdapter.getLockedBalance(walletAddress, asset.address);
 
-	// Phase 3: Execute swap
-	if (fundingDecision.source === "spending_power" && fundingDecision.asset) {
-		const asset = deps.getAsset(fundingDecision.asset);
-		const stablecoinAddress = deps.getStablecoinAddress(fundingDecision.stablecoin);
+		if (lockedBalance === 0n) {
+			return deps.updatePaymentStatus(deps.db, intentId, "failed");
+		}
 
-		const quote = await deps.swapAdapter.quote({
-			tokenIn: asset.address,
-			tokenOut: stablecoinAddress,
-			amountIn: fundingDecision.amountIn,
-			chainId: 196,
-		});
-
-		const amountOutMin = calculateAmountOutMin(quote.amountOut);
-
-		const swapResult = await deps.swapAdapter.execute({
-			tokenIn: asset.address,
-			tokenOut: stablecoinAddress,
-			amountIn: fundingDecision.amountIn,
-			amountOutMin,
-			recipient: intent.recipientAddress,
-			chainId: 196,
-		});
-
-		// Phase 4: Record settlement
-		await deps.updatePaymentStatus(deps.db, intentId, "settling");
-		await deps.recordSettlement(deps.db, {
-			paymentIntentId: intentId,
-			txHash: swapResult.txHash,
-			blockNumber: swapResult.blockNumber,
-			amountSettled: swapResult.amountOut,
-			stablecoin: fundingDecision.stablecoin,
-			gasUsed: swapResult.gasUsed,
-		});
-
-		return deps.updatePaymentStatus(deps.db, intentId, "settled");
+		fundingDecision.collateralVerified = true;
+		fundingDecision.collateralAmount = lockedBalance;
 	}
 
-	// Stablecoin direct transfer path (simpler, no swap needed)
+	await deps.updatePaymentStatus(deps.db, intentId, "collateral_verify", fundingDecision);
+
+	// Phase 3: Settlement via AvelaPaymentRouter
 	await deps.updatePaymentStatus(deps.db, intentId, "settling");
-	// TODO: Execute ERC-20 transfer for stablecoin balance payments
+	const walletAddress = await deps.getAccountWalletAddress(intent.accountId);
+	const stablecoinAddress = STABLECOINS[fundingDecision.settlementToken];
+	const settlementAmount = BigInt(Math.round(intent.amount * 1e6));
+
+	const result = await deps.routerAdapter.executePayment({
+		token: stablecoinAddress,
+		merchant: intent.recipientAddress,
+		amount: settlementAmount,
+		paymentId: fundingDecision.paymentId,
+		collateralOwner: walletAddress,
+	});
+
+	// Phase 4: Record settlement
+	await deps.recordSettlement(deps.db, {
+		paymentIntentId: intentId,
+		paymentId: fundingDecision.paymentId,
+		txHash: result.txHash,
+		blockNumber: result.blockNumber,
+		amountSettled: settlementAmount,
+		settlementToken: fundingDecision.settlementToken,
+		gasUsed: result.gasUsed,
+	});
+
 	return deps.updatePaymentStatus(deps.db, intentId, "settled");
 }
 ```
@@ -1266,18 +1206,18 @@ export async function executePayment(
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `bun run test packages/core/src/domain/__tests__/funding-engine.test.ts`
-Expected: PASS — all 8 tests green (5 from Task 4 + 3 new)
+Expected: PASS — all 9 tests green (5 from Task 4 + 4 new)
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/domain/funding-engine.ts packages/core/src/domain/__tests__/funding-engine.test.ts
-git commit -m "feat(core): add payment execution orchestrator"
+git commit -m "feat(core): add payment execution orchestrator with vault+reserve model"
 ```
 
 ---
 
-### Task 7: Settlement Recording and Receipt Generation
+### Task 8: Settlement Recording and Receipt Generation
 
 **Files:**
 - Create: `packages/core/src/domain/settlement.ts`
@@ -1285,12 +1225,12 @@ git commit -m "feat(core): add payment execution orchestrator"
 
 **Interfaces:**
 - Consumes: `settlements` table from `db/schema.ts`, `paymentIntents` table, `ulid()` from `ulidx`
-- Produces: `recordSettlement(db, params): Promise<Settlement>`, `getReceipt(db, paymentIntentId): Promise<Receipt | null>`
+- Produces: `recordSettlement(db, params): Promise<Settlement>`, `getReceipt(db, paymentIntentId): Promise<Receipt | null>`, `buildReceipt(params): Receipt`
 
 - [ ] **Step 1: Write the failing test for settlement and receipt**
 
 ```ts
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildReceipt } from "../settlement.js";
 
 describe("buildReceipt", () => {
@@ -1300,38 +1240,36 @@ describe("buildReceipt", () => {
 				id: "01JPAYMENT0000000000000000",
 				accountId: "01JACCOUNT0000000000000",
 				amount: 25,
-				recipientAddress: "0xMERCHANT",
-				recipientUsername: "merchant1",
+				recipientAddress: "0x1234567890abcdef1234567890abcdef12345678",
 				fundingDecision: {
 					source: "spending_power",
-					asset: "wSPYx",
-					stablecoin: "USDG",
-					amountIn: 45000000000000000n,
-					amountOutMin: 24750000n,
-					pool: "wSPYx",
-					conversionHop: false,
-					estimatedSlippage: 0.001,
+					collateralAsset: "wSPYx",
+					collateralVerified: true,
+					collateralAmount: 1000000000000000000n,
+					settlementToken: "USDG",
+					paymentId: "0x0000000000000000000000000000000000000000000000000000000000000001",
+					spendingPowerAtDecision: 800,
 					decidedAt: new Date("2026-09-21T12:00:00Z"),
 				},
 			},
 			settlement: {
+				paymentId: "0x0000000000000000000000000000000000000000000000000000000000000001",
 				txHash: "0xabc123def456",
 				blockNumber: 12345,
 				amountSettled: 25000000n,
-				stablecoin: "USDG",
+				settlementToken: "USDG",
 				gasUsed: 150000n,
 				settledAt: new Date("2026-09-21T12:00:05Z"),
 			},
 		});
 
-		expect(receipt.paymentId).toBe("01JPAYMENT0000000000000000");
+		expect(receipt.paymentId).toBe("0x0000000000000000000000000000000000000000000000000000000000000001");
 		expect(receipt.accountId).toBe("01JACCOUNT0000000000000");
 		expect(receipt.amount).toBe(25);
-		expect(receipt.sourceAsset).toBe("wSPYx");
-		expect(receipt.fundingSource).toBe("spending_power");
+		expect(receipt.collateralAsset).toBe("wSPYx");
+		expect(receipt.settlementToken).toBe("USDG");
 		expect(receipt.settlementTxHash).toBe("0xabc123def456");
-		expect(receipt.settlementStablecoin).toBe("USDG");
-		expect(receipt.recipientAddress).toBe("0xMERCHANT");
+		expect(receipt.recipientAddress).toBe("0x1234567890abcdef1234567890abcdef12345678");
 	});
 
 	it("handles stablecoin balance funding source", () => {
@@ -1340,32 +1278,31 @@ describe("buildReceipt", () => {
 				id: "01JPAYMENT0000000000000001",
 				accountId: "01JACCOUNT0000000000000",
 				amount: 10,
-				recipientAddress: "0xMERCHANT",
-				recipientUsername: null,
+				recipientAddress: "0x1234567890abcdef1234567890abcdef12345678",
 				fundingDecision: {
 					source: "stablecoin_balance",
-					asset: null,
-					stablecoin: "USDC",
-					amountIn: 0n,
-					amountOutMin: 0n,
-					pool: "",
-					conversionHop: false,
-					estimatedSlippage: 0,
+					collateralAsset: null,
+					collateralVerified: false,
+					collateralAmount: null,
+					settlementToken: "USDC",
+					paymentId: "0x0000000000000000000000000000000000000000000000000000000000000002",
+					spendingPowerAtDecision: 100,
 					decidedAt: new Date("2026-09-21T12:00:00Z"),
 				},
 			},
 			settlement: {
+				paymentId: "0x0000000000000000000000000000000000000000000000000000000000000002",
 				txHash: "0xdef789",
 				blockNumber: 12346,
 				amountSettled: 10000000n,
-				stablecoin: "USDC",
+				settlementToken: "USDC",
 				gasUsed: 50000n,
 				settledAt: new Date("2026-09-21T12:00:02Z"),
 			},
 		});
 
-		expect(receipt.sourceAsset).toBe("USDC");
-		expect(receipt.fundingSource).toBe("stablecoin_balance");
+		expect(receipt.collateralAsset).toBe("stablecoin");
+		expect(receipt.settlementToken).toBe("USDC");
 	});
 });
 ```
@@ -1385,7 +1322,7 @@ import { eq } from "drizzle-orm";
 import { ulid } from "ulidx";
 import { settlements, paymentIntents } from "../db/schema.js";
 import type * as schema from "../db/schema.js";
-import type { FundingDecision, Receipt, Settlement } from "./payment-intent.js";
+import type { FundingDecision, Receipt } from "./payment-intent.js";
 
 type Db = PostgresJsDatabase<typeof schema>;
 
@@ -1393,10 +1330,11 @@ export async function recordSettlement(
 	db: Db,
 	params: {
 		paymentIntentId: string;
+		paymentId: string;
 		txHash: string;
 		blockNumber: number;
 		amountSettled: bigint;
-		stablecoin: string;
+		settlementToken: string;
 		gasUsed: bigint;
 	},
 ) {
@@ -1405,10 +1343,11 @@ export async function recordSettlement(
 		.values({
 			id: ulid(),
 			paymentIntentId: params.paymentIntentId,
+			paymentId: params.paymentId,
 			txHash: params.txHash,
 			blockNumber: params.blockNumber,
 			amountSettled: params.amountSettled.toString(),
-			stablecoin: params.stablecoin,
+			settlementToken: params.settlementToken,
 			gasUsed: params.gasUsed.toString(),
 		})
 		.returning();
@@ -1430,14 +1369,14 @@ export function buildReceipt(params: {
 		accountId: string;
 		amount: number;
 		recipientAddress: string;
-		recipientUsername: string | null;
 		fundingDecision: FundingDecision | null;
 	};
 	settlement: {
+		paymentId: string;
 		txHash: string;
 		blockNumber: number;
 		amountSettled: bigint;
-		stablecoin: string;
+		settlementToken: string;
 		gasUsed: bigint;
 		settledAt: Date;
 	};
@@ -1446,13 +1385,12 @@ export function buildReceipt(params: {
 	const fd = intent.fundingDecision;
 
 	return {
-		paymentId: intent.id,
+		paymentId: settlement.paymentId,
 		accountId: intent.accountId,
 		amount: intent.amount,
-		sourceAsset: fd?.asset ?? fd?.stablecoin ?? "unknown",
-		fundingSource: fd?.source ?? "unknown",
+		collateralAsset: fd?.collateralAsset ?? "stablecoin",
+		settlementToken: settlement.settlementToken,
 		settlementTxHash: settlement.txHash,
-		settlementStablecoin: settlement.stablecoin,
 		recipientAddress: intent.recipientAddress,
 		timestamp: settlement.settledAt,
 	};
@@ -1475,14 +1413,14 @@ export async function getReceipt(db: Db, paymentIntentId: string): Promise<Recei
 			accountId: intent.accountId,
 			amount: Number(intent.amount),
 			recipientAddress: intent.recipientAddress,
-			recipientUsername: intent.recipientUsername,
 			fundingDecision: intent.fundingDecision as FundingDecision | null,
 		},
 		settlement: {
+			paymentId: settlement.paymentId,
 			txHash: settlement.txHash,
 			blockNumber: settlement.blockNumber,
 			amountSettled: BigInt(settlement.amountSettled),
-			stablecoin: settlement.stablecoin,
+			settlementToken: settlement.settlementToken,
 			gasUsed: BigInt(settlement.gasUsed),
 			settledAt: settlement.settledAt,
 		},
@@ -1504,7 +1442,7 @@ git commit -m "feat(core): add settlement recording and receipt generation"
 
 ---
 
-### Task 8: Payment API Routes
+### Task 9: Payment API Routes
 
 **Files:**
 - Create: `apps/api/src/routes/payments.ts`
@@ -1651,7 +1589,6 @@ const createPaymentIntentSchema = z.object({
 		.string()
 		.regex(/^0x[a-fA-F0-9]{40}$/, "Invalid EVM address"),
 	recipientUsername: z.string().optional(),
-	settlementCurrency: z.enum(["USDG", "USDC"]).optional(),
 });
 
 type PaymentDeps = {
@@ -1660,7 +1597,6 @@ type PaymentDeps = {
 		amount: number;
 		recipientAddress: string;
 		recipientUsername?: string;
-		settlementCurrency?: "USDG" | "USDC";
 	}) => Promise<unknown>;
 	getPaymentIntent: (id: string) => Promise<unknown | null>;
 	getPaymentHistory: (accountId: string, limit?: number) => Promise<unknown[]>;
@@ -1756,4 +1692,88 @@ Expected: PASS — all 4 tests green
 ```bash
 git add apps/api/src/routes/payments.ts apps/api/src/routes/__tests__/payments.test.ts
 git commit -m "feat(api): add payment intent API routes"
+```
+
+---
+
+### Task 10: Barrel Exports and Integration
+
+**Files:**
+- Modify: `packages/core/src/index.ts` (add payment, settlement, adapter exports)
+
+**Interfaces:**
+- Consumes: All modules from Tasks 1–8
+- Produces: Clean public API from `@avela/core`
+
+- [ ] **Step 1: Update barrel exports**
+
+Add to `packages/core/src/index.ts`:
+
+```ts
+// Payment intent lifecycle
+export {
+	PAYMENT_STATUSES,
+	type PaymentStatus,
+	type PaymentIntent,
+	type FundingDecision,
+	type Settlement,
+	type Receipt,
+	transitionStatus,
+	isTerminalStatus,
+	createPaymentIntent,
+	getPaymentIntent,
+	getPaymentHistory,
+	updatePaymentStatus,
+} from "./domain/payment-intent.js";
+
+// Funding engine
+export {
+	selectFundingSource,
+	executePayment,
+	generatePaymentId,
+	type ExecutePaymentDeps,
+} from "./domain/funding-engine.js";
+
+// Settlement
+export {
+	recordSettlement,
+	getReceipt,
+	buildReceipt,
+} from "./domain/settlement.js";
+
+// Vault adapter
+export {
+	type VaultAdapter,
+	createVaultAdapter,
+} from "./adapters/vault-adapter.js";
+
+// Router adapter
+export {
+	type RouterAdapter,
+	type ExecutePaymentParams,
+	type ExecutePaymentResult,
+	createRouterAdapter,
+} from "./adapters/router-adapter.js";
+```
+
+- [ ] **Step 2: Run typecheck**
+
+Run: `bun run typecheck`
+Expected: PASS — no type errors
+
+- [ ] **Step 3: Run all tests**
+
+Run: `bun run test`
+Expected: PASS — all tests green
+
+- [ ] **Step 4: Run lint**
+
+Run: `bun run check`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/core/src/index.ts
+git commit -m "feat(core): export payment and adapter modules from barrel"
 ```

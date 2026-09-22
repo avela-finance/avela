@@ -1,27 +1,27 @@
 # Spec: Funding Engine
 
-> Broken from [SPEC.md](../ideas/SPEC.md) §2.4, [PRD.md](../ideas/PRD.md) §5.1. The system that turns "Pay with Avela" into a settled payment.
+> Broken from [SPEC.md](../ideas/SPEC.md) §2.3–2.4, [PRD.md](../ideas/PRD.md) §5.1. The system that turns "Pay with Avela" into a settled payment.
 
 ## Objective
 
-The Funding Engine selects the best funding source for a payment under the user's policy, executes the onchain swap via Uniswap V3, and settles stablecoins to the merchant. It is not user-facing — the user taps pay, the engine handles everything from source selection to settlement proof.
+The Funding Engine verifies that the user's locked collateral in AvelaVault backs the requested payment, then settles from the pre-funded stablecoin reserve via AvelaPaymentRouter. It is not user-facing — the user taps pay, the engine handles everything from collateral verification to settlement proof. No Uniswap swaps occur per payment — positions stay locked and intact.
 
 ## Scope
 
 **In:**
 - Payment intent creation (amount, recipient, currency)
-- Funding source selection: spending power first → stablecoin balance fallback (configurable by policy)
-- Asset selection within spending power: route through deepest pool per asset
-- Uniswap V3 swap execution on X Layer (wSPYx→USDG, wQQQx→USDC, wNVDAx→USDG)
-- Stablecoin conversion hop when needed (USDG↔USDC via $1.01M pool)
-- Slippage protection and transaction simulation
-- Payment state machine: `created → policy_check → funding → executing → settling → settled | failed`
-- Settlement proof: tx hash, block number, amounts
-- Receipt generation with full audit trail
+- Spending power verification: TWAP pricing + haircut, already built in core-account
+- Collateral verification: view call to AvelaVault.getLockedBalance() confirms user's position backs the payment
+- Policy check delegation to spending-policy (daily limits, approval thresholds)
+- Settlement execution: call AvelaPaymentRouter.executePayment() from backend signer
+- Payment state machine: `created → policy_check → awaiting_approval → collateral_verify → settling → settled | failed | rejected`
+- Receipt generation with paymentId linking AvelaVault (PositionLocked) and AvelaPaymentRouter (PaymentExecuted) events
+- Per-asset stablecoin routing: each asset maps to USDG or USDC by pool depth
 
 **Out:**
+- Uniswap V3 swap execution (not needed — reserve model)
 - Fiat/card settlement (Phase 2+)
-- Multi-hop routing through 3+ pools
+- Reserve replenishment logic (manual for MVP)
 - Partial fills across multiple assets in one payment
 - Recurring payment scheduling (separate feature)
 
@@ -34,7 +34,6 @@ type PaymentIntent = {
   amount: number                // USD value
   recipientAddress: string      // Merchant/recipient wallet
   recipientUsername: string | null
-  settlementCurrency: 'USDG' | 'USDC'
   status: PaymentStatus
   fundingDecision: FundingDecision | null
   settlement: Settlement | null
@@ -46,8 +45,7 @@ type PaymentStatus =
   | 'created'
   | 'policy_check'
   | 'awaiting_approval'
-  | 'funding'
-  | 'executing'
+  | 'collateral_verify'
   | 'settling'
   | 'settled'
   | 'failed'
@@ -55,47 +53,48 @@ type PaymentStatus =
 
 type FundingDecision = {
   source: 'spending_power' | 'stablecoin_balance'
-  asset: string | null          // e.g. 'wSPYx' if from spending power
-  amountIn: bigint              // Token amount to swap
-  amountOutMin: bigint          // Min stablecoin after slippage
-  pool: string                  // Pool address for swap
-  stablecoin: 'USDG' | 'USDC'  // Direct settlement stablecoin
-  conversionHop: boolean        // Needs USDG↔USDC conversion?
-  estimatedSlippage: number
+  collateralAsset: string | null      // e.g. 'wSPYx' — the asset backing this payment
+  collateralVerified: boolean         // AvelaVault.getLockedBalance() confirmed
+  collateralAmount: bigint | null     // User's locked balance at verification time
+  settlementToken: 'USDG' | 'USDC'   // Stablecoin used for merchant payout
+  paymentId: string                   // bytes32 hex — shared across vault + router events
+  spendingPowerAtDecision: number     // Total spending power when decision was made
   decidedAt: Date
 }
 
 type Settlement = {
-  txHash: string
+  paymentId: string             // Same bytes32 as FundingDecision
+  txHash: string                // AvelaPaymentRouter.executePayment() tx
   blockNumber: number
-  amountSettled: bigint
-  stablecoin: 'USDG' | 'USDC'
+  amountSettled: bigint         // Stablecoin amount paid to merchant
+  settlementToken: 'USDG' | 'USDC'
   gasUsed: bigint
   settledAt: Date
 }
 
 type Receipt = {
-  paymentId: string
+  paymentId: string             // Links vault collateral check to router settlement
   accountId: string
-  amount: number
-  sourceAsset: string
-  fundingSource: string
-  settlementTxHash: string
-  settlementStablecoin: string
+  amount: number                // USD value
+  collateralAsset: string       // Which xStock backed this payment
+  settlementToken: string       // USDG or USDC
+  settlementTxHash: string      // Router tx hash — verifiable on explorer
   recipientAddress: string
   timestamp: Date
 }
 ```
 
-### Per-Asset Routing (Verified)
+### Per-Asset Settlement Routing (Verified)
 
-| Asset | → Stablecoin | Pool Liquidity | Route |
-|-------|-------------|----------------|-------|
-| wSPYx | USDG | $1.89M | wSPYx → USDG (direct) |
-| wQQQx | USDC | $738K | wQQQx → USDC (direct) |
-| wNVDAx | USDG | $623K | wNVDAx → USDG (direct) |
+| Asset | → Stablecoin | Pool Liquidity | Collateral Verified Via |
+|-------|-------------|----------------|------------------------|
+| wSPYx | USDG | $1.89M | AvelaVault.getLockedBalance() |
+| wQQQx | USDC | $738K | AvelaVault.getLockedBalance() |
+| wNVDAx | USDG | $623K | AvelaVault.getLockedBalance() |
+| wGOOGLx | USDC | $616K | AvelaVault.getLockedBalance() |
+| wAAPLx | USDG | $404K | AvelaVault.getLockedBalance() |
 
-If merchant needs the other stablecoin: USDG↔USDC conversion via $1.01M pool.
+Pool liquidity is relevant for TWAP pricing accuracy, not for per-payment execution.
 
 ## Interfaces
 
@@ -110,11 +109,17 @@ createPaymentIntent(params: {
   recipientUsername?: string
 }): Promise<PaymentIntent>
 
-// Funding decision
+// Funding decision — verifies spending power and collateral
 selectFundingSource(intent: PaymentIntent): Promise<FundingDecision>
 
-// Execution
-executePayment(intentId: string): Promise<Settlement>
+// Collateral verification — view call to AvelaVault
+verifyCollateral(accountId: string, asset: string): Promise<{
+  locked: bigint
+  sufficient: boolean
+}>
+
+// Settlement execution — calls AvelaPaymentRouter.executePayment()
+executeSettlement(intentId: string): Promise<Settlement>
 
 // Query
 getPaymentStatus(intentId: string): Promise<PaymentIntent>
@@ -122,43 +127,40 @@ getReceipt(intentId: string): Promise<Receipt>
 getPaymentHistory(accountId: string, limit?: number): Promise<PaymentIntent[]>
 ```
 
-### Swap Adapter
+### Vault Adapter
 
 ```ts
-interface SwapAdapter {
-  quote(params: {
-    tokenIn: string
-    tokenOut: string
-    amountIn: bigint
-    chainId: number
-  }): Promise<{
-    amountOut: bigint
-    priceImpact: number
-    route: string[]
-  }>
+interface VaultAdapter {
+  getLockedBalance(depositor: string, token: string): Promise<bigint>
+}
+```
 
-  execute(params: {
-    tokenIn: string
-    tokenOut: string
-    amountIn: bigint
-    amountOutMin: bigint
-    recipient: string
-    chainId: number
+### Router Adapter
+
+```ts
+interface RouterAdapter {
+  executePayment(params: {
+    token: string           // Settlement stablecoin address (USDG or USDC)
+    merchant: string        // Recipient address
+    amount: bigint          // Settlement amount
+    paymentId: string       // bytes32 hex — links to vault collateral
+    collateralOwner: string // User whose locked position backs this
   }): Promise<{
     txHash: string
     blockNumber: number
-    amountOut: bigint
     gasUsed: bigint
   }>
+
+  isPaymentExecuted(paymentId: string): Promise<boolean>
 }
 ```
 
 ## Dependencies
 
-- **core-account** — spending power calculation, position data, stablecoin balances
+- **core-account** — spending power calculation (TWAP pricing + haircut), position data, stablecoin balances
+- **contracts** — AvelaVault (collateral verification), AvelaPaymentRouter (settlement execution)
 - **spending-policy** — policy checks before funding (daily limits, approval thresholds)
-- **viem** — transaction construction and signing for Uniswap V3 swaps
-- **Uniswap V3 SDK** or direct contract calls — swap execution on X Layer
+- **viem** — contract reads (AvelaVault.getLockedBalance) and writes (AvelaPaymentRouter.executePayment)
 
 ## Project Structure
 
@@ -166,29 +168,29 @@ interface SwapAdapter {
 packages/core/src/
 ├── domain/
 │   ├── payment-intent.ts      — PaymentIntent entity + state machine
-│   ├── funding-engine.ts      — Source selection logic
-│   ├── settlement.ts          — Settlement + receipt generation
+│   ├── funding-engine.ts      — Source selection + collateral verification logic
+│   ├── settlement.ts          — Settlement execution + receipt generation
 │   └── types.ts               — (extended with payment types)
 ├── adapters/
-│   ├── swap.ts                — SwapAdapter interface
-│   └── uniswap-v3.ts          — Uniswap V3 swap implementation on X Layer
+│   ├── vault-adapter.ts       — VaultAdapter interface + AvelaVault implementation
+│   └── router-adapter.ts      — RouterAdapter interface + AvelaPaymentRouter implementation
 ```
 
 ## Success Criteria
 
 1. Payment intent state machine transitions correctly through all states
 2. Funding source selection: prefers spending power over stablecoin balance
-3. Asset selection: picks the asset with the deepest pool that covers the amount
-4. Slippage protection: transaction reverts if slippage exceeds threshold (1% default)
-5. Settlement proof: every settled payment has tx hash and block number
-6. Receipt contains: source asset, funding decision, settlement tx, amounts, timestamps
+3. Collateral verification: view call to AvelaVault confirms locked balance
+4. Settlement: AvelaPaymentRouter.executePayment() called with correct paymentId
+5. Replay protection: paymentId cannot be reused (enforced by router contract)
+6. Receipt contains: collateral asset, paymentId, settlement tx hash, amounts, timestamps
 7. Payment fails gracefully when spending power is insufficient — no silent conversion
-8. USDG↔USDC conversion hop works when merchant needs different stablecoin
-9. Unit tests for state machine transitions, funding source selection
-10. Integration test: create intent → fund → execute → verify settlement onchain
+8. Per-asset stablecoin routing: wSPYx/wNVDAx/wAAPLx → USDG, wQQQx/wGOOGLx → USDC
+9. Unit tests for state machine transitions, funding source selection, collateral verification
+10. Integration test: create intent → verify collateral → settle → receipt with onchain proof
 
 ## Open Questions
 
-- Uniswap V3 interaction: use SDK (`@uniswap/v3-sdk`) or direct router contract calls via viem?
-- Gas sponsorship: who pays gas for the swap tx? User's embedded wallet, or Avela relayer?
-- Slippage default: 1% for xStock pools, or higher given liquidity depth?
+- Reserve monitoring: should the backend check AvelaPaymentRouter's reserve balance before attempting settlement, or let the contract revert?
+- Gas sponsorship: who pays gas for the executePayment tx? Backend operator wallet, or relayed?
+- paymentId generation: ULID converted to bytes32, or keccak256 of intent fields?
