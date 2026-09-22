@@ -12,7 +12,7 @@ The marketing site at avela.xyz. Tells the product story: what Avela is, how it 
 - Hero: one-liner + CTA ("Launch App" → apps/web)
 - How it works: 3-step visual (deposit → spending power → pay)
 - Features section: spending power, agent spending, WhatsApp access, watchers
-- Supported assets: wSPYx, wQQQx, wNVDAx with logos
+- Supported assets: wSPYx, wQQQx, wNVDAx, wGOOGLx, wAAPLx with logos
 - "Built on X Layer" branding
 - Footer: links, social, legal placeholder
 - Mobile-responsive
@@ -44,7 +44,7 @@ The marketing site at avela.xyz. Tells the product story: what Avela is, how it 
    [Launch App →]
 
 2. HOW IT WORKS
-   Step 1: Deposit tokenized stocks (wSPYx, wQQQx, wNVDAx)
+   Step 1: Deposit tokenized stocks (wSPYx, wQQQx, wNVDAx, wGOOGLx, wAAPLx)
    Step 2: See your spending power (haircut applied)
    Step 3: Pay at checkout — stocks stay, merchant gets paid
 
@@ -57,7 +57,7 @@ The marketing site at avela.xyz. Tells the product story: what Avela is, how it 
    - Onchain receipts with settlement proof
 
 4. SUPPORTED ASSETS
-   Asset cards: wSPYx, wQQQx, wNVDAx with live price (optional)
+   Asset cards: wSPYx, wQQQx, wNVDAx, wGOOGLx, wAAPLx with live price (optional)
 
 5. BUILT ON
    X Layer logo, OKX logo, Uniswap logo

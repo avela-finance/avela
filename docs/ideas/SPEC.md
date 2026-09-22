@@ -86,25 +86,29 @@ Demonstrate a programmable stock spending account — not just "pay with stocks"
 
 ### 2.2 MVP Assets
 
-Three assets from day one. All verified with $600K+ stablecoin pools on Uniswap V3.
+Five assets from day one. All verified with $400K+ stablecoin pools on Uniswap V3. Aligns with OKX "Magnificent 7" trading competition (Sep 2026).
 
 | Asset | Symbol | Address | Best Pool | Liquidity |
 |-------|--------|---------|-----------|-----------|
 | S&P 500 | wSPYx | `0xe7e553cd128f0011777323a0b44a7b96ea1cb540` | USDG | $1.89M |
 | Nasdaq 100 | wQQQx | `0x4c1ae29c159838fc1b224636e28e086eb69101f7` | USDC | $738K |
 | Nvidia | wNVDAx | `0xa8ddb5cd96b5222afe198316e9a57caa642850d5` | USDG | $623K |
+| Alphabet | wGOOGLx | `0xf8c5308f80e459bb53d9ebe689854d9cbb2caa6f` | USDC | $616K |
+| Apple | wAAPLx | `0x943bf64d566c32a2bcd41ac92fb63c111cc9de8f` | USDG | $404K |
 
 ### 2.3 MVP Settlement
 
-**Both USDG and USDC** — routed per-asset by liquidity depth.
+**Both USDG and USDC** — routed per-asset by liquidity depth. Uniswap TWAP used for spending power pricing only — payments settle from a pre-funded stablecoin reserve, not per-payment swaps.
 
 | Asset | Settlement Stablecoin | Pool Liquidity |
 |-------|-----------------------|----------------|
 | wSPYx | USDG | $1.89M |
-| wNVDAx | USDG | $623K |
 | wQQQx | USDC | $738K |
+| wNVDAx | USDG | $623K |
+| wGOOGLx | USDC | $616K |
+| wAAPLx | USDG | $404K |
 
-The Funding Engine routes each asset through its deepest stablecoin pool. If the merchant or downstream rail needs the other stablecoin, the USDG/USDC conversion pool ($1.01M) handles the hop.
+**Settlement model:** Positions stay locked in AvelaVault as collateral. The AvelaPaymentRouter pays merchants from a pre-funded stablecoin reserve. Uniswap V3 pools are used for pricing (TWAP) and reserve replenishment — not for per-payment execution. This makes "positions stay intact" provably true on-chain.
 
 ### 2.4 Scope
 
@@ -115,15 +119,21 @@ The Funding Engine routes each asset through its deepest stablecoin pool. If the
 - **MCP skills** — Agent-accessible tools. Enables AI agents to query balances, create payment intents, check permissions via MCP protocol.
 - No native mobile app for MVP — PWA covers mobile. Native app is Phase 2+.
 
+**Smart contracts (Avela-owned, deployed on X Layer):**
+- **AvelaVault** — multi-asset collateral vault. Accepts all 5 whitelisted wrapped xStocks. `deposit(token, amount)`, `withdraw(token, amount)`. Emits `PositionLocked` / `PositionReleased`. One contract, one address — user approves per-token, deposits into one vault. Withdrawal is permissionless to the original depositor; no admin key can move user funds.
+- **AvelaPaymentRouter** — multi-stablecoin settlement. `executePayment(token, merchant, amount, paymentId, collateralOwner)`. Holds a pre-funded USDG+USDC reserve. Callable only by authorized backend signer (single EOA for MVP, stated limitation). Emits `PaymentExecuted`. Replay protection via paymentId.
+- Backend checks spending power off-chain (TWAP pricing), verifies collateral in vault (view call), then calls Router to settle. Both events carry the same `paymentId` — traceable on explorer.
+- **Stated MVP limitations:** single backend-operator EOA (not multisig), pre-funded reserve (~$10 for demo, not self-replenishing), off-chain spending power calculation. These are honest, stated trust boundaries — not hidden gaps.
+
 **Core account:**
 - Chain: **X Layer** (chain ID 196)
-- 3 assets: wSPYx, wQQQx, wNVDAx
-- Deposit wrapped xStocks, haircut applied, spending power per-asset and aggregated
-- Funding Engine: spending-power-first routing through deepest pool per asset
+- 5 assets: wSPYx, wQQQx, wNVDAx, wGOOGLx, wAAPLx
+- Deposit wrapped xStocks into AvelaVault, haircut applied, spending power per-asset and aggregated
+- Payment settles from stablecoin reserve — positions stay locked as collateral
 - Payment fails gracefully if spending power insufficient — no silent asset conversion
 - Spending policy: daily limits, approval thresholds, price floors
 - Payment preview before execution
-- Receipts with onchain proof
+- Receipts with onchain proof (vault lock + router settlement, linked by paymentId)
 
 **Intelligence layer:**
 - Agent spending: AI agent pays for a service from user's portfolio within scoped permissions (amount cap, asset restriction, recipient allowlist)
@@ -146,20 +156,22 @@ The Funding Engine routes each asset through its deepest stablecoin pool. If the
 
 **Flow 1: Portfolio deposit and spending power**
 
-1. User connects wallet holding wSPYx, wQQQx, wNVDAx on X Layer
-2. User deposits into Avela account
-3. Haircut applied per-asset, spending power calculated and aggregated
-4. User sees: "Portfolio: $3,200 across 3 assets. Spending power: $1,600."
+1. User connects wallet holding wSPYx, wQQQx, wNVDAx, wGOOGLx, wAAPLx on X Layer
+2. User approves AvelaVault to pull the token, then calls `AvelaVault.deposit(amount)` — positions locked as collateral on-chain
+3. Haircut applied per-asset, spending power calculated via Uniswap TWAP pricing
+4. User sees: "Portfolio: $5,200 across 5 assets. Spending power: $2,600."
+5. On explorer: `PositionLocked` event with depositor address, amount, and new balance
 
 **Flow 2: Pay with Avela at checkout**
 
 1. User clicks "Pay with Avela" at demo merchant
-2. Payment preview: amount, which asset funds it, estimated settlement
+2. Payment preview: amount, collateral backing it, estimated settlement
 3. Policy checks pass (daily limit, approval threshold, spending power)
-4. Funding Engine selects best source — draws from wSPYx (deepest pool)
-5. Uniswap V3 swap: wSPYx → USDG
-6. Merchant receives stablecoins
-7. Receipt: source asset, funding decision, settlement tx hash
+4. Backend verifies collateral locked in AvelaVault (view call, no state change)
+5. AvelaPaymentRouter pays merchant from stablecoin reserve, emits `PaymentExecuted`
+6. Merchant receives stablecoins. User's positions stay locked in vault — never swapped.
+7. Receipt: collateral asset, paymentId (links vault + router events), settlement tx hash
+8. On explorer: position still locked at same balance, payment settled separately
 
 **Flow 3: Agent pays for a service**
 
@@ -167,8 +179,8 @@ The Funding Engine routes each asset through its deepest stablecoin pool. If the
 2. Agent discovers a service it needs (API call, data feed, compute)
 3. Agent creates payment intent within its permission scope
 4. If amount exceeds auto-approve threshold → user gets WhatsApp notification to approve
-5. Agent payment executes via Funding Engine (same path as user payment)
-6. Receipt shows: agent identity, permission used, funding source, tx hash
+5. Agent payment settles via AvelaPaymentRouter (same vault+reserve path as user payment)
+6. Receipt shows: agent identity, permission used, collateral asset, paymentId, tx hash
 
 **Flow 4: Approve via WhatsApp**
 
@@ -187,7 +199,7 @@ The Funding Engine routes each asset through its deepest stablecoin pool. If the
 
 **What the judge sees:**
 
-A person holds 3 tokenized stocks. They paid at checkout without selling. An AI agent independently paid for a service from the same portfolio — within permissions the user defined. The user approved a payment via WhatsApp. A watcher alerted them when their spending power dropped. Every action has an onchain receipt. This isn't just "pay with stocks" — it's a programmable financial account where humans and agents both operate, with intelligence built in.
+A person holds 5 tokenized stocks locked in a vault contract on X Layer. They paid at checkout — positions stayed locked (provable on explorer), merchant got paid from a stablecoin reserve. An AI agent independently paid for a service from the same portfolio — within permissions the user defined. The user approved a payment via WhatsApp. A watcher alerted them when their spending power dropped. Every action has an onchain receipt linking vault collateral to payment settlement via a shared paymentId. Avela deployed its own contracts — this isn't just integration work, it's infrastructure. This isn't "pay with stocks" — it's a programmable financial account where humans and agents both operate, with intelligence built in.
 
 ### 2.6 Success Criteria
 
@@ -202,6 +214,7 @@ A judge (or investor, or user) can:
 7. See the permission dashboard — what the agent can and cannot do
 8. Share a payment link (pay.avela.xyz/username)
 9. Understand: "this is not a neobank — this is a programmable account where agents and humans both spend from tokenized stock portfolios"
+10. See, on the explorer: a `PositionLocked` event with no matching `PositionReleased` event across a payment — proof the collateral was never touched
 
 ---
 
@@ -214,13 +227,18 @@ A judge (or investor, or user) can:
 
 Not a minimal demo — a first-class product that shows why Avela is a different category.
 
+Smart contracts (Avela-owned, deployed on X Layer):
+- AvelaVault: multi-asset collateral vault for all 5 whitelisted xStocks. Withdrawal is permissionless to depositor — no admin can move user funds.
+- AvelaPaymentRouter: multi-stablecoin settlement from pre-funded USDG+USDC reserve (~$10 for demo). Single backend EOA signer (stated limitation).
+- Both connected by shared paymentId — traceable on explorer.
+
 Core account:
-- Multi-asset portfolio: wSPYx, wNVDAx, wQQQx (3 assets, all verified with $600K+ pools)
-- Deposit wrapped xStocks, haircut applied, spending power calculated per-asset and aggregated
-- Funding Engine: spending-power-first routing, per-asset deepest pool (USDG or USDC)
+- Multi-asset portfolio: wSPYx, wQQQx, wNVDAx, wGOOGLx, wAAPLx (5 assets, all verified with $400K+ pools)
+- Deposit wrapped xStocks into AvelaVault, haircut applied, spending power calculated per-asset and aggregated
+- Payment settles from stablecoin reserve — positions stay locked as collateral (provable on explorer)
 - Spending policy: daily limits, approval thresholds, price floors
 - Payment preview before execution
-- Receipts with onchain proof (source asset, funding decision, settlement tx hash)
+- Receipts with onchain proof (vault lock + router settlement, linked by paymentId)
 
 Intelligence (the differentiator):
 - Agent spending: one AI agent that can pay for a service from the user's portfolio within scoped permissions (amount limit, asset restriction, recipient allowlist)
@@ -241,7 +259,7 @@ Checkout:
 
 **Phase 2 — Multi-currency, local rails, and merchant tools**
 
-Additional wrapped xStocks (wAAPLx, wTSLAx, wSPCXx, wGOOGLx, wMSFTx, wMETAx). Local currency payouts via Rain (80+ countries, 50+ currencies). Merchant checkout SDK/API. Recurring payments and subscriptions. WhatsApp access. Advanced identity (ENS, cross-platform resolution).
+Additional wrapped xStocks (wTSLAx, wSPCXx, wMSFTx, wMETAx — wAAPLx and wGOOGLx already in MVP). Self-replenishing stablecoin reserve (batch rebalancing from vault positions). Local currency payouts via Rain (80+ countries, 50+ currencies). Merchant checkout SDK/API. Recurring payments and subscriptions. Advanced identity (ENS, cross-platform resolution). Multisig upgrade for contract operator key.
 
 **Phase 3 — Full intelligence and card spending**
 
@@ -282,7 +300,9 @@ Extensions of the account, not prerequisites:
 | **Testing** | Vitest | `bun run test` |
 | **Linting** | Biome | `bun run check` — not ESLint/Prettier |
 | **Chain** | X Layer (chain ID 196) | OKX L2 |
-| **DEX** | Uniswap V3 | All xStock stablecoin pools |
+| **Smart contracts** | Solidity + Foundry | AvelaVault, AvelaPaymentRouter — deploy with `forge` |
+| **Contract interaction** | viem | Read/write X Layer contracts from backend |
+| **DEX pricing** | Uniswap V3 | TWAP for spending power calculation (not per-payment execution) |
 | **Messaging** | WhatsApp Business API | MVP messaging surface |
 | **Agent protocol** | MCP | Agent skill exposure |
 
@@ -294,6 +314,10 @@ avela/
 │   ├── site/          — Marketing site (Next.js, avela.xyz)
 │   ├── web/           — Product dashboard (Next.js, PWA)
 │   └── api/           — Backend API (Hono)
+├── contracts/         — Solidity contracts (Foundry)
+│   ├── src/           — AvelaVault.sol, AvelaPaymentRouter.sol
+│   ├── test/          — Contract tests
+│   └── script/        — Deploy scripts
 ├── packages/
 │   └── core/          — Shared domain, adapters, orchestration
 ├── docs/
@@ -321,20 +345,22 @@ avela/
 Avela core
 +-- Account model
 +-- Portfolio & asset eligibility
-+-- Spending power engine
++-- Spending power engine (TWAP pricing + haircut)
 +-- Payment intent & state machine
 +-- Funding policy & approval engine
-+-- Provider router
 +-- Receipt & audit ledger
 +-- API, web/PWA, MCP, agent skill
 
+Smart contracts (X Layer, Avela-owned)
++-- AvelaVault — multi-asset collateral (5 whitelisted xStocks, one contract)
++-- AvelaPaymentRouter — multi-stablecoin settlement (USDG/USDC reserve, one contract)
+
 Adapters (replaceable)
-+-- Wallet / custody (Privy)
-+-- Asset data & pricing (Uniswap TWAP, OKX market data, Chainlink Data Streams when available)
-+-- Liquidity / swap (Uniswap V3 on X Layer)
-+-- Settlement (USDG/USDC, conversion via pool when needed)
++-- Wallet / custody / auth (Privy)
++-- Asset data & pricing (Uniswap V3 TWAP, OKX market data API)
++-- Settlement (USDG/USDC reserve, conversion via pool when needed)
 +-- Identity (usernames, payment links, ENS)
-+-- Messaging (WhatsApp, Telegram)
++-- Messaging (WhatsApp)
 +-- Agent runtime (MCP, A2MCP)
 +-- Card issuing
 +-- Local payment rails
@@ -344,12 +370,13 @@ Adapters (replaceable)
 
 | Capability | Provider | Status | Notes |
 |-----------|----------|--------|-------|
-| Tokenized equities | xStocks (wrapped) | **Verified live** | 9 wrapped xStocks on X Layer. MVP uses wSPYx, wQQQx, wNVDAx |
-| Stablecoin settlement | USDG + USDC | **Verified live** | Both supported, routed per-asset by pool depth. USDG/USDC conversion: $1.01M pool |
-| Liquidity / swap | Uniswap V3 on X Layer | **Verified live** | USDG/wSPYx $1.89M, wQQQx/USDC $738K, USDG/wNVDAx $623K |
+| Tokenized equities | xStocks (wrapped) | **Verified live** | 9 wrapped xStocks on X Layer. MVP uses 5: wSPYx, wQQQx, wNVDAx, wGOOGLx, wAAPLx |
+| Collateral custody | AvelaVault (own contract) | **To deploy** | Locks wrapped xStocks as collateral. Positions provably stay intact. |
+| Payment settlement | AvelaPaymentRouter (own contract) | **To deploy** | Pays merchants from stablecoin reserve. Linked to vault by paymentId. |
+| Stablecoin reserve | USDG + USDC | **Verified live** | Pre-funded reserve for MVP. Both supported, routed per-asset by pool depth. |
+| Pricing / TWAP | Uniswap V3 on X Layer | **Verified live** | TWAP for spending power calculation. Not used for per-payment execution. |
 | Wallet / custody / auth | Privy | **Documented** | Embedded wallets, agent wallets, scoped permissions |
-| Price feed / oracle (MVP) | Uniswap V3 TWAP + OKX market data API | **Available** | Chainlink Data Streams announced but VerifierProxy not deployed on X Layer yet |
-| Price feed / oracle (production) | Chainlink Data Streams | **Announced, not verified** | Equity feeds confirmed; VerifierProxy address on X Layer not public; credentials self-serve |
+| Price feed / oracle | Uniswap V3 TWAP + OKX market data API | **Available** | Chainlink Data Streams do NOT support X Layer (confirmed by Ian, OKX, Sep 22 2026). TWAP is the oracle. |
 | Messaging access | WhatsApp Business API | **Available** | MVP: balance checks, spending power, approve/reject payments |
 | Agent runtime | MCP + Privy agent wallets | **Available** | Scoped agent permissions, payment intent creation within bounds |
 | Identity / payment links | Custom (MVP) | **To build** | pay.avela.xyz/username, username resolution |
@@ -358,13 +385,13 @@ Adapters (replaceable)
 
 ### 4.6 Oracle Strategy
 
-**MVP:** Uniswap V3 TWAP from pool data. The wSPYx/USDG pool has $1.89M liquidity — sufficient for spending power calculation. OKX market data API (via onchainos CLI) as secondary/validation source.
+**Chainlink Data Streams do NOT support X Layer** — confirmed by Ian (OKX) on Sep 22, 2026 in OKX Dev Day Telegram. This resolves the open question definitively.
 
-**Production:** Chainlink Data Streams when the X Layer VerifierProxy is publicly available. OKX announced "24/5 equities streams covering major US stocks including TSLA, NVDA, and AAPL" on X Layer in June 2026. Credentials self-serve (confirmed by David Shui, OKX).
+**MVP and production:** Uniswap V3 TWAP from pool data. The wSPYx/USDG pool has $1.89M liquidity — sufficient for spending power calculation. OKX market data API (via onchainos CLI) as secondary/validation source.
 
-**Fallback (validated by other builders):** duke.sol/Gloam used "a self-sourced oracle plus the xStock liquidity that's already onchain" — bypassed Chainlink entirely.
+**Why this is fine:** Under the vault+reserve model, TWAP is only used for spending power pricing — it's never in the payment execution path. No swap happens per payment, so there's no slippage risk from oracle inaccuracy. The worst case is slightly over/under-estimated spending power, which the haircut already buffers.
 
-TODO: Ask in OKX Telegram for Chainlink Data Streams VerifierProxy address on X Layer mainnet (chain 196).
+**Validated by other builders:** duke.sol/Gloam used "a self-sourced oracle plus the xStock liquidity that's already onchain" — same approach, successfully competed at OKX Dev Day.
 
 ### 4.7 Wrapping Mechanics
 
@@ -384,13 +411,32 @@ TODO: Verify the wrapping contract interface and whether wrapping is permissionl
 | wSPYx (MVP asset) | `0xe7e553cd128f0011777323a0b44a7b96ea1cb540` | Yes |
 | wQQQx (MVP asset) | `0x4c1ae29c159838fc1b224636e28e086eb69101f7` | Yes |
 | wNVDAx (MVP asset) | `0xa8ddb5cd96b5222afe198316e9a57caa642850d5` | Yes |
+| wGOOGLx (MVP asset) | `0xf8c5308f80e459bb53d9ebe689854d9cbb2caa6f` | Yes |
+| wAAPLx (MVP asset) | `0x943bf64d566c32a2bcd41ac92fb63c111cc9de8f` | Yes |
 | USDG (settlement) | `0x4ae46a509f6b1d9056937ba4500cb143933d2dc8` | Yes |
 | USDC (settlement) | `0xb6ceceab302e2e4948951ee7843fc24e92933061` | Yes |
 | USDG/wSPYx pool | Uniswap V3 | Yes ($1.89M) |
 | wQQQx/USDC pool | Uniswap V3 | Yes ($738K) |
 | USDG/wNVDAx pool | Uniswap V3 | Yes ($623K) |
+| USDC/wGOOGLx pool | Uniswap V3 | Yes ($616K) |
+| USDG/wAAPLx pool | Uniswap V3 | Yes ($404K) |
 | USDG/USDC pool | Uniswap V3 | Yes ($1.01M) |
-| Chainlink VerifierProxy | Unknown | Not verified |
+| AvelaVault | To deploy | Avela-owned |
+| AvelaPaymentRouter | To deploy | Avela-owned |
+
+### 4.9 Custody Disclosure
+
+**Collateral custody (AvelaVault):** non-custodial. Withdrawal is permissionless — only the original depositor can withdraw their own balance. No owner, admin, or backend key can move a user's locked position. The contract accepts all 5 whitelisted MVP assets (one vault, one address).
+
+**Settlement custody (AvelaPaymentRouter):** custodial. The router holds a pre-funded stablecoin reserve (~$10 USDG+USDC for demo payments), disbursed by a single backend EOA. This is a stated MVP limitation. Phase 2: multisig authorization or claim-based release.
+
+**Contract design decisions (resolved):**
+- Multi-asset vault (one contract with token whitelist), not 5 single-asset vaults — one address for judges, one approval per token for users
+- Multi-stablecoin router (token parameter), not per-stablecoin routers — routes USDG or USDC per payment
+- Single EOA signer for MVP — stated honestly, not hidden. Multisig is Phase 2.
+- Reserve pre-funded with ~$10 USDG+USDC — enough for demo payments ($0.50-$1 each). The judge cares about the flow, not the dollar amount.
+
+**Reference templates:** `resources/AvelaVault.sol` and `resources/AvelaPaymentRouter.sol` are single-asset starting points. Production contracts should be multi-asset as specified above. Implementation must follow Foundry best practices (see skills at `resources/skills/`).
 
 ---
 
@@ -486,18 +532,23 @@ The first proof is repeated transactions, not signups.
 
 ### 8.1 Resolved (this version)
 
-- ~~Which xStocks exist on X Layer with live liquidity pools?~~ → 9 wrapped xStocks verified, wSPYx + wQQQx + wNVDAx selected for MVP
-- ~~Oracle/price feed provider selection~~ → Uniswap V3 TWAP for MVP, Chainlink Data Streams for production
+- ~~Which xStocks exist on X Layer with live liquidity pools?~~ → 9 wrapped xStocks verified, 5 selected for MVP (wSPYx, wQQQx, wNVDAx, wGOOGLx, wAAPLx)
+- ~~Oracle/price feed provider selection~~ → Uniswap V3 TWAP. Chainlink Data Streams do NOT support X Layer (confirmed by Ian, OKX, Sep 22 2026).
 - ~~Settlement stablecoin~~ → Both USDG and USDC, routed per-asset by pool depth
+- ~~"Positions stay intact" vs swap execution~~ → Vault+reserve model. AvelaVault locks collateral, AvelaPaymentRouter pays from stablecoin reserve. Positions provably stay locked. No per-payment swap.
+- ~~No Avela-owned contracts~~ → AvelaVault + AvelaPaymentRouter deployed on X Layer. Satisfies "provide contract addresses and technical links" requirement.
+- ~~Vault deployment strategy~~ → Multi-asset vault (one contract, token whitelist), not 5 single-asset vaults. One address for judges, one approval per token for users.
+- ~~Reserve sizing~~ → ~$10 USDG+USDC for demo. Small demo payments ($0.50-$1). Flow matters, not dollar amounts.
+- ~~Signer key management~~ → Single EOA for MVP, stated limitation. Multisig is Phase 2.
+- ~~Multi-stablecoin routing in contracts~~ → One router with token parameter, not per-stablecoin routers.
 
 ### 8.2 Remaining
 
-- **Chainlink VerifierProxy address on X Layer** — ask in OKX Telegram; if unavailable, proceed with Uniswap TWAP
 - **Wrapping mechanics** — verify ERC-4626 wrapper interface, permissionless vs. allowlisted
-- **Haircut calibration** — starting at 50% for wSPYx (index); needs per-asset tuning for single stocks
+- **Haircut calibration** — starting at 50% for indices (wSPYx, wQQQx); needs per-asset tuning for single stocks (wNVDAx, wGOOGLx, wAAPLx)
 - **KYC/KYB provider selection** — deferred; not required for hackathon demo
 - **Demo merchant setup** — create a demo merchant checkout for OKX Dev Day
-- **Pool liquidity sustainability** — current liquidity is partly incentive-driven (OKX $5M RWA program, $100K LP rounds). Risk: if campaigns end, execution breaks on slippage. Mitigation: payment size limits, slippage checks.
+- **Pool liquidity sustainability** — current liquidity is partly incentive-driven (OKX $5M RWA program, $100K LP rounds). Under vault model, this only affects TWAP pricing accuracy, not payment execution — haircut buffers the risk.
 
 ---
 
@@ -516,8 +567,11 @@ The first proof is repeated transactions, not signups.
 - Chainlink Data Streams announced for X Layer but VerifierProxy not publicly deployed at any known address.
 - Other Dev Day builders confirmed same oracle difficulty; duke.sol/Gloam used self-sourced oracle.
 
-**Community intel (OKX Dev Day Telegram, Sep 19–21):**
+**Community intel (OKX Dev Day Telegram, Sep 19–22):**
 - OKX $5M RWA Incentive Program active — Round 2 LP incentives ($100K, Sep 18–25), RWA Meme Trading Competition ($50K, Sep 23–30)
+- Magnificent 7 Trading Competition ($50K USDT) active — GOOGLx, AMZNx, METAx, NVDAx, TSLAx, AAPLx
 - Incentivized pools are mostly meme tokens paired with wrapped xStocks
 - Chainlink Data Streams credentials are self-serve (confirmed by David Shui, OKX)
+- **Chainlink Data Streams do NOT support X Layer** (confirmed by Ian, OKX, Sep 22 2026). This is definitive — not "not yet deployed" but "not supported."
 - In-Person Finale rejects auto-move to Best Remote Build (confirmed by Yanyi, OKX AI team)
+- You can withdraw NVDAx from OKX to X Layer (confirmed by Ian, OKX, Sep 22 2026)

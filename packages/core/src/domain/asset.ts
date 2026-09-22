@@ -39,6 +39,28 @@ const MVP_ASSETS: Asset[] = [
 		poolAddress: "0x0000000000000000000000000000000000000000", // TODO: verify exact Uniswap V3 pool address
 		enabled: true,
 	},
+	{
+		symbol: "wGOOGLx",
+		name: "Alphabet",
+		address: "0xf8c5308f80e459bb53d9ebe689854d9cbb2caa6f",
+		decimals: 18,
+		assetType: "single_stock",
+		haircut: 0.5,
+		settlementStablecoin: "USDC",
+		poolAddress: "0x0000000000000000000000000000000000000000", // TODO: verify exact Uniswap V3 pool address
+		enabled: true,
+	},
+	{
+		symbol: "wAAPLx",
+		name: "Apple",
+		address: "0x943bf64d566c32a2bcd41ac92fb63c111cc9de8f",
+		decimals: 18,
+		assetType: "single_stock",
+		haircut: 0.5,
+		settlementStablecoin: "USDG",
+		poolAddress: "0x0000000000000000000000000000000000000000", // TODO: verify exact Uniswap V3 pool address
+		enabled: true,
+	},
 ];
 
 export function getSupportedAssets(): Asset[] {

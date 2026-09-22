@@ -136,7 +136,7 @@ apps/web/
 ## Success Criteria
 
 1. Dashboard shows spending power as the hero metric
-2. Portfolio page shows all 3 assets with values, haircuts, spending power
+2. Portfolio page shows all 5 assets with values, haircuts, spending power
 3. Spending power updates on page refresh (polling)
 4. Payment history shows real payments with onchain receipts
 5. Policy editor saves spending rules that the API enforces
