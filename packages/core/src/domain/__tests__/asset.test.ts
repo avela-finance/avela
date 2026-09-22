@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { getAsset, getSupportedAssets, isAssetEligible, STABLECOINS } from "../asset.js";
+import {
+	getAsset,
+	getSupportedAssets,
+	isAssetEligible,
+	STABLECOINS,
+	STABLECOIN_DECIMALS,
+} from "../asset.js";
 
 describe("asset registry", () => {
 	it("returns 5 MVP assets", () => {
 		const assets = getSupportedAssets();
 		expect(assets).toHaveLength(5);
-		expect(assets.map((a) => a.symbol)).toEqual([
-			"wSPYx",
-			"wQQQx",
-			"wNVDAx",
-			"wGOOGLx",
-			"wAAPLx",
-		]);
+		expect(assets.map((a) => a.symbol)).toEqual(["wSPYx", "wQQQx", "wNVDAx", "wGOOGLx", "wAAPLx"]);
 	});
 
 	it("returns correct wSPYx config", () => {
@@ -65,5 +65,10 @@ describe("asset registry", () => {
 	it("has USDG and USDC stablecoin addresses", () => {
 		expect(STABLECOINS.USDG).toBe("0x4ae46a509f6b1d9056937ba4500cb143933d2dc8");
 		expect(STABLECOINS.USDC).toBe("0xb6ceceab302e2e4948951ee7843fc24e92933061");
+	});
+
+	it("has correct stablecoin decimals", () => {
+		expect(STABLECOIN_DECIMALS.USDG).toBe(18);
+		expect(STABLECOIN_DECIMALS.USDC).toBe(6);
 	});
 });

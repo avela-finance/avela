@@ -1,4 +1,13 @@
-import { bigint, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+	bigint,
+	integer,
+	jsonb,
+	numeric,
+	pgEnum,
+	pgTable,
+	timestamp,
+	varchar,
+} from "drizzle-orm/pg-core";
 
 export const accountsTable = pgTable("accounts", {
 	id: varchar("id", { length: 26 }).primaryKey(),
@@ -29,4 +38,44 @@ export const stablecoinBalancesTable = pgTable("stablecoin_balances", {
 	stablecoin: varchar("stablecoin", { length: 10 }).notNull(),
 	amount: bigint("amount", { mode: "bigint" }).notNull().default(0n),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const paymentStatusEnum = pgEnum("payment_status", [
+	"created",
+	"policy_check",
+	"awaiting_approval",
+	"collateral_verify",
+	"settling",
+	"settled",
+	"failed",
+	"rejected",
+]);
+
+export const paymentIntentsTable = pgTable("payment_intents", {
+	id: varchar("id", { length: 26 }).primaryKey(),
+	accountId: varchar("account_id", { length: 26 })
+		.notNull()
+		.references(() => accountsTable.id),
+	amount: numeric("amount", { precision: 18, scale: 6 }).notNull(),
+	recipientAddress: varchar("recipient_address", { length: 42 }).notNull(),
+	recipientUsername: varchar("recipient_username", { length: 32 }),
+	status: paymentStatusEnum("status").notNull().default("created"),
+	fundingDecision: jsonb("funding_decision"),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const settlementsTable = pgTable("settlements", {
+	id: varchar("id", { length: 26 }).primaryKey(),
+	paymentIntentId: varchar("payment_intent_id", { length: 26 })
+		.notNull()
+		.references(() => paymentIntentsTable.id)
+		.unique(),
+	paymentId: varchar("payment_id", { length: 66 }).notNull(),
+	txHash: varchar("tx_hash", { length: 66 }).notNull(),
+	blockNumber: integer("block_number").notNull(),
+	amountSettled: varchar("amount_settled", { length: 78 }).notNull(),
+	settlementToken: varchar("settlement_token", { length: 10 }).notNull(),
+	gasUsed: varchar("gas_used", { length: 78 }).notNull(),
+	settledAt: timestamp("settled_at", { withTimezone: true }).notNull().defaultNow(),
 });

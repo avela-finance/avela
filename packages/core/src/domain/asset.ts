@@ -5,6 +5,11 @@ export const STABLECOINS: Record<SettlementStablecoin, string> = {
 	USDC: "0xb6ceceab302e2e4948951ee7843fc24e92933061",
 } as const;
 
+export const STABLECOIN_DECIMALS: Record<SettlementStablecoin, number> = {
+	USDG: 18,
+	USDC: 6,
+} as const;
+
 const MVP_ASSETS: Asset[] = [
 	{
 		symbol: "wSPYx",
