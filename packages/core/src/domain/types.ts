@@ -185,3 +185,41 @@ export const CreateWatcherInputSchema = z.object({
 	cooldownMinutes: z.number().int().positive().default(60),
 });
 export type CreateWatcherInput = z.infer<typeof CreateWatcherInputSchema>;
+
+// --- WhatsApp Access ---
+
+export type WhatsAppNotificationType =
+	| "payment_pending"
+	| "payment_settled"
+	| "payment_failed"
+	| "spending_alert"
+	| "agent_approval_request";
+
+export type InteractiveAction = {
+	type: "button";
+	title: string;
+	id: string;
+};
+
+export type WhatsAppLink = {
+	id: string;
+	accountId: string;
+	phoneNumber: string;
+	waId: string;
+	linkedAt: Date;
+	active: boolean;
+};
+
+export type WhatsAppNotification = {
+	id: string;
+	accountId: string;
+	phoneNumber: string;
+	type: WhatsAppNotificationType;
+	paymentIntentId: string | null;
+	templateName: string;
+	message: string;
+	interactiveActions: InteractiveAction[] | null;
+	sentAt: Date;
+	respondedAt: Date | null;
+	response: "approved" | "rejected" | null;
+};
