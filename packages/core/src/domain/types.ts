@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type AccountStatus = "active" | "frozen" | "closed";
 
 export type Account = {
@@ -62,4 +64,81 @@ export type PriceResult = {
 	source: string;
 	confidence: number;
 	timestamp: Date;
+};
+
+// --- Agent Permission ---
+
+export const AgentPermissionSchema = z
+	.object({
+		maxPerTransaction: z.number().nonnegative(),
+		maxPerDay: z.number().nonnegative(),
+		allowedAssets: z.array(z.string()),
+		allowedRecipients: z.array(z.string()),
+		requiresApproval: z.boolean(),
+		approvalThreshold: z.number().nonnegative(),
+	})
+	.refine((data) => data.maxPerTransaction <= data.maxPerDay, {
+		message: "maxPerTransaction must not exceed maxPerDay",
+	});
+
+export type AgentPermission = z.infer<typeof AgentPermissionSchema>;
+
+export const DEMO_AGENT_PERMISSION: AgentPermission = {
+	maxPerTransaction: 50,
+	maxPerDay: 200,
+	allowedAssets: ["wSPYx"],
+	allowedRecipients: [],
+	requiresApproval: false,
+	approvalThreshold: 25,
+};
+
+// --- Agent ---
+
+export const AgentStatusEnum = z.enum(["active", "suspended", "expired", "revoked"]);
+export type AgentStatus = z.infer<typeof AgentStatusEnum>;
+
+export const AgentSchema = z.object({
+	id: z.string(),
+	accountId: z.string(),
+	name: z.string().min(1).max(100),
+	walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+	permissions: AgentPermissionSchema,
+	status: AgentStatusEnum,
+	createdAt: z.date(),
+	expiresAt: z.date().nullable(),
+});
+
+export type Agent = z.infer<typeof AgentSchema>;
+
+// --- Agent Spending Log ---
+
+export const AgentSpendingLogStatusEnum = z.enum([
+	"approved",
+	"rejected",
+	"auto_approved",
+	"pending_approval",
+]);
+
+export const AgentSpendingLogSchema = z.object({
+	id: z.string(),
+	agentId: z.string(),
+	paymentIntentId: z.string(),
+	amount: z.number().nonnegative(),
+	asset: z.string(),
+	recipient: z.string(),
+	permissionSnapshot: AgentPermissionSchema,
+	status: AgentSpendingLogStatusEnum,
+	decidedAt: z.date(),
+});
+
+export type AgentSpendingLog = z.infer<typeof AgentSpendingLogSchema>;
+
+// --- Permission Evaluation Result ---
+
+export type AgentPermissionEvaluation = {
+	allowed: boolean;
+	requiresApproval: boolean;
+	violations: string[];
+	dailySpent: number;
+	dailyRemaining: number;
 };
