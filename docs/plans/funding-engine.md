@@ -947,12 +947,38 @@ git commit -m "feat(core): add router adapter interface for AvelaPaymentRouter"
 ### Task 7: Payment Execution Orchestrator
 
 **Files:**
+- Modify: `packages/core/src/domain/asset.ts` (add `STABLECOIN_DECIMALS`)
 - Modify: `packages/core/src/domain/funding-engine.ts` (add `executePayment`)
 - Test: `packages/core/src/domain/__tests__/funding-engine.test.ts` (extend)
+- Test: `packages/core/src/domain/__tests__/asset.test.ts` (extend with decimals test)
 
 **Interfaces:**
-- Consumes: `updatePaymentStatus` from `payment-intent.ts`, `selectFundingSource` from this file, `evaluatePolicy` from `spending-policy.ts`, `VaultAdapter` from `adapters/vault-adapter.ts`, `RouterAdapter` from `adapters/router-adapter.ts`, `calculateSpendingPower` from `spending-power.ts`
+- Consumes: `updatePaymentStatus` from `payment-intent.ts`, `selectFundingSource` from this file, `evaluatePolicy` from `spending-policy.ts`, `VaultAdapter` from `adapters/vault-adapter.ts`, `RouterAdapter` from `adapters/router-adapter.ts`, `calculateSpendingPower` from `spending-power.ts`, `STABLECOIN_DECIMALS` from `asset.ts`
 - Produces: `executePayment(deps, intentId): Promise<PaymentIntent>`
+
+- [ ] **Step 0: Add STABLECOIN_DECIMALS to asset.ts**
+
+USDG has 18 decimals, USDC has 6. Settlement amounts must use the correct decimals per stablecoin.
+
+```ts
+// In packages/core/src/domain/asset.ts — add after STABLECOINS export
+export const STABLECOIN_DECIMALS: Record<SettlementStablecoin, number> = {
+	USDG: 18,
+	USDC: 6,
+} as const;
+```
+
+Add test in `asset.test.ts`:
+
+```ts
+it("has correct stablecoin decimals", () => {
+	expect(STABLECOIN_DECIMALS.USDG).toBe(18);
+	expect(STABLECOIN_DECIMALS.USDC).toBe(6);
+});
+```
+
+Run: `cd packages/core && bun run test -- --reporter=verbose`
+Expected: all tests pass including new decimals test.
 
 - [ ] **Step 1: Write the failing test for executePayment**
 
@@ -1092,7 +1118,7 @@ Add to `packages/core/src/domain/funding-engine.ts`:
 ```ts
 import type { VaultAdapter } from "../adapters/vault-adapter.js";
 import type { RouterAdapter } from "../adapters/router-adapter.js";
-import { STABLECOINS } from "./asset.js";
+import { STABLECOINS, STABLECOIN_DECIMALS } from "./asset.js";
 import type { PaymentIntent, FundingDecision, PaymentStatus } from "./payment-intent.js";
 import type { SpendingPower } from "./spending-power.js";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
@@ -1164,7 +1190,13 @@ export async function executePayment(
 		const asset = getAsset(fundingDecision.collateralAsset)!;
 		const lockedBalance = await deps.vaultAdapter.getLockedBalance(walletAddress, asset.address);
 
-		if (lockedBalance === 0n) {
+		// Verify collateral sufficiency — not just existence
+		const spendingPower = await deps.calculateSpendingPower(intent.accountId);
+		const assetPower = spendingPower.perAsset.find(
+			(a) => a.symbol === fundingDecision.collateralAsset,
+		);
+
+		if (!assetPower || assetPower.spendingPower < intent.amount) {
 			return deps.updatePaymentStatus(deps.db, intentId, "failed");
 		}
 
@@ -1178,7 +1210,8 @@ export async function executePayment(
 	await deps.updatePaymentStatus(deps.db, intentId, "settling");
 	const walletAddress = await deps.getAccountWalletAddress(intent.accountId);
 	const stablecoinAddress = STABLECOINS[fundingDecision.settlementToken];
-	const settlementAmount = BigInt(Math.round(intent.amount * 1e6));
+	const decimals = STABLECOIN_DECIMALS[fundingDecision.settlementToken];
+	const settlementAmount = BigInt(Math.round(intent.amount * 10 ** decimals));
 
 	const result = await deps.routerAdapter.executePayment({
 		token: stablecoinAddress,

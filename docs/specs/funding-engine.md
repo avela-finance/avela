@@ -189,8 +189,8 @@ packages/core/src/
 9. Unit tests for state machine transitions, funding source selection, collateral verification
 10. Integration test: create intent → verify collateral → settle → receipt with onchain proof
 
-## Open Questions
+## Resolved Questions
 
-- Reserve monitoring: should the backend check AvelaPaymentRouter's reserve balance before attempting settlement, or let the contract revert?
-- Gas sponsorship: who pays gas for the executePayment tx? Backend operator wallet, or relayed?
-- paymentId generation: ULID converted to bytes32, or keccak256 of intent fields?
+- **Reserve monitoring:** Backend pre-checks AvelaPaymentRouter's reserve balance before attempting settlement. Fail fast with a clear error rather than wasting gas on a revert.
+- **Gas sponsorship:** Backend operator wallet pays gas for executePayment transactions. No relay/meta-tx for MVP.
+- **paymentId generation:** keccak256 of the ULID (converted to bytes32). Deterministic, collision-resistant, fits the bytes32 slot on-chain.

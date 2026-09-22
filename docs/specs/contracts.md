@@ -197,8 +197,8 @@ contracts/
 11. All Foundry tests pass (`forge test`)
 12. Gas usage reasonable for X Layer (report gas in test output)
 
-## Open Questions
+## Resolved Questions
 
-- Should the vault support batch deposit/withdraw (multiple tokens in one tx)?
-- Should the router support batch payments (multiple merchants in one tx)?
-- OKX Explorer contract verification: does it support Foundry's standard JSON input?
+- **Batch deposit/withdraw:** No for MVP. Single-token operations only. Batch adds gas complexity without clear user demand yet.
+- **Batch payments:** No for MVP. Single-payment execution only.
+- **OKX Explorer contract verification:** Try `forge verify-contract` with OKX Explorer's API first. If unsupported, fall back to manual standard JSON input upload.

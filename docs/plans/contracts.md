@@ -16,7 +16,7 @@
 - **SafeERC20** for all `transferFrom` / `transfer` calls
 - **No mocks** — use Foundry's built-in test infrastructure (vm cheatcodes, MockERC20)
 - **`forge test` must pass before every commit**
-- **Exact Solidity version:** `pragma solidity ^0.8.24;`
+- **Exact Solidity version:** `pragma solidity 0.8.24;`
 - Deploy target: X Layer mainnet, chain ID 196, RPC `https://rpc.xlayer.tech`
 
 ---
@@ -156,7 +156,7 @@ File: `contracts/test/mocks/MockERC20.sol`
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -210,7 +210,7 @@ File: `contracts/test/AvelaVault.t.sol`
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {AvelaVault} from "../src/AvelaVault.sol";
@@ -403,7 +403,7 @@ File: `contracts/src/AvelaVault.sol`
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -426,6 +426,7 @@ contract AvelaVault is Ownable, ReentrancyGuard {
     event TokenWhitelistUpdated(address indexed token, bool status);
 
     error ZeroAmount();
+    error ZeroAddress();
     error TokenNotWhitelisted(address token);
     error InsufficientLockedBalance(uint256 requested, uint256 available);
 
@@ -457,6 +458,7 @@ contract AvelaVault is Ownable, ReentrancyGuard {
     }
 
     function setWhitelisted(address token, bool status) external onlyOwner {
+        if (token == address(0)) revert ZeroAddress();
         whitelisted[token] = status;
         emit TokenWhitelistUpdated(token, status);
     }
@@ -501,7 +503,7 @@ File: `contracts/test/AvelaPaymentRouter.t.sol`
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {AvelaPaymentRouter} from "../src/AvelaPaymentRouter.sol";
@@ -701,7 +703,7 @@ File: `contracts/src/AvelaPaymentRouter.sol`
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -774,6 +776,8 @@ contract AvelaPaymentRouter is Ownable, ReentrancyGuard {
 
     function withdrawReserve(address token, address to, uint256 amount) external onlyOwner nonReentrant {
         if (to == address(0)) revert ZeroAddress();
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        if (amount > balance) revert InsufficientReserve(amount, balance);
         IERC20(token).safeTransfer(to, amount);
         emit ReserveWithdrawn(to, token, amount);
     }
@@ -823,7 +827,7 @@ File: `contracts/test/Integration.t.sol`
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {AvelaVault} from "../src/AvelaVault.sol";
@@ -968,7 +972,7 @@ File: `contracts/script/Deploy.s.sol`
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
 import {AvelaVault} from "../src/AvelaVault.sol";
