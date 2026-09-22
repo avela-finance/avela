@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+	agentSpendingLogTable,
+	agentsTable,
 	dailySpendingLogTable,
 	paymentIntentsTable,
 	settlementsTable,
@@ -45,5 +47,34 @@ describe("spending policy schema", () => {
 		expect(columns).toContain("accountId");
 		expect(columns).toContain("amount");
 		expect(columns).toContain("spentAt");
+	});
+});
+
+describe("agent schema", () => {
+	it("exports agentsTable with required columns", () => {
+		expect(agentsTable).toBeDefined();
+		const columns = Object.keys(agentsTable);
+		expect(columns).toContain("id");
+		expect(columns).toContain("accountId");
+		expect(columns).toContain("name");
+		expect(columns).toContain("walletAddress");
+		expect(columns).toContain("permissions");
+		expect(columns).toContain("status");
+		expect(columns).toContain("createdAt");
+		expect(columns).toContain("expiresAt");
+	});
+
+	it("exports agentSpendingLogTable with required columns", () => {
+		expect(agentSpendingLogTable).toBeDefined();
+		const columns = Object.keys(agentSpendingLogTable);
+		expect(columns).toContain("id");
+		expect(columns).toContain("agentId");
+		expect(columns).toContain("paymentIntentId");
+		expect(columns).toContain("amount");
+		expect(columns).toContain("asset");
+		expect(columns).toContain("recipient");
+		expect(columns).toContain("permissionSnapshot");
+		expect(columns).toContain("status");
+		expect(columns).toContain("decidedAt");
 	});
 });
