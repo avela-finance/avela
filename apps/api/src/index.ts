@@ -7,6 +7,7 @@ import { healthRoutes } from "./routes/health.js";
 
 export type AppVariables = {
 	requestId: string;
+	privyUserId: string;
 };
 
 const app = new Hono<{ Variables: AppVariables }>();
