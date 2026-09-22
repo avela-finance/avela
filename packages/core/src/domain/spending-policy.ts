@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gte } from "drizzle-orm";
 import { ulid } from "ulidx";
 import type { Database } from "../db/client.js";
-import { spendingPoliciesTable } from "../db/schema.js";
+import { dailySpendingLogTable, spendingPoliciesTable } from "../db/schema.js";
 import { DEFAULT_POLICY } from "./policy-defaults.js";
 
 export type FundingSource = "spending_power" | "stablecoin_balance";
@@ -167,4 +167,42 @@ export function evaluatePolicyRules(params: {
 		params.amount > params.approvalThreshold;
 
 	return { passed, requiresApproval, violations };
+}
+
+export async function recordSpending(
+	db: Database,
+	accountId: string,
+	amount: number,
+	paymentIntentId?: string,
+) {
+	await db.insert(dailySpendingLogTable).values({
+		id: ulid(),
+		accountId,
+		amount: amount.toFixed(6),
+		paymentIntentId: paymentIntentId ?? null,
+	});
+}
+
+export async function getDailySpending(
+	db: Database,
+	accountId: string,
+	policy: { dailyLimit: string | null },
+) {
+	const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+	const rows = await db
+		.select({ amount: dailySpendingLogTable.amount })
+		.from(dailySpendingLogTable)
+		.where(
+			and(
+				eq(dailySpendingLogTable.accountId, accountId),
+				gte(dailySpendingLogTable.spentAt, twentyFourHoursAgo),
+			),
+		);
+
+	const total = rows.reduce((sum, row) => sum + Number(row.amount), 0);
+	const limit = policy.dailyLimit ? Number(policy.dailyLimit) : null;
+	const remaining = limit !== null ? Math.max(0, limit - total) : null;
+
+	return { total, limit, remaining };
 }
