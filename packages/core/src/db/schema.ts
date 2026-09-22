@@ -113,3 +113,35 @@ export const dailySpendingLogTable = pgTable(
 	},
 	(table) => [index("daily_spending_account_spent_idx").on(table.accountId, table.spentAt)],
 );
+
+export const agentsTable = pgTable("agents", {
+	id: varchar("id", { length: 26 }).primaryKey(),
+	accountId: varchar("account_id", { length: 26 })
+		.notNull()
+		.references(() => accountsTable.id),
+	name: varchar("name", { length: 100 }).notNull(),
+	walletAddress: varchar("wallet_address", { length: 42 }).notNull(),
+	permissions: jsonb("permissions").notNull(),
+	status: varchar("status", { length: 20 }).notNull().default("active"),
+	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+	expiresAt: timestamp("expires_at", { withTimezone: true }),
+});
+
+export const agentSpendingLogTable = pgTable(
+	"agent_spending_log",
+	{
+		id: varchar("id", { length: 26 }).primaryKey(),
+		agentId: varchar("agent_id", { length: 26 })
+			.notNull()
+			.references(() => agentsTable.id),
+		paymentIntentId: varchar("payment_intent_id", { length: 26 }).notNull(),
+		amount: numeric("amount", { precision: 18, scale: 6 }).notNull(),
+		asset: varchar("asset", { length: 20 }).notNull(),
+		recipient: varchar("recipient", { length: 42 }).notNull(),
+		permissionSnapshot: jsonb("permission_snapshot").notNull(),
+		status: varchar("status", { length: 20 }).notNull(),
+		decidedAt: timestamp("decided_at", { withTimezone: true }).notNull().defaultNow(),
+	},
+	(table) => [index("agent_spending_log_agent_decided_idx").on(table.agentId, table.decidedAt)],
+);
