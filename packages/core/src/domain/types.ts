@@ -142,3 +142,46 @@ export type AgentPermissionEvaluation = {
 	dailySpent: number;
 	dailyRemaining: number;
 };
+
+// --- Watcher ---
+
+export const WatcherStatusEnum = z.enum(["active", "triggered", "paused", "disabled"]);
+export type WatcherStatus = z.infer<typeof WatcherStatusEnum>;
+
+export const SpendingPowerThresholdConfigSchema = z.object({
+	threshold: z.number().nonnegative(),
+	direction: z.literal("below"),
+});
+export type SpendingPowerThresholdConfig = z.infer<typeof SpendingPowerThresholdConfigSchema>;
+
+export const WatcherSchema = z.object({
+	id: z.string(),
+	accountId: z.string(),
+	type: z.literal("spending_power_threshold"),
+	config: SpendingPowerThresholdConfigSchema,
+	status: WatcherStatusEnum,
+	lastEvaluatedAt: z.date().nullable(),
+	lastTriggeredAt: z.date().nullable(),
+	cooldownMinutes: z.number().int().positive(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
+});
+export type Watcher = z.infer<typeof WatcherSchema>;
+
+export const WatcherEvaluationSchema = z.object({
+	watcherId: z.string(),
+	currentValue: z.number(),
+	threshold: z.number(),
+	triggered: z.boolean(),
+	evaluatedAt: z.date(),
+});
+export type WatcherEvaluation = z.infer<typeof WatcherEvaluationSchema>;
+
+export type WatcherCyclePhase = "watch" | "evaluate" | "decide" | "authorize" | "execute";
+
+export const CreateWatcherInputSchema = z.object({
+	accountId: z.string().min(1),
+	threshold: z.number().nonnegative(),
+	cooldownMinutes: z.number().int().positive().default(60),
+});
+export type CreateWatcherInput = z.infer<typeof CreateWatcherInputSchema>;
