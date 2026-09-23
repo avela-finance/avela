@@ -162,9 +162,7 @@ export function evaluatePolicyRules(params: {
 	const passed = violations.length === 0;
 
 	const requiresApproval =
-		passed &&
-		params.approvalThreshold !== null &&
-		params.amount > params.approvalThreshold;
+		passed && params.approvalThreshold !== null && params.amount > params.approvalThreshold;
 
 	return { passed, requiresApproval, violations };
 }
@@ -200,7 +198,7 @@ export async function getDailySpending(
 			),
 		);
 
-	const total = Number(row!.total);
+	const total = Number(row?.total);
 	const limit = policy.dailyLimit ? Number(policy.dailyLimit) : null;
 	const remaining = limit !== null ? Math.max(0, limit - total) : null;
 

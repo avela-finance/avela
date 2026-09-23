@@ -1,10 +1,5 @@
-import { describe, it, expect } from "vitest";
-import type {
-	WhatsAppLink,
-	WhatsAppNotification,
-	WhatsAppNotificationType,
-	InteractiveAction,
-} from "../types.js";
+import { describe, expect, it } from "vitest";
+import type { WhatsAppLink, WhatsAppNotification } from "../types.js";
 
 describe("WhatsApp types", () => {
 	it("creates a valid WhatsAppLink", () => {

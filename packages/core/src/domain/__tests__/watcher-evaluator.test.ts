@@ -1,9 +1,9 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
-import { evaluateWatcher, evaluateAllActiveWatchers } from "../watcher-evaluator.js";
 import { createWatcher, updateWatcher } from "../watcher.js";
+import { evaluateAllActiveWatchers, evaluateWatcher } from "../watcher-evaluator.js";
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL;
 const describeDb = TEST_DB_URL ? describe : describe.skip;
@@ -170,10 +170,7 @@ describeDb("evaluateAllActiveWatchers (requires TEST_DATABASE_URL)", () => {
 			cooldownMinutes: 60,
 		});
 
-		spendingPowerResponses = [
-			{ totalSpendingPower: 600 },
-			{ totalSpendingPower: 400 },
-		];
+		spendingPowerResponses = [{ totalSpendingPower: 600 }, { totalSpendingPower: 400 }];
 
 		const results = await evaluateAllActiveWatchers(db, testGetSpendingPower, testSendAlert);
 

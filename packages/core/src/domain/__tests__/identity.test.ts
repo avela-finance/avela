@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { validateUsername, USERNAME_RULES } from "../identity.js";
+import { describe, expect, it } from "vitest";
+import { USERNAME_RULES, validateUsername } from "../identity.js";
 
 describe("validateUsername", () => {
 	it("accepts valid usernames", () => {

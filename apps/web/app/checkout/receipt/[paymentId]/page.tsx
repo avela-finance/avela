@@ -2,8 +2,8 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { SettlementProof } from "@/components/checkout/settlement-proof";
 import type { SettlementProofData } from "@/components/checkout/settlement-proof";
+import { SettlementProof } from "@/components/checkout/settlement-proof";
 
 export default function ReceiptPage() {
 	const params = useParams<{ paymentId: string }>();

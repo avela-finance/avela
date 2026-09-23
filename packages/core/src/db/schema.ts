@@ -158,7 +158,9 @@ export const watchersTable = pgTable(
 			.notNull()
 			.references(() => accountsTable.id),
 		type: varchar("type", { length: 50 }).notNull().default("spending_power_threshold"),
-		config: jsonb("config").notNull().$type<import("../domain/types.js").SpendingPowerThresholdConfig>(),
+		config: jsonb("config")
+			.notNull()
+			.$type<import("../domain/types.js").SpendingPowerThresholdConfig>(),
 		status: varchar("status", { length: 20 }).notNull().default("active"),
 		lastEvaluatedAt: timestamp("last_evaluated_at", { withTimezone: true }),
 		lastTriggeredAt: timestamp("last_triggered_at", { withTimezone: true }),

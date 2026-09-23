@@ -1,8 +1,8 @@
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import type { Database } from "../db/client.js";
 import { agentSpendingLogTable, agentsTable } from "../db/schema.js";
-import { AgentPermissionSchema } from "./types.js";
 import type { AgentPermissionEvaluation } from "./types.js";
+import { AgentPermissionSchema } from "./types.js";
 
 export type EvaluateAgentPermissionInput = {
 	agentId: string;
@@ -68,7 +68,9 @@ export async function evaluateAgentPermission(
 		if (!input.asset) {
 			violations.push("Asset is required when allowedAssets restriction is set");
 		} else if (!perms.allowedAssets.includes(input.asset)) {
-			violations.push(`Asset ${input.asset} not in allowed list: ${perms.allowedAssets.join(", ")}`);
+			violations.push(
+				`Asset ${input.asset} not in allowed list: ${perms.allowedAssets.join(", ")}`,
+			);
 		}
 	}
 
@@ -92,7 +94,7 @@ export async function evaluateAgentPermission(
 			),
 		);
 
-	const dailySpent = Number(dailyRow!.total);
+	const dailySpent = Number(dailyRow?.total);
 	const dailyRemaining = Math.max(0, perms.maxPerDay - dailySpent);
 
 	// Check daily limit

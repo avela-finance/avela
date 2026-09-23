@@ -1,6 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { DEMO_PRODUCTS, getProduct } from "../demo-products.js";
-import type { DemoProduct } from "../demo-products.js";
 
 describe("demo products", () => {
 	it("has exactly 3 products", () => {
@@ -25,7 +24,7 @@ describe("demo products", () => {
 	it("getProduct returns product by id", () => {
 		const product = getProduct("1");
 		expect(product).toBeDefined();
-		expect(product!.name).toBe("API Credits");
+		expect(product?.name).toBe("API Credits");
 	});
 
 	it("getProduct returns undefined for unknown id", () => {

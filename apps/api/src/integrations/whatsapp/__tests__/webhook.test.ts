@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
 import { Hono } from "hono";
+import { describe, expect, it } from "vitest";
 import { createWebhookRoutes } from "../webhook.js";
 
 describe("WhatsApp webhook", () => {

@@ -17,10 +17,7 @@ const VAULT_ABI = [
 	},
 ] as const;
 
-export function createVaultAdapter(
-	publicClient: PublicClient,
-	vaultAddress: string,
-): VaultAdapter {
+export function createVaultAdapter(publicClient: PublicClient, vaultAddress: string): VaultAdapter {
 	return {
 		async getLockedBalance(depositor: string, token: string): Promise<bigint> {
 			const balance = await publicClient.readContract({

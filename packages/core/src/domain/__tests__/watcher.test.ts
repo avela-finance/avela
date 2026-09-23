@@ -1,13 +1,13 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import {
 	createWatcher,
+	deleteWatcher,
 	getWatcher,
 	getWatchersByAccount,
 	updateWatcher,
-	deleteWatcher,
 } from "../watcher.js";
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL;
@@ -72,7 +72,7 @@ describeDb("watcher CRUD (requires TEST_DATABASE_URL)", () => {
 
 			const result = await getWatcher(db, created.id);
 			expect(result).not.toBeNull();
-			expect(result!.id).toBe(created.id);
+			expect(result?.id).toBe(created.id);
 		});
 
 		it("returns null for unknown ID", async () => {
@@ -139,9 +139,9 @@ describeDb("watcher CRUD (requires TEST_DATABASE_URL)", () => {
 		});
 
 		it("throws when watcher not found", async () => {
-			await expect(
-				updateWatcher(db, "nonexistent", { status: "paused" }),
-			).rejects.toThrow("Watcher nonexistent not found");
+			await expect(updateWatcher(db, "nonexistent", { status: "paused" })).rejects.toThrow(
+				"Watcher nonexistent not found",
+			);
 		});
 	});
 

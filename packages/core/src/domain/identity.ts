@@ -9,21 +9,10 @@ export const USERNAME_RULES = {
 	maxLength: 32,
 	pattern: /^[a-z0-9][a-z0-9-]*[a-z0-9]$/,
 	singleCharPattern: /^[a-z0-9]$/,
-	reserved: [
-		"admin",
-		"avela",
-		"pay",
-		"api",
-		"app",
-		"www",
-		"help",
-		"support",
-	],
+	reserved: ["admin", "avela", "pay", "api", "app", "www", "help", "support"],
 } as const;
 
-export function validateUsername(
-	username: string,
-): { valid: boolean; error?: string } {
+export function validateUsername(username: string): { valid: boolean; error?: string } {
 	if (!username || username.length < USERNAME_RULES.minLength) {
 		return {
 			valid: false,

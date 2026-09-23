@@ -96,7 +96,12 @@ export function paymentsRoutes(deps: PaymentDeps) {
 			return c.json({ data: result });
 		} catch {
 			return c.json(
-				{ error: { code: "INVALID_STATE", message: "Payment cannot be rejected in its current state" } },
+				{
+					error: {
+						code: "INVALID_STATE",
+						message: "Payment cannot be rejected in its current state",
+					},
+				},
 				400,
 			);
 		}

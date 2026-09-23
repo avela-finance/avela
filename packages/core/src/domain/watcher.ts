@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { ulid } from "ulidx";
 import type { Database } from "../db/client.js";
 import { watchersTable } from "../db/schema.js";
-import type { Watcher, CreateWatcherInput } from "./types.js";
+import type { CreateWatcherInput, Watcher } from "./types.js";
 import { CreateWatcherInputSchema, WatcherStatusEnum } from "./types.js";
 
 export async function createWatcher(db: Database, input: CreateWatcherInput): Promise<Watcher> {
@@ -34,18 +34,12 @@ export async function createWatcher(db: Database, input: CreateWatcherInput): Pr
 }
 
 export async function getWatcher(db: Database, watcherId: string): Promise<Watcher | null> {
-	const rows = await db
-		.select()
-		.from(watchersTable)
-		.where(eq(watchersTable.id, watcherId));
+	const rows = await db.select().from(watchersTable).where(eq(watchersTable.id, watcherId));
 	return (rows[0] as Watcher) ?? null;
 }
 
 export async function getWatchersByAccount(db: Database, accountId: string): Promise<Watcher[]> {
-	const rows = await db
-		.select()
-		.from(watchersTable)
-		.where(eq(watchersTable.accountId, accountId));
+	const rows = await db.select().from(watchersTable).where(eq(watchersTable.accountId, accountId));
 	return rows as Watcher[];
 }
 

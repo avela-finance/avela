@@ -1,4 +1,4 @@
-import { inArray, eq, asc } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import type { Database } from "../db/client.js";
 import { watchersTable } from "../db/schema.js";
 import type { Watcher, WatcherEvaluation } from "./types.js";
@@ -73,10 +73,7 @@ async function evaluateWatcherInternal(
 		if (!breached && watcher.status === "triggered") {
 			updates.status = "active";
 		}
-		await db
-			.update(watchersTable)
-			.set(updates)
-			.where(eq(watchersTable.id, watcher.id));
+		await db.update(watchersTable).set(updates).where(eq(watchersTable.id, watcher.id));
 	}
 
 	return {
@@ -100,10 +97,7 @@ export async function evaluateWatcher(
 	getSpendingPower: GetSpendingPowerFn,
 	sendAlert: SendAlertFn,
 ): Promise<WatcherEvaluation> {
-	const rows = await db
-		.select()
-		.from(watchersTable)
-		.where(eq(watchersTable.id, watcherId));
+	const rows = await db.select().from(watchersTable).where(eq(watchersTable.id, watcherId));
 	const watcher = rows[0] as Watcher | undefined;
 
 	if (!watcher) {

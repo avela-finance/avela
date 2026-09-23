@@ -60,12 +60,7 @@ export function createGetWhatsAppLink(db: PostgresJsDatabase) {
 		const [link] = await db
 			.select()
 			.from(whatsappLinksTable)
-			.where(
-				and(
-					eq(whatsappLinksTable.accountId, accountId),
-					eq(whatsappLinksTable.active, true),
-				),
-			);
+			.where(and(eq(whatsappLinksTable.accountId, accountId), eq(whatsappLinksTable.active, true)));
 
 		return link ?? null;
 	};
