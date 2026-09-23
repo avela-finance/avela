@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 const statusStyles: Record<string, string> = {
 	created: "bg-muted text-muted-foreground",
 	policy_check: "bg-muted text-muted-foreground",
-	awaiting_approval: "bg-amber-900/50 text-amber-300",
-	funding: "bg-blue-900/50 text-blue-300",
-	executing: "bg-blue-900/50 text-blue-300",
-	settling: "bg-blue-900/50 text-blue-300",
-	settled: "bg-emerald-900/50 text-emerald-300",
-	failed: "bg-red-900/50 text-red-300",
-	rejected: "bg-red-900/50 text-red-300",
+	awaiting_approval: "bg-warning/10 text-warning",
+	funding: "bg-info/10 text-info",
+	executing: "bg-info/10 text-info",
+	settling: "bg-info/10 text-info",
+	settled: "bg-success/10 text-success",
+	failed: "bg-destructive/10 text-destructive",
+	rejected: "bg-destructive/10 text-destructive",
 };
 
 export function PaymentStatusBadge({ status }: { status: string }) {

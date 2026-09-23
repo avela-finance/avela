@@ -74,13 +74,13 @@ export default function WatchersPage() {
 	const getStatusColor = (status: Watcher["status"]) => {
 		switch (status) {
 			case "active":
-				return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300";
+				return "bg-success/10 text-success";
 			case "triggered":
-				return "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300";
+				return "bg-warning/10 text-warning";
 			case "paused":
-				return "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground";
+				return "bg-muted text-muted-foreground";
 			case "disabled":
-				return "bg-muted text-muted-foreground/60 dark:bg-muted dark:text-muted-foreground/60";
+				return "bg-muted text-muted-foreground/60";
 			default:
 				return "bg-muted text-muted-foreground";
 		}
@@ -94,8 +94,8 @@ export default function WatchersPage() {
 			</div>
 
 			{error && (
-				<div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
-					<p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+				<div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+					<p className="text-sm text-destructive">{error}</p>
 				</div>
 			)}
 

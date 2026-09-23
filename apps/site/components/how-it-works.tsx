@@ -24,7 +24,7 @@ const steps = [
 
 export function HowItWorks() {
 	return (
-		<section className="light-section bg-background px-4 py-24 border-t border-border">
+		<section className="bg-card px-4 py-24 border-t border-border">
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
 					<h2 className="text-3xl font-semibold tracking-tight text-foreground">How it works</h2>
@@ -41,7 +41,7 @@ export function HowItWorks() {
 							transition={{ duration: 0.5, delay: i * 0.12, ease: "easeOut" }}
 							className="flex flex-col gap-3"
 						>
-							<span className="font-mono text-sm text-emerald-600">{step.number}</span>
+							<span className="font-mono text-sm text-brand">{step.number}</span>
 							<h3 className="text-lg font-medium text-foreground">{step.title}</h3>
 							<p className="text-sm leading-relaxed text-muted-foreground">{step.description}</p>
 						</motion.div>

@@ -150,7 +150,7 @@ export default function PaymentDetailPage() {
 										href={`${XLAYER_EXPLORER}${payment.settlement.txHash}`}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="text-blue-400 underline hover:text-blue-300"
+										className="text-info underline hover:text-info/80"
 									>
 										{formatAddress(payment.settlement.txHash)}
 									</a>

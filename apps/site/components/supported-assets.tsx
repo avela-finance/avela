@@ -21,7 +21,7 @@ const assets = [
 
 export function SupportedAssets() {
 	return (
-		<section className="light-section bg-background px-4 py-24 border-t border-border">
+		<section className="bg-card px-4 py-24 border-t border-border">
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
 					<h2 className="text-3xl font-semibold tracking-tight text-foreground">
@@ -42,10 +42,10 @@ export function SupportedAssets() {
 								<span className="font-mono text-sm font-medium text-foreground">
 									{asset.symbol}
 								</span>
-								<span className="text-xs font-semibold text-emerald-600">{asset.tvl}</span>
+								<span className="text-xs font-semibold text-brand">{asset.tvl}</span>
 							</div>
 							<p className="text-sm text-muted-foreground">{asset.name}</p>
-							<span className="mt-1 inline-block rounded-md bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
+							<span className="mt-1 inline-block rounded-md bg-brand/10 px-2 py-0.5 text-xs text-brand">
 								{asset.pool}
 							</span>
 						</div>

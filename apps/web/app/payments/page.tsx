@@ -50,8 +50,8 @@ export default function PaymentsPage() {
 			</div>
 
 			{error && (
-				<div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
-					<p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+				<div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+					<p className="text-sm text-destructive">{error}</p>
 				</div>
 			)}
 

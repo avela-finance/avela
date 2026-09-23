@@ -23,10 +23,10 @@ const TYPE_LABELS: Record<ActivityType, string> = {
 };
 
 const TYPE_COLORS: Record<ActivityType, string> = {
-	payment_settled: "text-emerald-500 bg-emerald-500/10",
-	payment_failed: "text-red-500 bg-red-500/10",
-	deposit: "text-blue-500 bg-blue-500/10",
-	alert: "text-amber-500 bg-amber-500/10",
+	payment_settled: "text-success bg-success/10",
+	payment_failed: "text-destructive bg-destructive/10",
+	deposit: "text-info bg-info/10",
+	alert: "text-warning bg-warning/10",
 };
 
 function formatTime(timestamp: string): string {

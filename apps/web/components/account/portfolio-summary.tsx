@@ -67,7 +67,7 @@ export function PortfolioSummary({ positions, loading = false }: PortfolioSummar
 									maximumFractionDigits: 2,
 								})}
 							</p>
-							<p className="text-xs text-emerald-500">
+							<p className="text-xs text-brand">
 								SP: $
 								{position.spendingPower.toLocaleString("en-US", {
 									minimumFractionDigits: 2,

@@ -1,6 +1,6 @@
 export function CTA() {
 	return (
-		<section className="light-section bg-background px-4 py-24 border-t border-border">
+		<section className="bg-card px-4 py-24 border-t border-border">
 			<div className="max-w-5xl mx-auto text-center flex flex-col items-center gap-6">
 				<h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
 					Start spending from your portfolio.
@@ -10,7 +10,7 @@ export function CTA() {
 				</p>
 				<a
 					href="https://app.useavela.xyz"
-					className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+					className="inline-flex items-center gap-1 rounded-lg bg-brand px-6 py-3 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
 				>
 					Launch App →
 				</a>

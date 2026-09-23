@@ -12,7 +12,7 @@ export function Hero() {
 					transition={{ duration: 0.6, ease: "easeOut" }}
 					className="flex flex-col items-center gap-4"
 				>
-					<span className="inline-block rounded-full border border-emerald-800 bg-emerald-900/50 px-3 py-1 text-xs text-emerald-400">
+					<span className="inline-block rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs text-brand">
 						Built on X Layer
 					</span>
 					<h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
@@ -35,7 +35,7 @@ export function Hero() {
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
 					transition={{ duration: 0.5, delay: 0.25 }}
-					className="text-sm font-medium text-emerald-400"
+					className="text-sm font-medium text-brand"
 				>
 					Every payment is a market order on X Layer.
 				</motion.p>
@@ -45,7 +45,7 @@ export function Hero() {
 					initial={{ opacity: 0, y: 8 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
-					className="mt-2 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+					className="mt-2 inline-flex items-center gap-1 rounded-lg bg-brand px-6 py-3 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
 				>
 					Launch App →
 				</motion.a>
