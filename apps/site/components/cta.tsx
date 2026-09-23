@@ -9,7 +9,7 @@ export function CTA() {
 					Connect your wallet, deposit wrapped xStocks, and unlock spending power in minutes.
 				</p>
 				<a
-					href="https://app.avela.xyz"
+					href="https://app.useavela.xyz"
 					className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
 				>
 					Launch App →

@@ -115,7 +115,7 @@ When a user sends a text message to the bot, pattern-match common intents:
 | "spending" / "how much can I spend" | Send spending power template |
 | "payments" / "history" | Send last 5 payments |
 | "help" | Send quick action list |
-| Unrecognized | "I can help with: balance, spending power, payments. Or visit app.avela.xyz" |
+| Unrecognized | "I can help with: balance, spending power, payments. Or visit app.useavela.xyz" |
 
 ### Core Functions
 

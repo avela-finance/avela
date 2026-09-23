@@ -20,12 +20,12 @@ export const metadata: Metadata = {
 	title: "Avela — Make your tokenized stocks your everyday spend",
 	description:
 		"One programmable account to hold tokenized stocks, unlock spending power, and pay across commerce. Built on X Layer.",
-	metadataBase: new URL("https://avela.xyz"),
+	metadataBase: new URL("https://useavela.xyz"),
 	openGraph: {
 		title: "Avela — Programmable Spending Account",
 		description:
 			"Pay from your tokenized stock portfolio without selling. Every payment is a market order on X Layer.",
-		url: "https://avela.xyz",
+		url: "https://useavela.xyz",
 		siteName: "Avela",
 		type: "website",
 	},

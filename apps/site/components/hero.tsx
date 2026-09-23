@@ -41,7 +41,7 @@ export function Hero() {
 				</motion.p>
 
 				<motion.a
-					href="https://app.avela.xyz"
+					href="https://app.useavela.xyz"
 					initial={{ opacity: 0, y: 8 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}

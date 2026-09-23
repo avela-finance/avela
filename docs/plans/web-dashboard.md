@@ -2337,7 +2337,7 @@ export default function SettingsPage() {
 					<p className="text-sm text-neutral-300">
 						Your payment link:{" "}
 						<span className="font-mono text-emerald-400">
-							pay.avela.xyz/{currentUsername}
+							pay.useavela.xyz/{currentUsername}
 						</span>
 					</p>
 				)}

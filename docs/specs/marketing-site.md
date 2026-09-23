@@ -1,10 +1,10 @@
 # Spec: Marketing Site (apps/site)
 
-> Broken from [SPEC.md](../ideas/SPEC.md) §2.4. Product story at avela.xyz — what judges and users see first.
+> Broken from [SPEC.md](../ideas/SPEC.md) §2.4. Product story at useavela.xyz — what judges and users see first.
 
 ## Objective
 
-The marketing site at avela.xyz. Tells the product story: what Avela is, how it works, why it matters. Links to the web app. This is the first impression for OKX Dev Day judges, investors, and early users.
+The marketing site at useavela.xyz. Tells the product story: what Avela is, how it works, why it matters. Links to the web app. This is the first impression for OKX Dev Day judges, investors, and early users.
 
 ## Scope
 
@@ -120,6 +120,6 @@ apps/site/
 
 ## Open Questions
 
-- Domain: avela.xyz already registered? Deployment: Vercel?
+- Domain: useavela.xyz already registered? Deployment: Vercel?
 - Design reference: use avela-v0 site as starting point, or fresh design?
 - Asset logos: source from xStocks branding or create custom?

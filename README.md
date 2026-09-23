@@ -14,7 +14,7 @@ Chain-agnostic by design — X Layer is the first deployment, Base is next. Any 
 
 ```text
 apps/
-  site/         Marketing site (avela.xyz)
+  site/         Marketing site (useavela.xyz)
   web/          Product dashboard (Next.js)
   api/          Backend API (planned)
 
@@ -37,6 +37,6 @@ bun run typecheck    # typescript type check
 
 ## Links
 
-- [avela.xyz](https://avela.xyz)
+- [useavela.xyz](https://useavela.xyz)
 - [PRD](./docs/ideas/PRD.md) — product vision
 - [SPEC](./docs/ideas/SPEC.md) — MVP scope, roadmap, verified onchain data

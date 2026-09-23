@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Username registration and payment links (pay.avela.xyz/username). Users pick a unique username, get a shareable link. Anyone with the link can pay them — the link resolves to a wallet address.
+**Goal:** Username registration and payment links (pay.useavela.xyz/username). Users pick a unique username, get a shareable link. Anyone with the link can pay them — the link resolves to a wallet address.
 
 **Architecture:** Domain logic (username validation, registration, resolution) in `packages/core`. API routes in `apps/api`. Payment link page in `apps/web`. The identity table has a unique constraint on username with case-insensitive lookup (stored lowercase).
 

@@ -791,12 +791,12 @@ export function formatHelpMessage(): string {
 		"• *spending* — check spending power",
 		"• *payments* — recent payment history",
 		"",
-		"Or visit app.avela.xyz",
+		"Or visit app.useavela.xyz",
 	].join("\n");
 }
 
 export function formatUnknownMessage(): string {
-	return "I didn't understand that. Try *balance*, *spending*, or *payments*. Or visit app.avela.xyz";
+	return "I didn't understand that. Try *balance*, *spending*, or *payments*. Or visit app.useavela.xyz";
 }
 ```
 

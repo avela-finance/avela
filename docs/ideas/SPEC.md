@@ -114,7 +114,7 @@ Five assets from day one. All verified with $400K+ stablecoin pools on Uniswap V
 
 **Product surfaces (non-negotiable):**
 - **Web app** (apps/web) — PWA, mobile-first responsive. Portfolio dashboard, spending power, payments, agent permissions, receipts.
-- **Marketing site** (apps/site) — avela.xyz. Product story, how it works, demo access.
+- **Marketing site** (apps/site) — useavela.xyz. Product story, how it works, demo access.
 - **API** (apps/api) — Hono backend. Payment intents, account operations, settlement, agent auth. Powers all surfaces.
 - **MCP skills** — Agent-accessible tools. Enables AI agents to query balances, create payment intents, check permissions via MCP protocol.
 - No native mobile app for MVP — PWA covers mobile. Native app is Phase 2+.
@@ -145,7 +145,7 @@ Five assets from day one. All verified with $400K+ stablecoin pools on Uniswap V
 - Payment notifications delivered in-conversation
 
 **Identity:**
-- Payment links (pay.avela.xyz/username)
+- Payment links (pay.useavela.xyz/username)
 - Username resolution for recipients
 
 **Checkout:**
@@ -212,7 +212,7 @@ A judge (or investor, or user) can:
 5. See a watcher fire when spending power drops below threshold
 6. See receipts with onchain proof connecting portfolio to every payment
 7. See the permission dashboard — what the agent can and cannot do
-8. Share a payment link (pay.avela.xyz/username)
+8. Share a payment link (pay.useavela.xyz/username)
 9. Understand: "this is not a neobank — this is a programmable account where agents and humans both spend from tokenized stock portfolios"
 10. See, on the explorer: a `PositionLocked` event with no matching `PositionReleased` event across a payment — proof the collateral was never touched
 
@@ -250,7 +250,7 @@ Messaging access:
 - Payment notifications in-conversation
 
 Identity:
-- Payment links (pay.avela.xyz/username) — makes the demo tangible and shareable
+- Payment links (pay.useavela.xyz/username) — makes the demo tangible and shareable
 - Username resolution for recipients
 
 Checkout:
@@ -311,7 +311,7 @@ Extensions of the account, not prerequisites:
 ```
 avela/
 ├── apps/
-│   ├── site/          — Marketing site (Next.js, avela.xyz)
+│   ├── site/          — Marketing site (Next.js, useavela.xyz)
 │   ├── web/           — Product dashboard (Next.js, PWA)
 │   └── api/           — Backend API (Hono)
 ├── contracts/         — Solidity contracts (Foundry)
@@ -379,7 +379,7 @@ Adapters (replaceable)
 | Price feed / oracle | Uniswap V3 TWAP + OKX market data API | **Available** | Chainlink Data Streams do NOT support X Layer (confirmed by Ian, OKX, Sep 22 2026). TWAP is the oracle. |
 | Messaging access | WhatsApp Business API | **Available** | MVP: balance checks, spending power, approve/reject payments |
 | Agent runtime | MCP + Privy agent wallets | **Available** | Scoped agent permissions, payment intent creation within bounds |
-| Identity / payment links | Custom (MVP) | **To build** | pay.avela.xyz/username, username resolution |
+| Identity / payment links | Custom (MVP) | **To build** | pay.useavela.xyz/username, username resolution |
 | Local currency payouts | Rain | **Documented** | 80+ countries, 50+ currencies — Phase 2 |
 | Card programmes | Privy + Stripe Issuing | **Documented** | Card spending — Phase 3 |
 

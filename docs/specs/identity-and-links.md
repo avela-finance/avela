@@ -4,14 +4,14 @@
 
 ## Objective
 
-Username registration and payment links (pay.avela.xyz/username). A user picks a username, gets a shareable payment link. Anyone with the link can pay them — the link resolves to the user's account. This makes the OKX Dev Day demo immediately tangible: "here's my payment link, send me money."
+Username registration and payment links (pay.useavela.xyz/username). A user picks a username, gets a shareable payment link. Anyone with the link can pay them — the link resolves to the user's account. This makes the OKX Dev Day demo immediately tangible: "here's my payment link, send me money."
 
 ## Scope
 
 **In:**
 - Username registration (unique, alphanumeric + hyphens, 3-32 chars)
 - Username → account resolution
-- Payment link generation: `pay.avela.xyz/<username>`
+- Payment link generation: `pay.useavela.xyz/<username>`
 - Payment link page: shows recipient name, amount input (optional pre-filled), "Pay with Avela" button
 - Username display in receipts and payment previews
 
@@ -96,7 +96,7 @@ apps/web/src/app/
 1. Username registration validates rules (length, pattern, reserved words)
 2. Duplicate username returns clear error
 3. Username resolution returns account wallet address
-4. `pay.avela.xyz/samuel` renders a payment page for that user
+4. `pay.useavela.xyz/samuel` renders a payment page for that user
 5. Payment link with `?amount=25` pre-fills the amount
 6. Payment from link creates a payment intent targeting the resolved account
 7. Username appears in payment receipts

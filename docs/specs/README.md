@@ -74,6 +74,6 @@ Broken from [SPEC.md](../ideas/SPEC.md) §2.4. Each spec defines one feature's o
 | [Watcher](watcher.md) | Spending power threshold alerts, WATCH→EVALUATE→DECIDE→AUTHORIZE→EXECUTE loop | Intelligence |
 | [WhatsApp Access](whatsapp-access.md) | Interactive messages, inline approval, notifications | Messaging |
 | [Checkout](checkout.md) | Demo merchant storefront, "Pay with Avela" button, receipts | Commerce |
-| [Identity & Links](identity-and-links.md) | Usernames, payment links (pay.avela.xyz/username) | Commerce |
+| [Identity & Links](identity-and-links.md) | Usernames, payment links (pay.useavela.xyz/username) | Commerce |
 | [Web Dashboard](web-dashboard.md) | PWA, portfolio view, policies, agent dashboard, receipts | Surface |
-| [Marketing Site](marketing-site.md) | avela.xyz product story, how it works | Surface |
+| [Marketing Site](marketing-site.md) | useavela.xyz product story, how it works | Surface |

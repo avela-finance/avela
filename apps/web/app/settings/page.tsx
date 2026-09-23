@@ -152,7 +152,7 @@ export default function SettingsPage() {
 							<div className="space-y-2">
 								<p className="text-sm text-muted-foreground">Your payment link:</p>
 								<p className="font-mono text-sm text-emerald-600 dark:text-emerald-400">
-									pay.avela.xyz/{currentUsername}
+									pay.useavela.xyz/{currentUsername}
 								</p>
 							</div>
 						)}

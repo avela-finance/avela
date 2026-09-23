@@ -57,7 +57,7 @@ export async function handleButtonCallback(
 	} catch {
 		await deps.sendTextMessage(
 			from,
-			"Something went wrong. Please try again or visit app.avela.xyz",
+			"Something went wrong. Please try again or visit app.useavela.xyz",
 		);
 	}
 }

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the Avela marketing site at avela.xyz — a fast, static landing page that tells the product story for OKX Dev Day judges, investors, and early users. One page, seven sections, SSG.
+**Goal:** Build the Avela marketing site at useavela.xyz — a fast, static landing page that tells the product story for OKX Dev Day judges, investors, and early users. One page, seven sections, SSG.
 
 **Architecture:** Next.js 15 App Router with static generation. Single page composed of section components. No authentication, no API calls, no client-side state. Tailwind CSS v4 for styling, Geist font, subtle Motion animations on hero.
 
@@ -170,12 +170,12 @@ export const siteMetadata: Metadata = {
 	title: "Avela — Make your tokenized stocks your everyday spend",
 	description:
 		"One programmable account to hold tokenized stocks, unlock spending power, and pay across commerce. Built on X Layer.",
-	metadataBase: new URL("https://avela.xyz"),
+	metadataBase: new URL("https://useavela.xyz"),
 	openGraph: {
 		title: "Avela — Programmable Spending Account",
 		description:
 			"Pay from your tokenized stock portfolio without selling. Every payment is a market order on X Layer.",
-		url: "https://avela.xyz",
+		url: "https://useavela.xyz",
 		siteName: "Avela",
 		type: "website",
 		images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Avela" }],
@@ -243,7 +243,7 @@ Create `apps/site/src/components/hero.tsx`:
 
 import { motion } from "motion/react";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.avela.xyz";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.useavela.xyz";
 
 export function Hero() {
 	return (
@@ -601,7 +601,7 @@ export function BuiltOn() {
 Create `apps/site/src/components/cta.tsx`:
 
 ```tsx
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.avela.xyz";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.useavela.xyz";
 
 export function CTA() {
 	return (
@@ -650,12 +650,12 @@ git commit -m "feat(site): add built-on partners and CTA sections"
 Create `apps/site/src/components/footer.tsx`:
 
 ```tsx
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.avela.xyz";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.useavela.xyz";
 
 const links = [
 	{ label: "App", href: APP_URL },
 	{ label: "Docs", href: "#" },
-	{ label: "GitHub", href: "https://github.com/avela-xyz" },
+	{ label: "GitHub", href: "https://github.com/avela-finance" },
 	{ label: "X", href: "https://x.com/avela_xyz" },
 ] as const;
 

@@ -59,7 +59,7 @@ Read PRD.md and SPEC.md before making architectural decisions. They contain veri
 Bun workspace with `apps/*` and `packages/*`.
 
 ```
-apps/site     — Marketing site (Next.js, avela.xyz)
+apps/site     — Marketing site (Next.js, useavela.xyz)
 apps/web      — Product dashboard (Next.js, PWA, mobile-first)
 apps/api      — Backend API (Hono)
 packages/core — Shared domain, adapters, and orchestration
