@@ -17,7 +17,7 @@ export function SpendingPowerCard({
 }: SpendingPowerCardProps) {
 	if (loading) {
 		return (
-			<div className="rounded-lg border border-border bg-gradient-to-br from-brand/10 to-muted p-6 space-y-4">
+			<div className="rounded-lg border border-border bg-gradient-to-br from-primary/10 to-muted p-6 space-y-4">
 				<div className="h-4 w-32 animate-pulse rounded bg-muted" />
 				<div className="h-12 w-48 animate-pulse rounded bg-muted" />
 				<div className="grid grid-cols-2 gap-4">
@@ -32,7 +32,7 @@ export function SpendingPowerCard({
 		<motion.div
 			initial={{ opacity: 0, y: 8 }}
 			animate={{ opacity: 1, y: 0 }}
-			className="rounded-lg border border-border bg-gradient-to-br from-brand/10 to-muted p-6"
+			className="rounded-lg border border-border bg-gradient-to-br from-primary/10 to-muted p-6"
 		>
 			<div className="space-y-2">
 				<p className="text-sm font-medium text-muted-foreground">Spending Power</p>

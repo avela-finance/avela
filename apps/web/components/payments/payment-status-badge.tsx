@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 const statusStyles: Record<string, string> = {
 	created: "bg-muted text-muted-foreground",
 	policy_check: "bg-muted text-muted-foreground",
-	awaiting_approval: "bg-warning/10 text-warning",
-	funding: "bg-info/10 text-info",
-	executing: "bg-info/10 text-info",
-	settling: "bg-info/10 text-info",
-	settled: "bg-success/10 text-success",
+	awaiting_approval: "bg-accent/10 text-accent-foreground",
+	funding: "bg-secondary/10 text-secondary-foreground",
+	executing: "bg-secondary/10 text-secondary-foreground",
+	settling: "bg-secondary/10 text-secondary-foreground",
+	settled: "bg-primary/10 text-primary",
 	failed: "bg-destructive/10 text-destructive",
 	rejected: "bg-destructive/10 text-destructive",
 };

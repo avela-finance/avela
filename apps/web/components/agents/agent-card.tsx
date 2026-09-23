@@ -16,11 +16,11 @@ type AgentCardProps = {
 const statusConfig = {
 	active: {
 		label: "Active",
-		className: "text-success bg-success/10",
+		className: "text-primary bg-primary/10",
 	},
 	suspended: {
 		label: "Suspended",
-		className: "text-warning bg-warning/10",
+		className: "text-accent-foreground bg-accent/10",
 	},
 	expired: { label: "Expired", className: "text-muted-foreground bg-muted" },
 	revoked: {

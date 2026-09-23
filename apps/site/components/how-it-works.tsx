@@ -41,7 +41,7 @@ export function HowItWorks() {
 							transition={{ duration: 0.5, delay: i * 0.12, ease: "easeOut" }}
 							className="flex flex-col gap-3"
 						>
-							<span className="font-mono text-sm text-brand">{step.number}</span>
+							<span className="font-mono text-sm text-primary">{step.number}</span>
 							<h3 className="text-lg font-medium text-foreground">{step.title}</h3>
 							<p className="text-sm leading-relaxed text-muted-foreground">{step.description}</p>
 						</motion.div>

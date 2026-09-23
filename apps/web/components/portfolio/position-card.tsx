@@ -62,7 +62,7 @@ export function PositionCard({
 					</div>
 					<div className="text-right">
 						<p className="text-xs text-muted-foreground">Spending Power</p>
-						<p className={cn("text-sm font-mono font-semibold mt-1", "text-brand")}>
+						<p className={cn("text-sm font-mono font-semibold mt-1", "text-primary")}>
 							$
 							{spendingPower.toLocaleString("en-US", {
 								minimumFractionDigits: 2,

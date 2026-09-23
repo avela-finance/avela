@@ -74,9 +74,9 @@ export default function WatchersPage() {
 	const getStatusColor = (status: Watcher["status"]) => {
 		switch (status) {
 			case "active":
-				return "bg-success/10 text-success";
+				return "bg-primary/10 text-primary";
 			case "triggered":
-				return "bg-warning/10 text-warning";
+				return "bg-accent/10 text-accent-foreground";
 			case "paused":
 				return "bg-muted text-muted-foreground";
 			case "disabled":

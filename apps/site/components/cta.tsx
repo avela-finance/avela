@@ -10,7 +10,7 @@ export function CTA() {
 				</p>
 				<a
 					href="https://app.useavela.xyz"
-					className="inline-flex items-center gap-1 rounded-lg bg-brand px-6 py-3 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
+					className="inline-flex items-center gap-1 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
 				>
 					Launch App →
 				</a>

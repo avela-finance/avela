@@ -120,8 +120,8 @@ export default function SettingsPage() {
 			)}
 
 			{success && (
-				<div className="rounded-lg border border-success/20 bg-success/5 p-4">
-					<p className="text-sm text-success">{success}</p>
+				<div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+					<p className="text-sm text-primary">{success}</p>
 				</div>
 			)}
 
@@ -151,7 +151,7 @@ export default function SettingsPage() {
 						{currentUsername && (
 							<div className="space-y-2">
 								<p className="text-sm text-muted-foreground">Your payment link:</p>
-								<p className="font-mono text-sm text-brand">pay.useavela.xyz/{currentUsername}</p>
+								<p className="font-mono text-sm text-primary">pay.useavela.xyz/{currentUsername}</p>
 							</div>
 						)}
 

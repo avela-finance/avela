@@ -42,10 +42,10 @@ export function SupportedAssets() {
 								<span className="font-mono text-sm font-medium text-foreground">
 									{asset.symbol}
 								</span>
-								<span className="text-xs font-semibold text-brand">{asset.tvl}</span>
+								<span className="text-xs font-semibold text-primary">{asset.tvl}</span>
 							</div>
 							<p className="text-sm text-muted-foreground">{asset.name}</p>
-							<span className="mt-1 inline-block rounded-md bg-brand/10 px-2 py-0.5 text-xs text-brand">
+							<span className="mt-1 inline-block rounded-md bg-primary/10 px-2 py-0.5 text-xs text-primary">
 								{asset.pool}
 							</span>
 						</div>
