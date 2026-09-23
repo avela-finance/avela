@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ModeToggle } from "@/components/mode-toggle";
 
 const NAV_ITEMS = [
 	{ label: "Dashboard", href: "/" },
@@ -51,6 +52,10 @@ export function Sidebar() {
 					);
 				})}
 			</nav>
+
+			<div className="p-3 border-t border-border">
+				<ModeToggle />
+			</div>
 		</aside>
 	);
 }
