@@ -48,6 +48,9 @@ jobs:
     env:
       DATABASE_URL: postgres://avela:avela@localhost:5432/avela_test
       TEST_DATABASE_URL: postgres://avela:avela@localhost:5432/avela_test
+      PRIVY_APP_ID: test-privy-app-id
+      PRIVY_APP_SECRET: test-privy-app-secret
+      XLAYER_RPC_URL: https://rpc.xlayer.tech
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -57,7 +60,7 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Run database migrations
+      - name: Push database schema
         run: bunx drizzle-kit push --config packages/core/drizzle.config.ts
 
       - name: Run tests
