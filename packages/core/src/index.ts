@@ -5,6 +5,7 @@ export * from "./adapters/vault-adapter.js";
 export * from "./adapters/xlayer-rpc.js";
 export * from "./db/client.js";
 export * from "./db/schema.js";
+export * from "./db/supabase.js";
 export * from "./domain/account.js";
 export * from "./domain/agent.js";
 export * from "./domain/agent-permission.js";
