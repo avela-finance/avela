@@ -1,6 +1,6 @@
 export function CTA() {
 	return (
-		<section className="px-4 py-24 border-t border-border">
+		<section className="light-section bg-background px-4 py-24 border-t border-border">
 			<div className="max-w-5xl mx-auto text-center flex flex-col items-center gap-6">
 				<h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
 					Start spending from your portfolio.

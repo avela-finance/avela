@@ -56,7 +56,7 @@ export function Features() {
 							whileInView={{ opacity: 1, y: 0 }}
 							viewport={{ once: true, margin: "-40px" }}
 							transition={{ duration: 0.45, delay: i * 0.08, ease: "easeOut" }}
-							className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-5 flex flex-col gap-2"
+							className="rounded-xl border border-border bg-muted/50 p-5 flex flex-col gap-2"
 						>
 							<h3 className="text-sm font-medium text-foreground">{feature.title}</h3>
 							<p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>

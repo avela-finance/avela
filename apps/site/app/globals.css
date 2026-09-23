@@ -127,3 +127,13 @@
 		@apply font-sans;
 	}
 }
+
+.light-section {
+	--background: oklch(0.985 0.001 106.423);
+	--foreground: oklch(0.147 0.004 49.25);
+	--muted: oklch(0.97 0.001 106.424);
+	--muted-foreground: oklch(0.553 0.013 58.071);
+	--border: oklch(0.923 0.003 48.717);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.147 0.004 49.25);
+}

@@ -21,7 +21,7 @@ const assets = [
 
 export function SupportedAssets() {
 	return (
-		<section className="px-4 py-24 border-t border-border">
+		<section className="light-section bg-background px-4 py-24 border-t border-border">
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
 					<h2 className="text-3xl font-semibold tracking-tight text-foreground">
@@ -36,16 +36,16 @@ export function SupportedAssets() {
 					{assets.map((asset) => (
 						<div
 							key={asset.symbol}
-							className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-5 flex flex-col gap-2"
+							className="rounded-xl border border-border bg-card p-5 flex flex-col gap-2"
 						>
 							<div className="flex items-center justify-between">
 								<span className="font-mono text-sm font-medium text-foreground">
 									{asset.symbol}
 								</span>
-								<span className="text-xs font-semibold text-emerald-400">{asset.tvl}</span>
+								<span className="text-xs font-semibold text-emerald-600">{asset.tvl}</span>
 							</div>
 							<p className="text-sm text-muted-foreground">{asset.name}</p>
-							<span className="mt-1 inline-block rounded-md bg-emerald-900/50 px-2 py-0.5 text-xs text-emerald-400">
+							<span className="mt-1 inline-block rounded-md bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
 								{asset.pool}
 							</span>
 						</div>
