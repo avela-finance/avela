@@ -61,7 +61,8 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - name: Push database schema
-        run: bunx drizzle-kit push --config packages/core/drizzle.config.ts
+        run: bunx drizzle-kit push
+        working-directory: packages/core
 
       - name: Run tests
         run: bun run test
