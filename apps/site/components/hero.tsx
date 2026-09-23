@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 
 export function Hero() {
 	return (
-		<section className="flex min-h-[90vh] flex-col items-center justify-center px-4 py-24 text-center">
+		<section className="dark bg-background flex min-h-[90vh] flex-col items-center justify-center px-4 py-24 text-center">
 			<div className="max-w-5xl mx-auto flex flex-col items-center gap-6">
 				<motion.div
 					initial={{ opacity: 0, y: 16 }}

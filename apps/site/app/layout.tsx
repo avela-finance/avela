@@ -51,7 +51,7 @@ export default function RootLayout({
 		<html
 			lang="en"
 			className={cn(
-				"dark antialiased",
+				"antialiased",
 				fontMono.variable,
 				"font-sans",
 				geist.variable,

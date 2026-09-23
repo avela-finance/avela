@@ -1,6 +1,6 @@
 export function BuiltOn() {
 	return (
-		<section className="px-4 py-16 border-t border-border">
+		<section className="dark bg-background px-4 py-16 border-t border-border">
 			<div className="max-w-5xl mx-auto text-center">
 				<p className="text-xs uppercase tracking-widest text-muted-foreground mb-6">Built on</p>
 				<div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">

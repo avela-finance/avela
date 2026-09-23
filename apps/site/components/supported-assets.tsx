@@ -21,7 +21,7 @@ const assets = [
 
 export function SupportedAssets() {
 	return (
-		<section className="bg-card px-4 py-24 border-t border-border">
+		<section className="bg-background px-4 py-24 border-t border-border">
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
 					<h2 className="text-3xl font-semibold tracking-tight text-foreground">
