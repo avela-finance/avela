@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-	WatcherSchema,
+	CreateWatcherInputSchema,
 	SpendingPowerThresholdConfigSchema,
 	WatcherEvaluationSchema,
-	CreateWatcherInputSchema,
+	WatcherSchema,
 } from "../types.js";
 
 describe("Watcher types", () => {

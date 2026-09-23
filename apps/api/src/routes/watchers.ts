@@ -1,6 +1,6 @@
+import type { Watcher, WatcherEvaluation } from "@avela/core";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { Watcher, WatcherEvaluation } from "@avela/core";
 
 const createWatcherSchema = z.object({
 	threshold: z.number().nonnegative(),

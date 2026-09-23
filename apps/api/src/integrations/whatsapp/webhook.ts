@@ -50,13 +50,8 @@ export function createWebhookRoutes(handlers: WebhookHandlers): Hono {
 				for (const msg of messages) {
 					if (msg.type === "text" && msg.text) {
 						promises.push(handlers.onTextMessage(msg.from, msg.text.body));
-					} else if (
-						msg.type === "interactive" &&
-						msg.interactive?.type === "button_reply"
-					) {
-						promises.push(
-							handlers.onButtonReply(msg.from, msg.interactive.button_reply.id),
-						);
+					} else if (msg.type === "interactive" && msg.interactive?.type === "button_reply") {
+						promises.push(handlers.onButtonReply(msg.from, msg.interactive.button_reply.id));
 					}
 				}
 			}

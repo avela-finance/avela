@@ -1,12 +1,12 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
-import { getProduct } from "@/lib/demo-products";
-import { PaymentPreview } from "@/components/checkout/payment-preview";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import type { PaymentPreviewData } from "@/components/checkout/payment-preview";
+import { PaymentPreview } from "@/components/checkout/payment-preview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getProduct } from "@/lib/demo-products";
 
 const DEMO_MERCHANT_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 
@@ -74,9 +74,9 @@ export default function PayPage() {
 			<Card className="mb-6">
 				<CardContent className="space-y-2">
 					{products.map((p) => (
-						<div key={p!.id} className="flex justify-between text-sm">
-							<span>{p!.name}</span>
-							<span className="font-medium">${p!.price}</span>
+						<div key={p?.id} className="flex justify-between text-sm">
+							<span>{p?.name}</span>
+							<span className="font-medium">${p?.price}</span>
 						</div>
 					))}
 					<div className="border-t border-border pt-2">
@@ -97,12 +97,7 @@ export default function PayPage() {
 					</div>
 				)}
 
-				<Button
-					className="w-full"
-					size="lg"
-					onClick={handlePay}
-					disabled={status === "executing"}
-				>
+				<Button className="w-full" size="lg" onClick={handlePay} disabled={status === "executing"}>
 					{status === "idle" && "Pay with Avela"}
 					{status === "executing" && "Executing payment..."}
 					{status === "error" && "Try Again"}

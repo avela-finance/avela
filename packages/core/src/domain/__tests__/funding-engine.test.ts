@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { executePayment, selectFundingSource } from "../funding-engine.js";
 import type { ExecutePaymentDeps } from "../funding-engine.js";
+import { executePayment, selectFundingSource } from "../funding-engine.js";
 import type { PaymentIntent } from "../payment-intent.js";
 import type { SpendingPower } from "../types.js";
 

@@ -1,13 +1,13 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import {
-	registerAgent,
 	getAgent,
 	getAgentsByAccount,
-	updateAgentPermissions,
+	registerAgent,
 	revokeAgent,
+	updateAgentPermissions,
 } from "../agent.js";
 import { DEMO_AGENT_PERMISSION } from "../types.js";
 
@@ -77,7 +77,7 @@ describeDb("agent CRUD (requires TEST_DATABASE_URL)", () => {
 
 			const result = await getAgent(db, created.id);
 			expect(result).not.toBeNull();
-			expect(result!.id).toBe(created.id);
+			expect(result?.id).toBe(created.id);
 		});
 
 		it("returns null for unknown ID", async () => {
@@ -149,9 +149,7 @@ describeDb("agent CRUD (requires TEST_DATABASE_URL)", () => {
 		});
 
 		it("throws for unknown agent", async () => {
-			await expect(revokeAgent(db, "nonexistent")).rejects.toThrow(
-				"Agent nonexistent not found",
-			);
+			await expect(revokeAgent(db, "nonexistent")).rejects.toThrow("Agent nonexistent not found");
 		});
 	});
 });

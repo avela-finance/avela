@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const XLAYER_EXPLORER = "https://www.okx.com/web3/explorer/xlayer/tx";
 
@@ -101,7 +101,11 @@ export function SettlementProof({ data }: { data: SettlementProofData }) {
 			</Card>
 
 			<div className="flex gap-3">
-				<Button variant="outline" className="flex-1" render={<a href={explorerUrl} target="_blank" rel="noopener noreferrer" />}>
+				<Button
+					variant="outline"
+					className="flex-1"
+					render={<a href={explorerUrl} target="_blank" rel="noopener noreferrer" />}
+				>
 					View on Explorer
 				</Button>
 				<Button className="flex-1" render={<a href="/checkout" />}>

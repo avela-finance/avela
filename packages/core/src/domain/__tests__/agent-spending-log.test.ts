@@ -1,8 +1,8 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
-import { logAgentSpending, getAgentSpendingLog, registerAgent } from "../agent.js";
+import { getAgentSpendingLog, logAgentSpending, registerAgent } from "../agent.js";
 import { DEMO_AGENT_PERMISSION } from "../types.js";
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL;
@@ -82,7 +82,7 @@ describeDb("agent spending log (requires TEST_DATABASE_URL)", () => {
 
 			const result = await getAgentSpendingLog(db, testAgentId, 10);
 			expect(result.length).toBeGreaterThanOrEqual(1);
-			expect(result[0]!.agentId).toBe(testAgentId);
+			expect(result[0]?.agentId).toBe(testAgentId);
 		});
 
 		it("returns empty array for unknown agent", async () => {

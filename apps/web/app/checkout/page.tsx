@@ -42,9 +42,7 @@ export default function CheckoutPage() {
 							</span>
 							<span className="ml-4 text-lg font-bold">${total}</span>
 						</div>
-						<Button
-							onClick={() => router.push(`/checkout/pay?products=${cart.join(",")}`)}
-						>
+						<Button onClick={() => router.push(`/checkout/pay?products=${cart.join(",")}`)}>
 							Proceed to Pay
 						</Button>
 					</CardContent>

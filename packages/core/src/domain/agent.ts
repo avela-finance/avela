@@ -41,10 +41,7 @@ export async function getAgent(db: Database, agentId: string): Promise<Agent | n
 }
 
 export async function getAgentsByAccount(db: Database, accountId: string): Promise<Agent[]> {
-	const rows = await db
-		.select()
-		.from(agentsTable)
-		.where(eq(agentsTable.accountId, accountId));
+	const rows = await db.select().from(agentsTable).where(eq(agentsTable.accountId, accountId));
 	return rows as Agent[];
 }
 

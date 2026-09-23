@@ -1,6 +1,6 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import {
 	createDefaultPolicy,
@@ -33,7 +33,7 @@ describeDb("daily spending tracking (requires TEST_DATABASE_URL)", () => {
 
 		const rows = await testClient`SELECT * FROM daily_spending_log`;
 		expect(rows).toHaveLength(1);
-		expect(Number(rows[0]!.amount)).toBe(25);
+		expect(Number(rows[0]?.amount)).toBe(25);
 	});
 
 	it("returns zero when no spending today", async () => {

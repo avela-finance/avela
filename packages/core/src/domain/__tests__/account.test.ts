@@ -30,8 +30,8 @@ describe("account operations", () => {
 		const created = await createAccount(db, "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		const account = await getAccount(db, created.id);
 		expect(account).toBeDefined();
-		expect(account!.id).toBe(created.id);
-		expect(account!.walletAddress).toBe("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		expect(account?.id).toBe(created.id);
+		expect(account?.walletAddress).toBe("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 	});
 
 	it("getAccount returns null for missing id", async () => {
@@ -43,6 +43,6 @@ describe("account operations", () => {
 		await createAccount(db, "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 		const account = await getAccountByWallet(db, "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 		expect(account).toBeDefined();
-		expect(account!.walletAddress).toBe("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+		expect(account?.walletAddress).toBe("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
 	});
 });

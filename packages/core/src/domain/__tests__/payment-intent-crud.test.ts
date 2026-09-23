@@ -1,7 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { drizzle } from "drizzle-orm/postgres-js";
 import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import {
 	createPaymentIntent,
@@ -124,8 +124,8 @@ describeDb("payment intent CRUD (requires TEST_DATABASE_URL)", () => {
 		await updatePaymentStatus(db, intent.id, "settling");
 		await updatePaymentStatus(db, intent.id, "settled");
 
-		await expect(
-			updatePaymentStatus(db, intent.id, "created"),
-		).rejects.toThrow("Invalid transition");
+		await expect(updatePaymentStatus(db, intent.id, "created")).rejects.toThrow(
+			"Invalid transition",
+		);
 	});
 });

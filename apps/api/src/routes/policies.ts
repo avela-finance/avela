@@ -20,7 +20,10 @@ const updatePolicySchema = z.object({
 			}),
 		)
 		.optional(),
-	fundingPriority: z.array(z.enum(["spending_power", "stablecoin_balance"])).min(1).optional(),
+	fundingPriority: z
+		.array(z.enum(["spending_power", "stablecoin_balance"]))
+		.min(1)
+		.optional(),
 	enabled: z.boolean().optional(),
 });
 

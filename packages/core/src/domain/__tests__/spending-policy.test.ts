@@ -12,10 +12,7 @@ describe("DEFAULT_POLICY", () => {
 	});
 
 	it("defaults to spending power first, then stablecoin balance", () => {
-		expect(DEFAULT_POLICY.fundingPriority).toEqual([
-			"spending_power",
-			"stablecoin_balance",
-		]);
+		expect(DEFAULT_POLICY.fundingPriority).toEqual(["spending_power", "stablecoin_balance"]);
 	});
 
 	it("has no price floors by default", () => {
@@ -63,7 +60,7 @@ describe("evaluatePolicyRules", () => {
 
 		expect(result.passed).toBe(false);
 		expect(result.violations).toHaveLength(1);
-		expect(result.violations[0]!.rule).toBe("daily_limit");
+		expect(result.violations[0]?.rule).toBe("daily_limit");
 	});
 
 	it("requires approval when amount exceeds threshold", () => {
@@ -112,7 +109,7 @@ describe("evaluatePolicyRules", () => {
 
 		expect(result.passed).toBe(false);
 		expect(result.violations).toHaveLength(1);
-		expect(result.violations[0]!.rule).toBe("price_floor");
+		expect(result.violations[0]?.rule).toBe("price_floor");
 	});
 
 	it("passes when asset price is above price floor", () => {

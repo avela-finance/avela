@@ -145,7 +145,10 @@ describe("GET /agents/:id/permissions", () => {
 
 describe("PUT /agents/:id/permissions", () => {
 	it("updates permissions and returns 200", async () => {
-		const updated = { ...mockAgent, permissions: { ...mockAgent.permissions, maxPerTransaction: 100 } };
+		const updated = {
+			...mockAgent,
+			permissions: { ...mockAgent.permissions, maxPerTransaction: 100 },
+		};
 		const deps = makeDeps({ updateAgentPermissions: vi.fn().mockResolvedValue(updated) });
 		const app = makeApp(deps);
 
@@ -237,7 +240,7 @@ describe("GET /agents/:id/spending-log", () => {
 		expect(res.status).toBe(200);
 		const body = (await res.json()) as { data: typeof mockLog };
 		expect(body.data).toHaveLength(1);
-		expect(body.data[0]!.amount).toBe(25);
+		expect(body.data[0]?.amount).toBe(25);
 	});
 
 	it("passes limit query param to dep", async () => {

@@ -1,6 +1,6 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import { createDefaultPolicy, getPolicy, updatePolicy } from "../spending-policy.js";
 
@@ -37,7 +37,7 @@ describeDb("spending policy CRUD (requires TEST_DATABASE_URL)", () => {
 		await createDefaultPolicy(db, "01JACCOUNT0000000000000");
 		const result = await getPolicy(db, "01JACCOUNT0000000000000");
 		expect(result).not.toBeNull();
-		expect(result!.dailyLimit).toBe("500.000000");
+		expect(result?.dailyLimit).toBe("500.000000");
 	});
 
 	it("updates daily limit", async () => {

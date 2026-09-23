@@ -1,12 +1,11 @@
 import { ulid } from "ulidx";
 import { keccak256, toHex } from "viem";
-import type { VaultAdapter } from "../adapters/vault-adapter.js";
 import type { RouterAdapter } from "../adapters/router-adapter.js";
+import type { VaultAdapter } from "../adapters/vault-adapter.js";
 import type { Database } from "../db/client.js";
-import { getAsset, STABLECOINS, STABLECOIN_DECIMALS } from "./asset.js";
+import { getAsset, STABLECOIN_DECIMALS, STABLECOINS } from "./asset.js";
 import type { FundingDecision, PaymentStatus } from "./payment-intent.js";
 import type { SpendingPower } from "./types.js";
-import type { SettlementStablecoin } from "./types.js";
 
 export function generatePaymentId(): string {
 	return keccak256(toHex(ulid()));

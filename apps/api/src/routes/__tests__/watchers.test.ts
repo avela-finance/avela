@@ -1,7 +1,7 @@
+import type { Watcher, WatcherEvaluation } from "@avela/core";
 import { Hono } from "hono";
 import { describe, expect, it, vi } from "vitest";
 import { watchersRoutes } from "../watchers.js";
-import type { Watcher, WatcherEvaluation } from "@avela/core";
 
 const mockWatcher: Watcher = {
 	id: "01JWATCHER0000000000000001",
@@ -118,9 +118,9 @@ describe("GET /accounts/:accountId/watchers", () => {
 		const res = await app.request("/accounts/01JACCOUNT000000000000001/watchers");
 
 		expect(res.status).toBe(200);
-		const body = (await res.json()) as { data: typeof mockWatcher[] };
+		const body = (await res.json()) as { data: (typeof mockWatcher)[] };
 		expect(body.data).toHaveLength(1);
-		expect(body.data[0]!.id).toBe("01JWATCHER0000000000000001");
+		expect(body.data[0]?.id).toBe("01JWATCHER0000000000000001");
 		expect(deps.getWatchersByAccount).toHaveBeenCalledWith("01JACCOUNT000000000000001");
 	});
 
@@ -221,9 +221,9 @@ describe("POST /accounts/:accountId/watchers/evaluate", () => {
 		});
 
 		expect(res.status).toBe(200);
-		const body = (await res.json()) as { data: typeof mockEvaluation[] };
+		const body = (await res.json()) as { data: (typeof mockEvaluation)[] };
 		expect(body.data).toHaveLength(1);
-		expect(body.data[0]!.triggered).toBe(true);
+		expect(body.data[0]?.triggered).toBe(true);
 		expect(deps.evaluateAllActiveWatchers).toHaveBeenCalledOnce();
 	});
 });

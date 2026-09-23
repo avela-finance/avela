@@ -1,7 +1,7 @@
+import type { Agent, AgentPermission, AgentSpendingLog } from "@avela/core";
+import { AgentPermissionSchema } from "@avela/core";
 import { Hono } from "hono";
 import { z } from "zod";
-import { AgentPermissionSchema } from "@avela/core";
-import type { Agent, AgentPermission, AgentSpendingLog } from "@avela/core";
 
 const registerAgentSchema = z.object({
 	accountId: z.string().min(1),
@@ -150,10 +150,7 @@ export function agentsRoutes(deps: AgentDeps) {
 		const rawLimit = c.req.query("limit");
 		const limit = rawLimit ? Number.parseInt(rawLimit, 10) : 20;
 		if (Number.isNaN(limit) || limit < 1 || limit > 100) {
-			return c.json(
-				{ error: { code: "VALIDATION_ERROR", message: "limit must be 1-100" } },
-				400,
-			);
+			return c.json({ error: { code: "VALIDATION_ERROR", message: "limit must be 1-100" } }, 400);
 		}
 
 		const log = await deps.getAgentSpendingLog(id, limit);

@@ -3,8 +3,8 @@ import {
 	getAsset,
 	getSupportedAssets,
 	isAssetEligible,
-	STABLECOINS,
 	STABLECOIN_DECIMALS,
+	STABLECOINS,
 } from "../asset.js";
 
 describe("asset registry", () => {

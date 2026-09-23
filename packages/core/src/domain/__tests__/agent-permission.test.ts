@@ -1,6 +1,6 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import { registerAgent, revokeAgent } from "../agent.js";
 import { evaluateAgentPermission } from "../agent-permission.js";

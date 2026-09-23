@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { DEMO_PRODUCTS, getProduct } from "../../../lib/demo-products.js";
+import { describe, expect, it } from "vitest";
+import { getProduct } from "../../../lib/demo-products.js";
 
 describe("checkout flow data", () => {
 	it("calculates cart total correctly for multiple products", () => {
@@ -31,7 +31,7 @@ describe("checkout flow data", () => {
 		const ids = params.split(",");
 		const products = ids.map(getProduct).filter(Boolean);
 		expect(products).toHaveLength(2);
-		expect(products[0]!.name).toBe("API Credits");
-		expect(products[1]!.name).toBe("Cloud Compute");
+		expect(products[0]?.name).toBe("API Credits");
+		expect(products[1]?.name).toBe("Cloud Compute");
 	});
 });
