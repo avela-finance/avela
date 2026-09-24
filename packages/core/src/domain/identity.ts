@@ -101,6 +101,17 @@ export function createResolveUsername(db: Database) {
 	};
 }
 
+export function createGetIdentityByAccount(db: Database) {
+	return async function getIdentityByAccount(accountId: string): Promise<Identity | null> {
+		const [identity] = await db
+			.select()
+			.from(identitiesTable)
+			.where(eq(identitiesTable.accountId, accountId));
+
+		return (identity as Identity | undefined) ?? null;
+	};
+}
+
 export function createIsUsernameAvailable(db: Database) {
 	return async function isUsernameAvailable(username: string): Promise<boolean> {
 		const validation = validateUsername(username.toLowerCase());

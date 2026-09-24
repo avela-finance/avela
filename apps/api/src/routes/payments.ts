@@ -27,6 +27,20 @@ type PaymentDeps = {
 export function paymentsRoutes(deps: PaymentDeps) {
 	const app = new Hono<{ Variables: AppVariables }>();
 
+	// GET / — payment history for the authenticated account.
+	app.get("/", async (c) => {
+		const accountId = resolveAccountId(c, c.req.query("accountId"));
+		const history = await deps.getPaymentHistory(accountId, 20);
+		const payments = (history as Array<Record<string, unknown>>).map((p) => ({
+			id: p.id,
+			amount: Number(p.amount),
+			status: p.status,
+			recipientAddress: p.recipientAddress,
+			createdAt: p.createdAt,
+		}));
+		return c.json({ data: { payments } });
+	});
+
 	app.post("/intent", async (c) => {
 		const body = await c.req.json();
 		const parsed = createPaymentIntentSchema.safeParse(body);

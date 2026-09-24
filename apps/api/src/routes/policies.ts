@@ -43,7 +43,11 @@ export function policiesRoutes(deps: PolicyDeps) {
 
 	app.get("/", async (c) => {
 		const accountId = resolveAccountId(c, c.req.param("accountId"));
-		const policy = await deps.getPolicy(accountId);
+		const policy = (await deps.getPolicy(accountId)) as {
+			dailyLimit: string | null;
+			approvalThreshold: string | null;
+			fundingPriority: string[] | null;
+		} | null;
 
 		if (!policy) {
 			return c.json(
@@ -52,8 +56,14 @@ export function policiesRoutes(deps: PolicyDeps) {
 			);
 		}
 
-		const dailySpending = await deps.getDailySpending(accountId, policy);
-		return c.json({ data: { policy, dailySpending } });
+		// Flat shape — matches apps/web SpendingPolicy.
+		return c.json({
+			data: {
+				dailyLimit: policy.dailyLimit ? Number(policy.dailyLimit) : null,
+				approvalThreshold: policy.approvalThreshold ? Number(policy.approvalThreshold) : null,
+				fundingPriority: policy.fundingPriority ?? [],
+			},
+		});
 	});
 
 	app.put("/", async (c) => {

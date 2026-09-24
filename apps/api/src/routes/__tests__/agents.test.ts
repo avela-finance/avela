@@ -260,8 +260,8 @@ describe("GET /agents?accountId=", () => {
 
 		const res = await app.request("/agents?accountId=01JACCOUNT000000000000001");
 		expect(res.status).toBe(200);
-		const body = (await res.json()) as { data: unknown[] };
-		expect(body.data).toHaveLength(1);
+		const body = (await res.json()) as { data: { agents: unknown[] } };
+		expect(body.data.agents).toHaveLength(1);
 		expect(deps.getAgentsByAccount).toHaveBeenCalledWith("01JACCOUNT000000000000001");
 	});
 

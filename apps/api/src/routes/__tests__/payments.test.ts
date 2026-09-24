@@ -110,3 +110,46 @@ describe("GET /payments/:id", () => {
 		expect(res.status).toBe(404);
 	});
 });
+
+describe("GET /payments", () => {
+	function makeApp(history: unknown[]) {
+		const app = new Hono();
+		app.route(
+			"/payments",
+			paymentsRoutes({
+				createPaymentIntent: vi.fn(),
+				getPaymentIntent: vi.fn(),
+				getPaymentHistory: vi.fn().mockResolvedValue(history),
+				executePayment: vi.fn(),
+				getReceipt: vi.fn(),
+				updatePaymentStatus: vi.fn(),
+			}),
+		);
+		return app;
+	}
+
+	it("returns payment history wrapped under payments key", async () => {
+		const app = makeApp([
+			{
+				id: "01JPAY000000000000000001",
+				amount: "25.000000",
+				status: "settled",
+				recipientAddress: "0x1234567890abcdef1234567890abcdef12345678",
+				createdAt: new Date().toISOString(),
+			},
+		]);
+
+		const res = await app.request("/payments?accountId=01JACCOUNT000000000000001");
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as {
+			data: { payments: { id: string; amount: number; status: string }[] };
+		};
+		expect(body.data.payments).toHaveLength(1);
+		expect(body.data.payments[0]?.amount).toBe(25);
+	});
+
+	it("returns 401 without account context or query", async () => {
+		const res = await makeApp([]).request("/payments");
+		expect(res.status).toBe(401);
+	});
+});

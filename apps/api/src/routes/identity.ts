@@ -2,6 +2,8 @@ import type { Identity } from "@avela/core";
 import { validateUsername } from "@avela/core";
 import { Hono } from "hono";
 import { z } from "zod";
+import type { AppVariables } from "../index.js";
+import { resolveAccountId } from "../middleware/account.js";
 
 const registerSchema = z.object({
 	accountId: z.string().min(1),
@@ -10,6 +12,7 @@ const registerSchema = z.object({
 });
 
 export type IdentityDeps = {
+	getIdentityByAccount: (accountId: string) => Promise<Identity | null>;
 	registerUsername: (
 		accountId: string,
 		username: string,
@@ -22,7 +25,14 @@ export type IdentityDeps = {
 };
 
 export function createIdentityRoutes(deps: IdentityDeps) {
-	const app = new Hono();
+	const app = new Hono<{ Variables: AppVariables }>();
+
+	// Authenticated caller's own identity (requires auth middleware at mount).
+	app.get("/me", async (c) => {
+		const accountId = resolveAccountId(c);
+		const identity = await deps.getIdentityByAccount(accountId);
+		return c.json({ data: { username: identity?.username ?? null } });
+	});
 
 	app.post("/register", async (c) => {
 		let body: unknown;

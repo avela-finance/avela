@@ -26,13 +26,10 @@ describe("GET /policies", () => {
 		const res = await app.request("/accounts/01JACCOUNT0000000000000/policies");
 		expect(res.status).toBe(200);
 		const body = (await res.json()) as {
-			data: {
-				policy: { dailyLimit: string };
-				dailySpending: { remaining: number };
-			};
+			data: { dailyLimit: number; approvalThreshold: number; fundingPriority: string[] };
 		};
-		expect(body.data.policy.dailyLimit).toBe("500.000000");
-		expect(body.data.dailySpending.remaining).toBe(450);
+		expect(body.data.dailyLimit).toBe(500);
+		expect(body.data.approvalThreshold).toBe(100);
 	});
 
 	it("returns 404 when no policy exists", async () => {

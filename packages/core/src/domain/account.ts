@@ -9,10 +9,12 @@ export async function createAccount(db: Database, walletAddress: string): Promis
 	if (!isAddress(walletAddress)) {
 		throw new Error(`Invalid wallet address: ${walletAddress}`);
 	}
+	// Normalize: wallets are case-insensitive (checksummed vs lowercase).
+	// Without this, one user gets duplicate accounts per casing.
 	const now = new Date();
 	const row = {
 		id: ulid(),
-		walletAddress,
+		walletAddress: walletAddress.toLowerCase(),
 		username: null,
 		status: "active" as const,
 		createdAt: now,
@@ -35,6 +37,6 @@ export async function getAccountByWallet(
 	const rows = await db
 		.select()
 		.from(accountsTable)
-		.where(eq(accountsTable.walletAddress, walletAddress));
+		.where(eq(accountsTable.walletAddress, walletAddress.toLowerCase()));
 	return (rows[0] as Account) ?? null;
 }

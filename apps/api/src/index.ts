@@ -5,7 +5,9 @@ import {
 	createDb,
 	createDefaultPolicy,
 	createGetAccountByPhoneNumber,
+	createGetIdentityByAccount,
 	createGetWhatsAppLink,
+	createLinkWhatsAppAccount,
 	createIsUsernameAvailable,
 	createPaymentIntent,
 	createRegisterUsername,
@@ -69,6 +71,7 @@ import { paymentsRoutes } from "./routes/payments.js";
 import { policiesRoutes } from "./routes/policies.js";
 import { createPortfolioRoutes } from "./routes/portfolio.js";
 import { watchersRoutes } from "./routes/watchers.js";
+import { createWhatsAppLinkRoutes } from "./routes/whatsapp.js";
 
 export type AppVariables = {
 	requestId: string;
@@ -123,10 +126,13 @@ async function resolvePrivyAccount(privyUserId: string): Promise<Account> {
 const accountMiddleware = createAccountMiddleware(resolvePrivyAccount);
 
 // All account- and payment-scoped routes require auth + account context.
-// (Asset prices and identity resolution stay public.)
+// (Asset prices and public identity resolution stay public — only /identity/me
+// is gated, so /resolve and /available keep working for payment links.)
 app.use("/accounts/*", authMiddleware, accountMiddleware);
 app.use("/payments/*", authMiddleware, accountMiddleware);
 app.use("/agents/*", authMiddleware, accountMiddleware);
+app.use("/integrations/*", authMiddleware, accountMiddleware);
+app.use("/identity/me", authMiddleware, accountMiddleware);
 
 async function getAccountWalletAddress(accountId: string): Promise<string> {
 	const account = await getAccount(db, accountId);
@@ -384,9 +390,19 @@ app.route(
 app.route(
 	"/identity",
 	createIdentityRoutes({
+		getIdentityByAccount: createGetIdentityByAccount(db),
 		registerUsername: createRegisterUsername(db),
 		resolveUsername: createResolveUsername(db),
 		isUsernameAvailable: createIsUsernameAvailable(db),
+	}),
+);
+
+const linkWhatsAppAccount = createLinkWhatsAppAccount(db);
+app.route(
+	"/integrations/whatsapp",
+	createWhatsAppLinkRoutes({
+		linkAccount: (accountId, phoneNumber) =>
+			linkWhatsAppAccount(accountId, phoneNumber, phoneNumber),
 	}),
 );
 
@@ -450,7 +466,7 @@ app.route(
 );
 
 app.route(
-	"/accounts/:accountId/policy",
+	"/accounts/:accountId/policies",
 	policiesRoutes({
 		getPolicy: (accountId) => getPolicy(db, accountId),
 		updatePolicy: (accountId, updates) =>
