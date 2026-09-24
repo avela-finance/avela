@@ -9,13 +9,14 @@ import {
 	getPaymentIntent,
 	updatePaymentStatus,
 } from "../payment-intent.js";
+import { cleanDatabase } from "./helpers.js";
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL;
 
 const describeDb = TEST_DB_URL ? describe : describe.skip;
 
 describeDb("payment intent CRUD (requires TEST_DATABASE_URL)", () => {
-	const testClient = postgres(TEST_DB_URL!);
+	const testClient = postgres(TEST_DB_URL ?? "postgres://localhost:5432/skipped");
 	const db = drizzle(testClient, { schema });
 
 	beforeAll(async () => {
@@ -59,7 +60,7 @@ describeDb("payment intent CRUD (requires TEST_DATABASE_URL)", () => {
 	});
 
 	afterAll(async () => {
-		await db.execute(sql`DELETE FROM payment_intents WHERE account_id = '01JACCOUNT0000000000000'`);
+		await cleanDatabase(db);
 		await testClient.end();
 	});
 

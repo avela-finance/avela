@@ -57,7 +57,8 @@ export async function createDefaultPolicy(db: Database, accountId: string) {
 		})
 		.returning();
 
-	return row!;
+	if (!row) throw new Error("Insert did not return a row");
+	return row;
 }
 
 export async function getPolicy(db: Database, accountId: string) {

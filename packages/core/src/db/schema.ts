@@ -26,7 +26,7 @@ export const positionsTable = pgTable("positions", {
 		.notNull()
 		.references(() => accountsTable.id),
 	assetSymbol: varchar("asset_symbol", { length: 20 }).notNull(),
-	amount: bigint("amount", { mode: "number" }).notNull(),
+	amount: bigint("amount", { mode: "bigint" }).notNull(),
 	depositTxHash: varchar("deposit_tx_hash", { length: 66 }).notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -38,7 +38,7 @@ export const stablecoinBalancesTable = pgTable("stablecoin_balances", {
 		.notNull()
 		.references(() => accountsTable.id),
 	stablecoin: varchar("stablecoin", { length: 10 }).notNull(),
-	amount: bigint("amount", { mode: "number" }).notNull().default(0),
+	amount: bigint("amount", { mode: "bigint" }).notNull().default(0n),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

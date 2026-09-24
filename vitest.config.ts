@@ -8,5 +8,9 @@ export default defineConfig({
 			"packages/*/src/**/*.test.ts",
 		],
 		exclude: ["**/node_modules/**", "**/.next/**", "resources/**", "contracts/**"],
+		// DB integration tests share one database with fixed IDs — run test
+		// files serially so parallel workers can't collide on the same rows.
+		pool: "forks",
+		poolOptions: { forks: { singleFork: true } },
 	},
 });

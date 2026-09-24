@@ -35,7 +35,9 @@
 			"!**/out",
 			"!**/resources",
 			"!**/public/**/*.svg",
-			"!contracts/lib"
+			"!contracts/lib",
+			"!contracts/broadcast",
+			"!contracts/cache"
 		]
 	}
 }

@@ -2,7 +2,9 @@ import { Hono } from "hono";
 import { describe, expect, it, vi } from "vitest";
 import { createWhatsAppLinkRoutes } from "../whatsapp.js";
 
-function makeApp(linkAccount: ReturnType<typeof vi.fn>) {
+function makeApp(
+	linkAccount: (accountId: string, phoneNumber: string) => Promise<{ phoneNumber: string }>,
+) {
 	const app = new Hono<{ Variables: { accountId?: string } }>();
 	app.use("*", async (c, next) => {
 		c.set("accountId", "01JACCOUNT000000000000001");

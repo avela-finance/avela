@@ -8,7 +8,9 @@ import { getBalanceTool } from "./tools/get-balance.js";
 import { getPaymentStatusTool } from "./tools/get-payment-status.js";
 import { getPermissionsTool } from "./tools/get-permissions.js";
 
-const db = createDb(process.env.DATABASE_URL!);
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL is required");
+const db = createDb(databaseUrl);
 
 // TODO: inject poolMap from config (pool addresses from SPEC.md xStock assets)
 // createUniswapTwapAdapter requires a viem PublicClient + poolMap

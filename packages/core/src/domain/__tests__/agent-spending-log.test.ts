@@ -4,20 +4,19 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import { getAgentSpendingLog, logAgentSpending, registerAgent } from "../agent.js";
 import { DEMO_AGENT_PERMISSION } from "../types.js";
+import { cleanDatabase } from "./helpers.js";
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL;
 const describeDb = TEST_DB_URL ? describe : describe.skip;
 
 describeDb("agent spending log (requires TEST_DATABASE_URL)", () => {
-	const testClient = postgres(TEST_DB_URL!);
+	const testClient = postgres(TEST_DB_URL ?? "postgres://localhost:5432/skipped");
 	const db = drizzle(testClient, { schema });
 
 	let testAgentId: string;
 
 	beforeEach(async () => {
-		await testClient`DELETE FROM agent_spending_log`;
-		await testClient`DELETE FROM agents`;
-		await testClient`DELETE FROM accounts`;
+		await cleanDatabase(db);
 		await testClient`INSERT INTO accounts (id, wallet_address, status, created_at, updated_at) VALUES ('01JACCOUNT000000000000001', '0x1234567890abcdef1234567890abcdef12345678', 'active', NOW(), NOW())`;
 
 		const agent = await registerAgent(db, {

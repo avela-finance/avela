@@ -4,6 +4,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import { createWatcher, updateWatcher } from "../watcher.js";
 import { evaluateAllActiveWatchers, evaluateWatcher } from "../watcher-evaluator.js";
+import { cleanDatabase } from "./helpers.js";
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL;
 const describeDb = TEST_DB_URL ? describe : describe.skip;
@@ -12,7 +13,7 @@ type SpendingPowerResult = { totalSpendingPower: number };
 type AlertRecord = { accountId: string; message: string };
 
 describeDb("evaluateWatcher (requires TEST_DATABASE_URL)", () => {
-	const testClient = postgres(TEST_DB_URL!);
+	const testClient = postgres(TEST_DB_URL ?? "postgres://localhost:5432/skipped");
 	const db = drizzle(testClient, { schema });
 
 	let spendingPowerResponses: SpendingPowerResult[] = [];
@@ -32,8 +33,7 @@ describeDb("evaluateWatcher (requires TEST_DATABASE_URL)", () => {
 	};
 
 	beforeEach(async () => {
-		await testClient`DELETE FROM watchers`;
-		await testClient`DELETE FROM accounts WHERE id IN ('01JACCOUNT000000000000001', '01JACCOUNT000000000000002')`;
+		await cleanDatabase(db);
 		await testClient`
 			INSERT INTO accounts (id, wallet_address, status, created_at, updated_at)
 			VALUES
@@ -47,8 +47,7 @@ describeDb("evaluateWatcher (requires TEST_DATABASE_URL)", () => {
 	});
 
 	afterAll(async () => {
-		await testClient`DELETE FROM watchers`;
-		await testClient`DELETE FROM accounts WHERE id IN ('01JACCOUNT000000000000001', '01JACCOUNT000000000000002')`;
+		await cleanDatabase(db);
 		await testClient.end();
 	});
 
@@ -122,7 +121,7 @@ describeDb("evaluateWatcher (requires TEST_DATABASE_URL)", () => {
 });
 
 describeDb("evaluateAllActiveWatchers (requires TEST_DATABASE_URL)", () => {
-	const testClient = postgres(TEST_DB_URL!);
+	const testClient = postgres(TEST_DB_URL ?? "postgres://localhost:5432/skipped");
 	const db = drizzle(testClient, { schema });
 
 	let spendingPowerResponses: SpendingPowerResult[] = [];
@@ -140,7 +139,7 @@ describeDb("evaluateAllActiveWatchers (requires TEST_DATABASE_URL)", () => {
 	};
 
 	beforeEach(async () => {
-		await testClient`DELETE FROM watchers`;
+		await cleanDatabase(db);
 		await testClient`
 			INSERT INTO accounts (id, wallet_address, status, created_at, updated_at)
 			VALUES
@@ -153,8 +152,7 @@ describeDb("evaluateAllActiveWatchers (requires TEST_DATABASE_URL)", () => {
 	});
 
 	afterAll(async () => {
-		await testClient`DELETE FROM watchers`;
-		await testClient`DELETE FROM accounts WHERE id IN ('01JACCOUNT000000000000001', '01JACCOUNT000000000000002')`;
+		await cleanDatabase(db);
 		await testClient.end();
 	});
 
