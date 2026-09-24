@@ -1,95 +1,81 @@
-# Avela Design System
+# Avela Design System — v1
 
-Single source of truth for visual design. Values here map 1:1 to shadcn CSS variables in `globals.css`. Components use semantic tokens (`bg-primary`, `text-muted-foreground`), never raw hex values.
+Single source of truth for visual design. Values here map 1:1 to shadcn CSS variables in `apps/site/app/globals.css` and `apps/web/app/globals.css` (both apps carry identical tokens). Components use semantic tokens (`bg-primary`, `text-muted-foreground`), never raw hex values. See [no-hardcoded-hex](#no-hardcoded-hex).
 
-## Brand palette
+Reference only: the v0 exploration doc at `avela-v0/DESIGN.md` is non-normative. Where v0 and this doc disagree, this doc wins.
 
-| Hex | Name | Role |
-|-----|------|------|
-| `#151700` | Warm black | Text, dark section background |
-| `#2C3500` | Deep olive | Primary (buttons, nav CTA, FAQ bg) |
-| `#DDF837` | Chartreuse | Accent (highlights, badges, headings on dark) |
-| `#CEE363` | Soft lime | Accent alternative (if chartreuse is too bright) |
-| `#566C4A` | Forest | Icon tint, secondary interactive |
-| `#6B7350` | Dark sage | Muted foreground (secondary text — WCAG AA) |
-| `#ABB189` | Sage | Muted foreground on dark sections |
-| `#CEECEF` | Ice blue | Feature card surface |
-| `#DEE4FD` | Lavender | Feature card surface |
-| `#F2C078` | Peach | Warm accent, article cards, badges |
+## Brand palette (v1)
+
+| Hex | Name | oklch | Role |
+|-----|------|-------|------|
+| `#29211A` | Deep brown | `oklch(0.255 0.018 63.1)` | Dark surfaces, light-mode primary |
+| `#DDF837` | Lime | `oklch(0.928 0.202 117.8)` | Accent, dark-mode primary, focus rings |
+| `#F2C078` | Peach | `oklch(0.837 0.107 75.5)` | Warm highlight, feature surfaces |
+| `#151700` | Warm black | `oklch(0.196 0.044 113.9)` | Text on lime/accent |
+| `#F8F8F3` | Warm off-white | `oklch(0.978 0.007 106.5)` | Text on dark, light primary-foreground |
+| (derived) | Dark elevated surface | `oklch(0.310 0.020 63.1)` | Dark card/popover/muted/secondary |
+
+Dropped from v0: ice blue and lavender feature colors. Do not use them.
+TBD: a sixth sage color is reserved but undecided — do not invent one. Leave the slot empty until approved.
 
 ## Color mapping
 
 ### Light (`:root`)
 
-| Token | Role | Hex | Tailwind class |
-|-------|------|-----|----------------|
-| `--background` | Page background | `#F8F8F3` (warm off-white) | `bg-background` |
-| `--foreground` | Primary text | `#151700` (warm black) | `text-foreground` |
-| `--primary` | Buttons, links, CTAs | `#2C3500` (deep olive) | `bg-primary` / `text-primary` |
-| `--primary-foreground` | Text on primary | `#F8F8F3` (warm off-white) | `text-primary-foreground` |
-| `--secondary` | Secondary surfaces | `#F0F0E8` (warm gray) | `bg-secondary` |
-| `--muted` | Muted backgrounds | `#F0F0E8` (warm gray) | `bg-muted` |
-| `--muted-foreground` | Secondary text | `#6B7350` (dark sage) | `text-muted-foreground` |
-| `--accent` | Highlight surfaces, badges | `#DDF837` (chartreuse) | `bg-accent` |
-| `--accent-foreground` | Text on accent | `#151700` (warm black) | `text-accent-foreground` |
-| `--card` | Card background | `#FFFFFF` (white) | `bg-card` |
-| `--border` | Borders | `#E5E5DC` (warm border) | `border-border` |
-| `--input` | Input borders | `#E5E5DC` | `border-input` |
-| `--ring` | Focus rings | `#566C4A` (forest) | `ring-ring` |
-| `--destructive` | Error, danger | `#D32F2F` (red) | `bg-destructive` |
+Only four tokens change from shadcn stone stock. Everything else keeps its current stock value.
 
-### Dark (`.dark`) — section-level only
+| Token | Value | Role |
+|-------|-------|------|
+| `--primary` | `oklch(0.255 0.018 63.1)` (deep brown) | Buttons, links, CTAs |
+| `--primary-foreground` | `oklch(0.978 0.007 106.5)` (warm off-white) | Text on primary |
+| `--accent` | `oklch(0.928 0.202 117.8)` (lime) | Highlight surfaces, badges |
+| `--accent-foreground` | `oklch(0.196 0.044 113.9)` (warm black) | Text on accent |
+| everything else | stock | Unchanged |
 
-Used on FAQ, CTA, footer — not a global theme toggle.
+### Dark (`.dark`) — both apps
 
-| Token | Role | Hex |
-|-------|------|-----|
-| `--background` | Dark surface | `#2C3500` (deep olive) |
-| `--foreground` | Light text | `#F8F8F3` (warm off-white) |
-| `--primary` | Buttons on dark | `#DDF837` (chartreuse) |
-| `--primary-foreground` | Text on buttons | `#151700` (warm black) |
-| `--card` | Elevated dark surface | `#3A4510` (lighter olive) |
-| `--muted` | Muted dark surface | `#3A4510` |
-| `--muted-foreground` | Secondary text on dark | `#ABB189` (sage) |
-| `--accent` | Accent on dark | `#DDF837` (chartreuse) |
-| `--accent-foreground` | Text on accent | `#151700` |
-| `--border` | Borders on dark | `#F8F8F3` with 10% opacity |
+| Token | Value |
+|-------|-------|
+| `--background` | `oklch(0.255 0.018 63.1)` (deep brown) |
+| `--foreground` | `oklch(0.978 0.007 106.5)` (warm off-white) |
+| `--primary` | `oklch(0.928 0.202 117.8)` (lime) |
+| `--primary-foreground` | `oklch(0.196 0.044 113.9)` (warm black) |
+| `--card` / `--popover` / `--muted` | `oklch(0.310 0.020 63.1)` (dark elevated) |
+| `--secondary` | `oklch(0.310 0.020 63.1)` (dark elevated) |
+| `--card-foreground` / `--popover-foreground` | `oklch(0.978 0.007 106.5)` (warm off-white) |
+| `--muted-foreground` / `--secondary-foreground` | `oklch(0.978 0.007 106.5)` (warm off-white) |
+| `--accent` | `oklch(0.928 0.202 117.8)` (lime) |
+| `--accent-foreground` | `oklch(0.196 0.044 113.9)` (warm black on lime) |
+| `--border` / `--input` | stock white 10% / 15% — unchanged |
+| `--ring` | `oklch(0.928 0.202 117.8)` (lime) |
+| `--destructive` | stock — unchanged |
 
-### Feature card accent colors
+Dark surfaces are section-level (FAQ, CTA, footer via `class="dark"` + `bg-background`), not a global theme toggle.
 
-These are used as direct utility classes on specific bento cards, not as global tokens:
+### Chart colors (`.dark`)
 
-| Color | Hex | Use | Tailwind |
-|-------|-----|-----|----------|
-| Ice blue | `#CEECEF` | Card bg for "Cross-border" or similar | `bg-[#CEECEF]` |
-| Lavender | `#DEE4FD` | Card bg for "AI operator" or similar | `bg-[#DEE4FD]` |
-| Peach | `#F2C078` | Card bg for highlights, warm emphasis | `bg-[#F2C078]` |
-| Chartreuse | `#DDF837` | Card bg for primary feature | `bg-[#DDF837]` |
+| Token | Value | Source |
+|-------|-------|--------|
+| `--chart-1` | `oklch(0.255 0.018 63.1)` | Deep brown |
+| `--chart-2` | `oklch(0.837 0.107 75.5)` | Peach |
+| `--chart-3` | `oklch(0.928 0.202 117.8)` | Lime |
+| `--chart-4` | `oklch(0.196 0.044 113.9)` | Warm black |
+| `--chart-5` | stock | Unchanged |
 
-### Chart colors
+### Extension tokens
 
-Derived from brand palette for data visualization:
+Declared in `:root`, wired through `@theme inline` as `--color-feature-*` (same pattern v0 used), usable as `bg-feature-peach`, `bg-feature-lime`:
 
-| Token | Hex | Role |
-|-------|-----|------|
-| `--chart-1` | `#2C3500` | Deep olive |
-| `--chart-2` | `#566C4A` | Forest |
-| `--chart-3` | `#DDF837` | Chartreuse |
-| `--chart-4` | `#F2C078` | Peach |
-| `--chart-5` | `#CEECEF` | Ice blue |
+| Token | Value | Theme wiring |
+|-------|-------|--------------|
+| `--feature-peach` | `oklch(0.837 0.107 75.5)` | `--color-feature-peach: var(--feature-peach)` |
+| `--feature-lime` | `oklch(0.928 0.202 117.8)` | `--color-feature-lime: var(--feature-lime)` |
 
 ## Typography
 
-### Fonts
+Geist only. Body/UI: Geist Sans (`--font-sans`, `font-sans`). Headings/code-data: Geist Mono — layouts set `--font-heading` via `Geist_Mono({ variable: "--font-heading" })`, wired in `@theme inline` as `--font-heading: var(--font-heading)` (class `font-heading`).
 
-| Role | Font | CSS variable | Tailwind class |
-|------|------|-------------|----------------|
-| Body / UI | Geist Sans | `--font-geist-sans` | `font-sans` |
-| Code / data | Geist Mono | `--font-geist-mono` | `font-mono` |
-
-### Scale
-
-Tailwind default type scale. No custom sizes.
+Tailwind default type scale only. No custom sizes.
 
 | Class | Size | Use |
 |-------|------|-----|
@@ -104,40 +90,21 @@ Tailwind default type scale. No custom sizes.
 | `text-5xl` | 48px | Hero heading (mobile) |
 | `text-6xl` | 60px | Hero heading (desktop) |
 
-### Weights
+Weights: 400 body, 500 nav/labels/FAQ questions, 600 section headings/card titles/buttons, 700 hero + stat numbers only.
 
-| Weight | Class | Use |
-|--------|-------|-----|
-| 400 | `font-normal` | Body text |
-| 500 | `font-medium` | Nav links, labels, FAQ questions |
-| 600 | `font-semibold` | Section headings, card titles, buttons |
-| 700 | `font-bold` | Hero heading, stat numbers only |
-
-### Rules
-
-- `tracking-tight` on all headings (h1, h2)
-- `tracking-wider` on uppercase labels
-- `text-wrap-balance` on headings
-- `text-wrap-pretty` on multi-line body
-- `tabular-nums` on financial figures
+Rules: `tracking-tight` on all headings, `tracking-wider` on uppercase labels, `text-wrap-balance` on headings, `text-wrap-pretty` on multi-line body, `tabular-nums` on financial figures.
 
 ## Spacing
 
-Tailwind default scale. No custom values.
-
-- Section vertical padding: `py-24` (96px)
-- Container max width: `max-w-6xl` (1152px)
-- Hero heading max width: `max-w-[680px]`
-- Card padding: `p-6` (24px)
-- Grid gap: `gap-4` (16px) for cards, `gap-6` (24px) for sections
+Tailwind default scale. No custom values. Section `py-24`, container `max-w-6xl`, hero heading `max-w-[680px]`, card `p-6`, grid `gap-4` cards / `gap-6` sections.
 
 ## Radius
 
-Base: `--radius: 0.625rem` (10px). Derived via shadcn scale.
+Base `--radius: 0.625rem`, derived via shadcn scale.
 
 ## Motion
 
-Easing: `cubic-bezier(0.32, 0.72, 0, 1)`
+Easing: `cubic-bezier(0.32, 0.72, 0, 1)` everywhere.
 
 | Pattern | Duration |
 |---------|----------|
@@ -151,17 +118,20 @@ Active feedback: `active:scale-[0.98]` on buttons.
 
 ## Icons
 
-Phosphor Icons (`@phosphor-icons/react`), `weight="duotone"`, `size={32}` for feature icons, `size={16}` for inline.
+Phosphor Icons (`@phosphor-icons/react`), `weight="duotone"`, `size={32}` feature icons, `size={16}` inline.
 
 ## Section surfaces
 
-- **Light** (default): warm off-white `bg-background` with warm black text
-- **Dark sections** (FAQ, CTA, footer): wrap in `class="dark"` + `bg-background` — deep olive surface, chartreuse accents
-- **Tinted cards**: use accent card colors directly (`bg-[#CEECEF]`, etc.) with `text-foreground` for text
+- **Light** (default): `bg-background` with foreground text.
+- **Dark sections** (FAQ, CTA, footer): wrap in `class="dark"` + `bg-background` — deep brown surface, lime accents.
+- **Feature surfaces**: `bg-feature-peach` / `bg-feature-lime` with `text-foreground` — never raw hex.
+
+## No-hardcoded-hex
+
+No hex literals in components or styles. All color goes through semantic tokens (`bg-primary`, `text-muted-foreground`) or the `feature-*` utilities. If a design needs a color that has no token, add the token here first, then use it.
 
 ## How to update
 
-1. Change hex values in this doc
-2. Convert to oklch
-3. Update `globals.css` `:root` and `.dark` blocks
-4. Components auto-inherit via semantic tokens
+1. Change values in this doc (hex + oklch together).
+2. Update `:root` and `.dark` blocks in both `globals.css` files — keep site and web identical.
+3. Components auto-inherit via semantic tokens.
