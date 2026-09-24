@@ -1,34 +1,43 @@
 "use client";
 
+import { ArrowsClockwise, ChatCircle, Eyes, Receipt, Robot, Vault } from "@phosphor-icons/react";
 import { motion } from "motion/react";
+
+const APPLE_EASE = [0.32, 0.72, 0, 1] as const;
 
 const features = [
 	{
+		icon: Vault,
 		title: "Spending power from your portfolio",
 		description:
 			"Your tokenized stocks generate spending power. No selling, no liquidation — just spend.",
 	},
 	{
-		title: "Every payment builds the market",
+		icon: ArrowsClockwise,
+		title: "Reserve settlement with onchain proof",
 		description:
-			"Each checkout triggers a real Uniswap V3 swap — your payment is a market order on X Layer.",
+			"Payments settle from the pre-funded stablecoin reserve via AvelaPaymentRouter. Positions stay locked in AvelaVault as collateral.",
 	},
 	{
+		icon: Robot,
 		title: "AI agent spending",
 		description:
 			"Authorize agents to spend within scoped permissions. Per-transaction limits, asset restrictions, daily caps.",
 	},
 	{
+		icon: ChatCircle,
 		title: "Approve payments via WhatsApp",
 		description:
 			"Check balances, approve or reject payments, and get receipts — all from WhatsApp.",
 	},
 	{
+		icon: Eyes,
 		title: "Watchers that act",
 		description:
 			"Set alerts for when spending power drops below a threshold. Your account monitors itself.",
 	},
 	{
+		icon: Receipt,
 		title: "Onchain receipts",
 		description:
 			"Every payment settles onchain. Full settlement proof with transaction hash and block number.",
@@ -37,13 +46,16 @@ const features = [
 
 export function Features() {
 	return (
-		<section className="dark bg-background px-4 py-24 border-t border-border">
+		<section
+			id="features"
+			className="dark bg-background px-4 py-24 border-t border-border scroll-mt-28"
+		>
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
-					<h2 className="text-3xl font-semibold tracking-tight text-foreground">
+					<h2 className="text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
 						Built for intelligent spending
 					</h2>
-					<p className="mt-3 text-muted-foreground">
+					<p className="mt-3 text-pretty text-muted-foreground">
 						Every feature designed for the portfolio-native consumer.
 					</p>
 				</div>
@@ -55,11 +67,19 @@ export function Features() {
 							initial={{ opacity: 0, y: 16 }}
 							whileInView={{ opacity: 1, y: 0 }}
 							viewport={{ once: true, margin: "-40px" }}
-							transition={{ duration: 0.45, delay: i * 0.08, ease: "easeOut" }}
-							className="rounded-xl border border-border bg-muted/50 p-5 flex flex-col gap-2"
+							transition={{ duration: 0.45, delay: i * 0.08, ease: APPLE_EASE }}
+							className="rounded-xl border border-border bg-muted/50 p-6 flex flex-col gap-2"
 						>
-							<h3 className="text-sm font-medium text-foreground">{feature.title}</h3>
-							<p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
+							<feature.icon
+								size={32}
+								weight="duotone"
+								className="text-primary"
+								aria-hidden="true"
+							/>
+							<h3 className="text-sm font-semibold text-foreground">{feature.title}</h3>
+							<p className="text-sm leading-relaxed text-pretty text-muted-foreground">
+								{feature.description}
+							</p>
 						</motion.div>
 					))}
 				</div>
