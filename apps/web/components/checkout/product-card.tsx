@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import type { DemoProduct } from "@/lib/demo-products";
@@ -15,7 +16,13 @@ export function ProductCard({
 		<Card>
 			<CardContent>
 				<div className="mb-4 flex h-24 items-center justify-center rounded-lg bg-muted">
-					<img src={product.image} alt={product.name} className="h-16 w-16 object-contain" />
+					<Image
+						src={product.image}
+						alt={product.name}
+						width={64}
+						height={64}
+						className="h-16 w-16 object-contain"
+					/>
 				</div>
 				<h3 className="text-base font-semibold">{product.name}</h3>
 				<p className="mt-1 text-sm text-muted-foreground">{product.description}</p>

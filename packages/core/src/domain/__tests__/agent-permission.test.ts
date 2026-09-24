@@ -10,7 +10,7 @@ const TEST_DB_URL = process.env.TEST_DATABASE_URL;
 const describeDb = TEST_DB_URL ? describe : describe.skip;
 
 describeDb("evaluateAgentPermission", () => {
-	const testClient = postgres(TEST_DB_URL!);
+	const testClient = postgres(TEST_DB_URL ?? "postgres://localhost:5432/skipped");
 	const db = drizzle(testClient, { schema });
 
 	let activeAgentId: string;

@@ -66,7 +66,8 @@ export function formatBalanceMessage(params: {
 	);
 	const lastIdx = positionLines.length - 1;
 	if (lastIdx >= 0) {
-		positionLines[lastIdx] = positionLines[lastIdx]!.replace("├", "└");
+		const last = positionLines[lastIdx];
+		if (last !== undefined) positionLines[lastIdx] = last.replace("├", "└");
 	}
 	return [
 		"📊 *Your Avela Balance*",
@@ -87,7 +88,8 @@ export function formatSpendingPowerMessage(params: {
 	);
 	const lastIdx = assetLines.length - 1;
 	if (lastIdx >= 0) {
-		assetLines[lastIdx] = assetLines[lastIdx]!.replace("├", "└");
+		const last = assetLines[lastIdx];
+		if (last !== undefined) assetLines[lastIdx] = last.replace("├", "└");
 	}
 	return [
 		"💰 *Spending Power*",

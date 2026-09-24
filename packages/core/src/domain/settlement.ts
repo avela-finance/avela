@@ -30,7 +30,8 @@ export async function recordSettlement(
 		})
 		.returning();
 
-	return row!;
+	if (!row) throw new Error("Insert did not return a row");
+	return row;
 }
 
 export async function getSettlement(db: Database, paymentIntentId: string) {

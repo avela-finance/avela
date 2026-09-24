@@ -1,17 +1,15 @@
-import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import { createAccount, getAccount, getAccountByWallet } from "../account.js";
+import { cleanDatabase } from "./helpers.js";
 
-const testClient = postgres(process.env.TEST_DATABASE_URL!);
+const testClient = postgres(process.env.TEST_DATABASE_URL ?? "postgres://localhost:5432/skipped");
 const db = drizzle(testClient, { schema });
 
 afterEach(async () => {
-	await db.execute(sql`DELETE FROM positions`);
-	await db.execute(sql`DELETE FROM stablecoin_balances`);
-	await db.execute(sql`DELETE FROM accounts`);
+	await cleanDatabase(db);
 });
 
 afterAll(async () => {

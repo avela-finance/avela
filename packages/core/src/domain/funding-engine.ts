@@ -23,8 +23,10 @@ export function selectFundingSource(params: {
 		.filter((a) => getAsset(a.assetSymbol) !== undefined);
 
 	if (eligible.length > 0) {
-		const selected = eligible.sort((a, b) => b.spendingPower - a.spendingPower)[0]!;
-		const asset = getAsset(selected.assetSymbol)!;
+		const [selected] = eligible.sort((a, b) => b.spendingPower - a.spendingPower);
+		if (!selected) throw new Error("No eligible funding source");
+		const asset = getAsset(selected.assetSymbol);
+		if (!asset) throw new Error(`Unknown asset: ${selected.assetSymbol}`);
 
 		return {
 			source: "spending_power",
@@ -126,14 +128,14 @@ export async function executePayment(
 	});
 
 	if (fundingDecision.source === "spending_power" && fundingDecision.collateralAsset) {
+		const collateralSymbol: string = fundingDecision.collateralAsset;
 		const walletAddress = await deps.getAccountWalletAddress(intent.accountId);
-		const asset = getAsset(fundingDecision.collateralAsset)!;
+		const asset = getAsset(collateralSymbol);
+		if (!asset) throw new Error(`Unknown collateral asset: ${collateralSymbol}`);
 		const lockedBalance = await deps.vaultAdapter.getLockedBalance(walletAddress, asset.address);
 
 		const currentPower = await deps.calculateSpendingPower(intent.accountId);
-		const assetPower = currentPower.perAsset.find(
-			(a) => a.assetSymbol === fundingDecision.collateralAsset,
-		);
+		const assetPower = currentPower.perAsset.find((a) => a.assetSymbol === collateralSymbol);
 
 		if (lockedBalance === 0n || !assetPower || assetPower.spendingPower < intentAmount) {
 			return deps.updatePaymentStatus(deps.db, intentId, "failed");

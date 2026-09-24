@@ -8,18 +8,17 @@ import {
 	getPolicy,
 	recordSpending,
 } from "../spending-policy.js";
+import { cleanDatabase } from "./helpers.js";
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL;
 const describeDb = TEST_DB_URL ? describe : describe.skip;
 
 describeDb("daily spending tracking (requires TEST_DATABASE_URL)", () => {
-	const testClient = postgres(TEST_DB_URL!);
+	const testClient = postgres(TEST_DB_URL ?? "postgres://localhost:5432/skipped");
 	const db = drizzle(testClient, { schema });
 
 	beforeEach(async () => {
-		await testClient`DELETE FROM daily_spending_log`;
-		await testClient`DELETE FROM spending_policies`;
-		await testClient`DELETE FROM accounts`;
+		await cleanDatabase(db);
 		await testClient`INSERT INTO accounts (id, wallet_address, status, created_at, updated_at) VALUES ('01JACCOUNT0000000000000', '0x1234567890abcdef1234567890abcdef12345678', 'active', NOW(), NOW())`;
 		await createDefaultPolicy(db, "01JACCOUNT0000000000000");
 	});
@@ -38,7 +37,8 @@ describeDb("daily spending tracking (requires TEST_DATABASE_URL)", () => {
 
 	it("returns zero when no spending today", async () => {
 		const policy = await getPolicy(db, "01JACCOUNT0000000000000");
-		const result = await getDailySpending(db, "01JACCOUNT0000000000000", policy!);
+		if (!policy) throw new Error("policy missing in test setup");
+		const result = await getDailySpending(db, "01JACCOUNT0000000000000", policy);
 
 		expect(result.total).toBe(0);
 		expect(result.limit).toBe(500);
@@ -50,7 +50,8 @@ describeDb("daily spending tracking (requires TEST_DATABASE_URL)", () => {
 		await recordSpending(db, "01JACCOUNT0000000000000", 50);
 
 		const policy = await getPolicy(db, "01JACCOUNT0000000000000");
-		const result = await getDailySpending(db, "01JACCOUNT0000000000000", policy!);
+		if (!policy) throw new Error("policy missing in test setup");
+		const result = await getDailySpending(db, "01JACCOUNT0000000000000", policy);
 
 		expect(result.total).toBe(150);
 		expect(result.limit).toBe(500);

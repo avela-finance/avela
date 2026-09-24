@@ -75,7 +75,8 @@ export function createRegisterUsername(db: Database) {
 			})
 			.returning();
 
-		return identity!;
+		if (!identity) throw new Error("Insert did not return a row");
+		return identity;
 	};
 }
 

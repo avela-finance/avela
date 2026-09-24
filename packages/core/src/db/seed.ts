@@ -97,7 +97,7 @@ async function main() {
 			id: ulid(),
 			accountId,
 			stablecoin,
-			amount: 5_000_000,
+			amount: 5_000_000n,
 			updatedAt: new Date(),
 		});
 	}

@@ -106,7 +106,8 @@ export async function createPaymentIntent(
 		})
 		.returning();
 
-	return row!;
+	if (!row) throw new Error("Insert did not return a row");
+	return row;
 }
 
 export async function getPaymentIntent(db: Database, id: string) {
