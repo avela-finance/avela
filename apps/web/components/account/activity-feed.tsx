@@ -1,5 +1,7 @@
 "use client";
 
+import { Receipt } from "@phosphor-icons/react";
+
 type ActivityType = "payment_settled" | "payment_failed" | "deposit" | "alert";
 
 interface ActivityItem {
@@ -78,7 +80,13 @@ export function ActivityFeed({ items, loading = false }: ActivityFeedProps) {
 		return (
 			<div className="rounded-lg border border-border bg-muted/50 p-6">
 				<h3 className="text-lg font-semibold mb-4">Activity</h3>
-				<p className="text-muted-foreground text-sm">No activity yet</p>
+				<div role="status" className="flex flex-col items-center py-8 text-center">
+					<Receipt size={32} weight="duotone" className="text-muted-foreground" aria-hidden />
+					<p className="mt-3 text-sm font-semibold">No activity yet</p>
+					<p className="mt-1 max-w-xs text-sm text-muted-foreground">
+						Payments and alerts will appear here
+					</p>
+				</div>
 			</div>
 		);
 	}
@@ -103,7 +111,7 @@ export function ActivityFeed({ items, loading = false }: ActivityFeedProps) {
 								</div>
 								<div className="flex-shrink-0 text-right">
 									{item.amount !== null && (
-										<p className="font-mono text-sm font-semibold">
+										<p className="font-mono text-sm font-semibold tabular-nums">
 											$
 											{item.amount.toLocaleString("en-US", {
 												minimumFractionDigits: 2,

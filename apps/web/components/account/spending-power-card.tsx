@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { APPLE_EASE } from "@/lib/motion";
 
 interface SpendingPowerCardProps {
 	totalSpendingPower: number;
@@ -32,11 +33,12 @@ export function SpendingPowerCard({
 		<motion.div
 			initial={{ opacity: 0, y: 8 }}
 			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.45, ease: APPLE_EASE }}
 			className="rounded-lg border border-border bg-gradient-to-br from-primary/10 to-muted p-6"
 		>
 			<div className="space-y-2">
 				<p className="text-sm font-medium text-muted-foreground">Spending Power</p>
-				<p className="font-mono text-4xl font-bold text-primary">
+				<p className="font-mono text-4xl font-bold text-primary tabular-nums">
 					$
 					{totalSpendingPower.toLocaleString("en-US", {
 						minimumFractionDigits: 2,
@@ -48,7 +50,7 @@ export function SpendingPowerCard({
 			<div className="mt-6 grid grid-cols-2 gap-4">
 				<div>
 					<p className="text-xs text-muted-foreground">Portfolio Value</p>
-					<p className="mt-1 font-mono text-lg font-semibold">
+					<p className="mt-1 font-mono text-lg font-semibold tabular-nums">
 						$
 						{portfolioValue.toLocaleString("en-US", {
 							minimumFractionDigits: 2,
@@ -58,7 +60,7 @@ export function SpendingPowerCard({
 				</div>
 				<div>
 					<p className="text-xs text-muted-foreground">Stablecoin Balance</p>
-					<p className="mt-1 font-mono text-lg font-semibold">
+					<p className="mt-1 font-mono text-lg font-semibold tabular-nums">
 						$
 						{stablecoinBalance.toLocaleString("en-US", {
 							minimumFractionDigits: 2,

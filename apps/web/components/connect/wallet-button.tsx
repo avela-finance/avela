@@ -15,9 +15,12 @@ export function WalletButton({ className }: WalletButtonProps) {
 			<button
 				type="button"
 				disabled
+				aria-label="Loading wallet"
+				aria-busy="true"
 				className={cn(
 					"inline-flex items-center rounded-md px-4 py-2 text-sm font-medium",
 					"bg-muted text-muted-foreground opacity-50 cursor-not-allowed",
+					"transition-transform duration-150 ease-out",
 					className,
 				)}
 			>
@@ -34,9 +37,13 @@ export function WalletButton({ className }: WalletButtonProps) {
 			<button
 				type="button"
 				onClick={logout}
+				aria-label={`Disconnect wallet ${truncated}`}
+				title={address || truncated}
 				className={cn(
 					"inline-flex items-center rounded-md px-4 py-2 text-sm font-medium",
-					"bg-muted text-muted-foreground hover:bg-muted/80 transition-colors",
+					"bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-150 ease-out",
+					"active:scale-[0.98]",
+					"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 					className,
 				)}
 			>
@@ -49,9 +56,12 @@ export function WalletButton({ className }: WalletButtonProps) {
 		<button
 			type="button"
 			onClick={login}
+			aria-label="Connect wallet"
 			className={cn(
 				"inline-flex items-center rounded-md px-4 py-2 text-sm font-medium",
-				"bg-primary text-primary-foreground hover:bg-primary/90 transition-colors",
+				"bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 ease-out",
+				"active:scale-[0.98]",
+				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
 				className,
 			)}
 		>

@@ -1,21 +1,31 @@
 "use client";
 
+import {
+	ArrowsLeftRight,
+	Diamond,
+	DotsThree,
+	Eye,
+	Gear,
+	House,
+	Robot,
+	SquaresFour,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-	{ label: "Dashboard", href: "/", icon: "⌂" },
-	{ label: "Portfolio", href: "/portfolio", icon: "◈" },
-	{ label: "Payments", href: "/payments", icon: "⇄" },
+	{ label: "Dashboard", href: "/", Icon: House },
+	{ label: "Portfolio", href: "/portfolio", Icon: Diamond },
+	{ label: "Payments", href: "/payments", Icon: ArrowsLeftRight },
 ];
 
 const MORE_ITEMS = [
-	{ label: "Policies", href: "/policies", icon: "⊞" },
-	{ label: "Agents", href: "/agents", icon: "◎" },
-	{ label: "Watchers", href: "/watchers", icon: "◉" },
-	{ label: "Settings", href: "/settings", icon: "⚙" },
+	{ label: "Policies", href: "/policies", Icon: SquaresFour },
+	{ label: "Agents", href: "/agents", Icon: Robot },
+	{ label: "Watchers", href: "/watchers", Icon: Eye },
+	{ label: "Settings", href: "/settings", Icon: Gear },
 ];
 
 export function MobileNav() {
@@ -39,6 +49,7 @@ export function MobileNav() {
 				<div className="fixed bottom-14 left-0 right-0 z-50 bg-background border-t border-border p-4 space-y-2">
 					{MORE_ITEMS.map((item) => {
 						const isActive = pathname.startsWith(item.href);
+						const ItemIcon = item.Icon;
 						return (
 							<Link
 								key={item.href}
@@ -51,7 +62,7 @@ export function MobileNav() {
 										: "text-muted-foreground hover:bg-muted hover:text-foreground",
 								)}
 							>
-								<span className="text-lg leading-none">{item.icon}</span>
+								<ItemIcon size={20} weight="duotone" aria-hidden />
 								<span>{item.label}</span>
 							</Link>
 						);
@@ -70,6 +81,7 @@ export function MobileNav() {
 			>
 				{NAV_ITEMS.map((item) => {
 					const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+					const ItemIcon = item.Icon;
 					return (
 						<Link
 							key={item.href}
@@ -79,7 +91,7 @@ export function MobileNav() {
 								isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
 							)}
 						>
-							<span className="text-lg leading-none">{item.icon}</span>
+							<ItemIcon size={20} weight="duotone" aria-hidden />
 							<span>{item.label}</span>
 						</Link>
 					);
@@ -95,7 +107,7 @@ export function MobileNav() {
 							: "text-muted-foreground hover:text-foreground",
 					)}
 				>
-					<span className="text-lg leading-none">⋯</span>
+					<DotsThree size={20} weight="duotone" aria-hidden />
 					<span>More</span>
 				</button>
 			</nav>
