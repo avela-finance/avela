@@ -1,5 +1,8 @@
 "use client";
 
+import { Wallet } from "@phosphor-icons/react";
+import Link from "next/link";
+
 interface Position {
 	assetSymbol: string;
 	assetName: string;
@@ -38,10 +41,23 @@ export function PortfolioSummary({ positions, loading = false }: PortfolioSummar
 	}
 
 	if (positions.length === 0) {
+		// TODO: show live AvelaVault address with copy affordance once deployed (docs/specs/contracts.md lists vault as "To deploy").
 		return (
 			<div className="rounded-lg border border-border bg-muted/50 p-6">
 				<h3 className="text-lg font-semibold mb-4">Portfolio</h3>
-				<p className="text-muted-foreground text-sm">No positions yet</p>
+				<div role="status" className="flex flex-col items-center py-8 text-center">
+					<Wallet size={32} weight="duotone" className="text-muted-foreground" aria-hidden />
+					<p className="mt-3 text-sm font-semibold">No positions yet</p>
+					<p className="mt-1 max-w-xs text-sm text-muted-foreground">
+						Deposit wrapped xStocks to your vault to unlock spending power
+					</p>
+					<Link
+						href="/portfolio"
+						className="mt-4 rounded-sm text-sm font-medium text-primary transition-transform duration-150 hover:underline active:scale-[0.98]"
+					>
+						View portfolio
+					</Link>
+				</div>
 			</div>
 		);
 	}
@@ -60,14 +76,14 @@ export function PortfolioSummary({ positions, loading = false }: PortfolioSummar
 							<p className="text-xs text-muted-foreground">{position.assetName}</p>
 						</div>
 						<div className="text-right">
-							<p className="font-mono font-semibold">
+							<p className="font-mono font-semibold tabular-nums">
 								$
 								{position.positionValue.toLocaleString("en-US", {
 									minimumFractionDigits: 2,
 									maximumFractionDigits: 2,
 								})}
 							</p>
-							<p className="text-xs text-primary">
+							<p className="text-xs text-primary tabular-nums">
 								SP: $
 								{position.spendingPower.toLocaleString("en-US", {
 									minimumFractionDigits: 2,

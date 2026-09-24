@@ -17,44 +17,52 @@ const assets = [
 		pool: "USDG pool",
 		tvl: "$623K TVL",
 	},
+	{
+		symbol: "wGOOGLx",
+		name: "Wrapped Alphabet",
+		pool: "Uniswap V3 pool",
+		tvl: "$400K+ TVL",
+	},
+	{
+		symbol: "wAAPLx",
+		name: "Wrapped Apple",
+		pool: "Uniswap V3 pool",
+		tvl: "$400K+ TVL",
+	},
 ];
 
 export function SupportedAssets() {
 	return (
-		<section className="bg-background px-4 py-24 border-t border-border">
+		<section id="assets" className="bg-background px-4 py-24 border-t border-border scroll-mt-28">
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
-					<h2 className="text-3xl font-semibold tracking-tight text-foreground">
+					<h2 className="text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
 						Supported assets
 					</h2>
-					<p className="mt-3 text-muted-foreground">
+					<p className="mt-3 text-pretty text-muted-foreground">
 						Five wrapped xStocks with verified Uniswap V3 liquidity on X Layer.
 					</p>
 				</div>
 
-				<div className="grid gap-4 sm:grid-cols-3">
+				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					{assets.map((asset) => (
 						<div
 							key={asset.symbol}
-							className="rounded-xl border border-border bg-card p-5 flex flex-col gap-2"
+							className="rounded-xl border border-border bg-card p-6 flex flex-col gap-2"
 						>
 							<div className="flex items-center justify-between">
 								<span className="font-mono text-sm font-medium text-foreground">
 									{asset.symbol}
 								</span>
-								<span className="text-xs font-semibold text-primary">{asset.tvl}</span>
+								<span className="text-xs font-semibold tabular-nums text-primary">{asset.tvl}</span>
 							</div>
 							<p className="text-sm text-muted-foreground">{asset.name}</p>
-							<span className="mt-1 inline-block rounded-md bg-primary/10 px-2 py-0.5 text-xs text-primary">
+							<span className="mt-1 inline-block w-fit rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
 								{asset.pool}
 							</span>
 						</div>
 					))}
 				</div>
-
-				<p className="mt-6 text-center text-xs text-muted-foreground">
-					Also supported: wGOOGLx · wAAPLx. All pools verified with $400K+ TVL on X Layer.
-				</p>
 			</div>
 		</section>
 	);

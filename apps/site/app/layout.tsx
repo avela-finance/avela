@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		title: "Avela — Programmable Spending Account",
 		description:
-			"Pay from your tokenized stock portfolio without selling. Every payment is a market order on X Layer.",
+			"Pay from your tokenized stock portfolio without selling. Positions stay locked; the reserve settles every payment.",
 		url: "https://useavela.xyz",
 		siteName: "Avela",
 		type: "website",

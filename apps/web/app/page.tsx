@@ -1,7 +1,8 @@
 "use client";
 
+import { Warning } from "@phosphor-icons/react";
 import { usePrivy } from "@privy-io/react-auth";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityFeed } from "@/components/account/activity-feed";
 import { PortfolioSummary } from "@/components/account/portfolio-summary";
 import { SpendingPowerCard } from "@/components/account/spending-power-card";
@@ -38,46 +39,64 @@ export default function DashboardPage() {
 	const { getAccessToken } = usePrivy();
 
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(false);
 	const [spendingPower, setSpendingPower] = useState<AccountData | null>(null);
 	const [activity, setActivity] = useState<ActivityItem[]>([]);
 
-	useEffect(() => {
-		async function fetchData() {
-			try {
-				setLoading(true);
-				const token = await getAccessToken();
+	const load = useCallback(async () => {
+		try {
+			setLoading(true);
+			setError(false);
+			const token = await getAccessToken();
 
-				const [accountRes, paymentsRes] = await Promise.all([
-					api.get<AccountData>("/accounts/me/portfolio", { token }),
-					api.get<PaymentData>("/payments", { token }),
-				]);
+			const [accountRes, paymentsRes] = await Promise.all([
+				api.get<AccountData>("/accounts/me/portfolio", { token }),
+				api.get<PaymentData>("/payments", { token }),
+			]);
 
-				setSpendingPower(accountRes.data);
-				setActivity(paymentsRes.data?.items ?? []);
-			} catch (error) {
-				console.error("Failed to fetch dashboard data:", error);
-				// Set defaults on error
-				setSpendingPower({
-					totalSpendingPower: 0,
-					portfolioValue: 0,
-					stablecoinBalance: 0,
-					positions: [],
-				});
-				setActivity([]);
-			} finally {
-				setLoading(false);
-			}
+			setSpendingPower(accountRes.data);
+			setActivity(paymentsRes.data?.items ?? []);
+		} catch {
+			setError(true);
+			setSpendingPower({
+				totalSpendingPower: 0,
+				portfolioValue: 0,
+				stablecoinBalance: 0,
+				positions: [],
+			});
+			setActivity([]);
+		} finally {
+			setLoading(false);
 		}
-
-		fetchData();
 	}, [getAccessToken]);
+
+	useEffect(() => {
+		load();
+	}, [load]);
 
 	return (
 		<div className="space-y-6">
 			<div>
-				<h1 className="text-3xl font-bold">Dashboard</h1>
+				<h1 className="text-3xl font-bold text-balance">Dashboard</h1>
 				<p className="text-muted-foreground mt-1">Manage your spending power and portfolio</p>
 			</div>
+
+			{error && !loading && (
+				<div
+					role="alert"
+					className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4"
+				>
+					<Warning size={20} weight="duotone" className="shrink-0 text-destructive" aria-hidden />
+					<p className="flex-1 text-sm font-medium">Couldn&apos;t load your account</p>
+					<button
+						type="button"
+						onClick={load}
+						className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-all duration-150 ease-out hover:bg-primary/90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+					>
+						Retry
+					</button>
+				</div>
+			)}
 
 			<SpendingPowerCard
 				totalSpendingPower={spendingPower?.totalSpendingPower ?? 0}

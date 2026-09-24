@@ -135,3 +135,11 @@ No hex literals in components or styles. All color goes through semantic tokens 
 1. Change values in this doc (hex + oklch together).
 2. Update `:root` and `.dark` blocks in both `globals.css` files — keep site and web identical.
 3. Components auto-inherit via semantic tokens.
+
+## Asset swap list (site placeholders)
+
+| Placeholder | Location | Exact source | Swap with | Status |
+|-------------|----------|--------------|-----------|--------|
+| Phone spending-power mock | `apps/site/components/phone-moment.tsx` | CSS-built, static demo figures | Live web PWA screenshot | TODO |
+| CTA lifestyle photo | `apps/site/components/photo-cta.tsx` | `https://picsum.photos/seed/avela-cta/1920/1080` (1920×1080) | Commissioned lifestyle photography | TODO |
+| Social share image | `apps/site/app/` | — | Generated og-image | TODO |

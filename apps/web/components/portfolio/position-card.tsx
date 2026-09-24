@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { APPLE_EASE } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 type PositionCardProps = {
@@ -24,6 +25,7 @@ export function PositionCard({
 		<motion.div
 			initial={{ opacity: 0, y: 8 }}
 			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.45, ease: APPLE_EASE }}
 			className="rounded-lg border border-border bg-muted/50 p-4"
 		>
 			<div className="space-y-4">
@@ -34,7 +36,7 @@ export function PositionCard({
 						<p className="text-xs text-muted-foreground mt-0.5">{assetName}</p>
 					</div>
 					<div className="text-right">
-						<p className="font-mono text-sm font-semibold">
+						<p className="font-mono text-sm font-semibold tabular-nums">
 							$
 							{positionValue.toLocaleString("en-US", {
 								minimumFractionDigits: 2,
@@ -52,7 +54,7 @@ export function PositionCard({
 				<div className="flex items-center justify-between">
 					<div>
 						<p className="text-xs text-muted-foreground">Haircut</p>
-						<p className="text-sm font-mono font-semibold mt-1">
+						<p className="text-sm font-mono font-semibold mt-1 tabular-nums">
 							{haircut.toLocaleString("en-US", {
 								minimumFractionDigits: 1,
 								maximumFractionDigits: 1,
@@ -62,7 +64,7 @@ export function PositionCard({
 					</div>
 					<div className="text-right">
 						<p className="text-xs text-muted-foreground">Spending Power</p>
-						<p className={cn("text-sm font-mono font-semibold mt-1", "text-primary")}>
+						<p className={cn("text-sm font-mono font-semibold mt-1 tabular-nums", "text-primary")}>
 							$
 							{spendingPower.toLocaleString("en-US", {
 								minimumFractionDigits: 2,
