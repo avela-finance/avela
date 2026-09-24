@@ -42,7 +42,7 @@ export function AgentCard({
 	return (
 		<Link
 			href={`/agents/${id}`}
-			className="hover:bg-muted/50 flex flex-col gap-4 rounded-lg border border-border p-4 transition-colors"
+			className="hover:bg-muted/50 flex flex-col gap-4 rounded-lg border border-border p-4 transition-colors active:scale-[0.98]"
 		>
 			<div className="flex items-center justify-between gap-2">
 				<p className="truncate text-sm font-semibold">{name}</p>

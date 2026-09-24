@@ -12,7 +12,7 @@ export function ModeToggle({ className }: { className?: string }) {
 			type="button"
 			onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
 			className={cn(
-				"inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+				"inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors active:scale-[0.98] hover:bg-muted hover:text-foreground",
 				className,
 			)}
 		>

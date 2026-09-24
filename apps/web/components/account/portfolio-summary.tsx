@@ -51,7 +51,10 @@ export function PortfolioSummary({ positions, loading = false }: PortfolioSummar
 					<p className="mt-1 max-w-xs text-sm text-muted-foreground">
 						Deposit wrapped xStocks to your vault to unlock spending power
 					</p>
-					<Link href="/portfolio" className="mt-4 text-sm font-medium text-primary hover:underline">
+					<Link
+						href="/portfolio"
+						className="mt-4 rounded-sm text-sm font-medium text-primary transition-transform duration-150 hover:underline active:scale-[0.98]"
+					>
 						View portfolio
 					</Link>
 				</div>

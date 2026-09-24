@@ -37,7 +37,10 @@ export function Sidebar() {
 			)}
 		>
 			<div className="flex h-14 items-center px-6 border-b border-border">
-				<Link href="/" className="text-lg font-semibold tracking-tight">
+				<Link
+					href="/"
+					className="rounded-sm text-lg font-semibold tracking-tight transition-transform duration-150 active:scale-[0.98]"
+				>
 					Avela
 				</Link>
 			</div>
@@ -51,7 +54,7 @@ export function Sidebar() {
 							key={item.href}
 							href={item.href}
 							className={cn(
-								"flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+								"flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors active:scale-[0.98]",
 								isActive
 									? "bg-muted text-primary"
 									: "text-muted-foreground hover:bg-muted/50 hover:text-foreground",

@@ -1,9 +1,11 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
+import { useEffect, useState } from "react";
 import { WalletButton } from "@/components/connect/wallet-button";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Sidebar } from "@/components/layout/sidebar";
+import { cn } from "@/lib/utils";
 
 interface AppShellProps {
 	children: React.ReactNode;
@@ -11,6 +13,25 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
 	const { ready, authenticated } = usePrivy();
+	const [scrolled, setScrolled] = useState(false);
+
+	// Scroll-edge fade: minimal scroll listener with rAF throttle (cheap —
+	// one passive listener, no IntersectionObserver sentinel needed since the
+	// header is sticky and scrollY > 8 is the only signal).
+	useEffect(() => {
+		let ticking = false;
+		const onScroll = () => {
+			if (ticking) return;
+			ticking = true;
+			requestAnimationFrame(() => {
+				setScrolled(window.scrollY > 8);
+				ticking = false;
+			});
+		};
+		onScroll();
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => window.removeEventListener("scroll", onScroll);
+	}, []);
 
 	if (!ready) {
 		return (
@@ -39,14 +60,24 @@ export function AppShell({ children }: AppShellProps) {
 			<Sidebar />
 
 			<div className="flex flex-1 flex-col min-w-0">
-				{/* Mobile header */}
-				<header className="flex h-14 items-center justify-between px-4 border-b border-border md:hidden">
+				{/* Mobile header — translucent material, content scrolls under */}
+				<header
+					className={cn(
+						"sticky top-0 z-40 flex h-14 items-center justify-between bg-background/70 px-4 backdrop-blur-xl transition-[border-color] duration-300 md:hidden",
+						scrolled ? "border-b border-border" : "border-b border-transparent",
+					)}
+				>
 					<span className="text-lg font-semibold tracking-tight">Avela</span>
 					<WalletButton />
 				</header>
 
-				{/* Desktop header with wallet */}
-				<header className="hidden md:flex h-14 items-center justify-end px-6 border-b border-border">
+				{/* Desktop header with wallet — translucent material, content scrolls under */}
+				<header
+					className={cn(
+						"sticky top-0 z-40 hidden h-14 items-center justify-end bg-background/70 px-6 backdrop-blur-xl transition-[border-color] duration-300 md:flex",
+						scrolled ? "border-b border-border" : "border-b border-transparent",
+					)}
+				>
 					<WalletButton />
 				</header>
 

@@ -23,7 +23,7 @@ export function PaymentList({ payments }: { payments: Payment[] }) {
 				<li key={payment.id}>
 					<Link
 						href={`/payments/${payment.id}`}
-						className="hover:bg-muted/50 flex items-center justify-between px-4 py-3 transition-colors"
+						className="hover:bg-muted/50 flex items-center justify-between px-4 py-3 transition-colors active:scale-[0.98]"
 					>
 						<div className="min-w-0 flex-1">
 							<p className="text-sm font-medium">{formatAddress(payment.recipientAddress)}</p>

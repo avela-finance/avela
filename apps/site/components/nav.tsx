@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
-import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { APPLE_EASE } from "@/lib/motion";
 
 const links = [
@@ -11,8 +11,19 @@ const links = [
 	{ label: "FAQ", href: "#faq" },
 ];
 
+const SHEET_SPRING = { type: "spring", bounce: 0, duration: 0.4 } as const;
+
 export function Nav() {
 	const [open, setOpen] = useState(false);
+
+	useEffect(() => {
+		if (!open) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setOpen(false);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [open]);
 
 	return (
 		<>
@@ -26,7 +37,10 @@ export function Nav() {
 					aria-label="Primary"
 					className="flex items-center justify-between rounded-full border border-border bg-background/80 py-3 pr-3 pl-5 backdrop-blur-xl"
 				>
-					<a href="#top" className="text-base font-semibold tracking-tight text-foreground">
+					<a
+						href="#top"
+						className="rounded-sm text-base font-semibold tracking-tight text-foreground transition-colors duration-300 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+					>
 						Avela
 					</a>
 
@@ -35,7 +49,7 @@ export function Nav() {
 							<a
 								key={link.href}
 								href={link.href}
-								className="text-sm font-medium text-muted-foreground transition-colors duration-300 hover:text-foreground"
+								className="rounded-sm text-sm font-medium text-muted-foreground transition-colors duration-300 hover:text-foreground active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 							>
 								{link.label}
 							</a>
@@ -73,32 +87,44 @@ export function Nav() {
 				</nav>
 			</motion.header>
 
-			{open && (
-				<div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-2 bg-background/80 backdrop-blur-3xl md:hidden">
-					{links.map((link, i) => (
-						<motion.a
-							key={link.href}
-							href={link.href}
-							onClick={() => setOpen(false)}
-							initial={{ opacity: 0, y: 48 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.6, delay: i * 0.1, ease: APPLE_EASE }}
-							className="rounded-xl px-6 py-3 text-2xl font-semibold tracking-tight text-foreground"
-						>
-							{link.label}
-						</motion.a>
-					))}
-					<motion.a
-						href="https://app.useavela.xyz"
-						initial={{ opacity: 0, y: 48 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.6, delay: links.length * 0.1, ease: APPLE_EASE }}
-						className="mt-4 inline-flex rounded-full bg-primary px-6 py-3 text-base font-semibold text-primary-foreground active:scale-[0.98]"
+			<AnimatePresence>
+				{open && (
+					<motion.div
+						key="mobile-overlay"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={SHEET_SPRING}
+						onClick={() => setOpen(false)}
+						className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-2 bg-background/80 backdrop-blur-3xl md:hidden"
 					>
-						Launch App
-					</motion.a>
-				</div>
-			)}
+						{links.map((link, i) => (
+							<motion.a
+								key={link.href}
+								href={link.href}
+								onClick={() => setOpen(false)}
+								initial={{ opacity: 0, y: 24 }}
+								animate={{ opacity: 1, y: 0 }}
+								exit={{ opacity: 0, y: 24 }}
+								transition={{ ...SHEET_SPRING, delay: open ? i * 0.05 : 0 }}
+								className="rounded-xl px-6 py-3 text-2xl font-semibold tracking-tight text-foreground active:scale-[0.98]"
+							>
+								{link.label}
+							</motion.a>
+						))}
+						<motion.a
+							href="https://app.useavela.xyz"
+							initial={{ opacity: 0, y: 24 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: 24 }}
+							transition={{ ...SHEET_SPRING, delay: open ? links.length * 0.05 : 0 }}
+							className="mt-4 inline-flex rounded-full bg-primary px-6 py-3 text-base font-semibold text-primary-foreground active:scale-[0.98]"
+						>
+							Launch App
+						</motion.a>
+					</motion.div>
+				)}
+			</AnimatePresence>
 		</>
 	);
 }

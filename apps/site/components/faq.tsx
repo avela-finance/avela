@@ -67,7 +67,7 @@ export function FAQ() {
 									type="button"
 									aria-expanded={isOpen}
 									onClick={() => setOpen(isOpen ? null : i)}
-									className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+									className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left transition-colors duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
 								>
 									<span className="text-sm font-medium text-foreground">{faq.question}</span>
 									<Plus
