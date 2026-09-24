@@ -1,8 +1,14 @@
+import { eq } from "drizzle-orm";
 import type { PriceFeedAdapter } from "../adapters/price-feed.js";
 import type { Database } from "../db/client.js";
-import { getAsset } from "./asset.js";
+import { stablecoinBalancesTable } from "../db/schema.js";
+import { getAsset, STABLECOIN_DECIMALS } from "./asset.js";
 import { getPortfolio } from "./position.js";
-import type { SpendingPower, SpendingPowerBreakdown } from "./types.js";
+import type { SettlementStablecoin, SpendingPower, SpendingPowerBreakdown } from "./types.js";
+
+function isSettlementStablecoin(value: string): value is SettlementStablecoin {
+	return value === "USDG" || value === "USDC";
+}
 
 export function computeAssetSpendingPower(
 	amount: bigint,
@@ -10,8 +16,13 @@ export function computeAssetSpendingPower(
 	price: number,
 	haircut: number,
 ): Omit<SpendingPowerBreakdown, "assetSymbol"> {
-	// TODO: bigint-safe arithmetic for amounts above ~9 tokens (Number.MAX_SAFE_INTEGER at 18 decimals)
-	const tokenAmount = Number(amount) / 10 ** decimals;
+	// Bigint-safe: split into whole tokens + 6dp fraction so neither
+	// Number() conversion exceeds MAX_SAFE_INTEGER for realistic balances.
+	const base = 10n ** BigInt(decimals);
+	const whole = amount / base;
+	const fracScale = 10n ** BigInt(Math.max(decimals - 6, 0));
+	const fracDp = Math.min(decimals, 6);
+	const tokenAmount = Number(whole) + Number((amount % base) / fracScale) / 10 ** fracDp;
 	const positionValue = tokenAmount * price;
 	const spendingPower = positionValue * (1 - haircut);
 
@@ -53,8 +64,16 @@ export async function calculateSpendingPower(
 		(b): b is SpendingPowerBreakdown => b !== null,
 	);
 
-	// TODO: add stablecoin balances (query stablecoinBalancesTable)
-	const stablecoinBalance = 0;
+	const stablecoinRows = await db
+		.select()
+		.from(stablecoinBalancesTable)
+		.where(eq(stablecoinBalancesTable.accountId, accountId));
+
+	const stablecoinBalance = stablecoinRows.reduce((sum, row) => {
+		if (!isSettlementStablecoin(row.stablecoin)) return sum;
+		const decimals = STABLECOIN_DECIMALS[row.stablecoin];
+		return sum + Number(row.amount) / 10 ** decimals;
+	}, 0);
 
 	const totalSpendingPower =
 		perAsset.reduce((sum, a) => sum + a.spendingPower, 0) + stablecoinBalance;

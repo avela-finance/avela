@@ -1,11 +1,13 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { PaymentPreviewData } from "@/components/checkout/payment-preview";
 import { PaymentPreview } from "@/components/checkout/payment-preview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { api } from "@/lib/api";
 import { getProduct } from "@/lib/demo-products";
 
 const DEMO_MERCHANT_ADDRESS = "0x000000000000000000000000000000000000dEaD";
@@ -13,6 +15,7 @@ const DEMO_MERCHANT_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 export default function PayPage() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
+	const { getAccessToken } = usePrivy();
 	const [status, setStatus] = useState<"idle" | "executing" | "error">("idle");
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -34,22 +37,27 @@ export default function PayPage() {
 	async function handlePay() {
 		try {
 			setStatus("executing");
-			const response = await fetch("/api/payments/intent", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					amount: totalAmount,
-					recipientAddress: DEMO_MERCHANT_ADDRESS,
-				}),
-			});
+			setErrorMessage(null);
+			const token = await getAccessToken();
 
-			if (!response.ok) {
-				const errorBody = (await response.json()) as { error?: { message?: string } };
-				throw new Error(errorBody.error?.message ?? "Payment failed");
+			const intentRes = await api.post<{ id: string }>("/payments/intent", {
+				token,
+				body: { amount: totalAmount, recipientAddress: DEMO_MERCHANT_ADDRESS },
+			});
+			const intentId = intentRes.data.id;
+
+			const authRes = await api.post<{ status: string }>(`/payments/${intentId}/authorize`, {
+				token,
+			});
+			if (authRes.data.status !== "settled" && authRes.data.status !== "settling") {
+				throw new Error(
+					authRes.data.status === "awaiting_approval"
+						? "Payment needs approval — check WhatsApp or your email"
+						: `Payment ${authRes.data.status}`,
+				);
 			}
 
-			const { data } = (await response.json()) as { data: { id: string } };
-			router.push(`/checkout/receipt/${data.id}`);
+			router.push(`/checkout/receipt/${intentId}`);
 		} catch (err) {
 			setStatus("error");
 			setErrorMessage(err instanceof Error ? err.message : "Payment failed");

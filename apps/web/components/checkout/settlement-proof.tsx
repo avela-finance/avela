@@ -9,12 +9,10 @@ const XLAYER_EXPLORER = "https://www.okx.com/web3/explorer/xlayer/tx";
 export type SettlementProofData = {
 	paymentId: string;
 	amount: number;
-	sourceAsset: string;
-	sourceAmount: string;
-	settlementCurrency: string;
+	collateralAsset: string;
+	settlementToken: string;
 	txHash: string;
-	blockNumber: number;
-	poolUsed: string;
+	blockNumber?: number;
 	recipientAddress: string;
 	timestamp: string;
 };
@@ -37,14 +35,8 @@ export function SettlementProof({ data }: { data: SettlementProofData }) {
 						<span className="font-semibold">${data.amount.toFixed(2)}</span>
 					</div>
 					<div className="flex justify-between">
-						<span className="text-muted-foreground">Source</span>
-						<span className="font-medium">
-							{data.sourceAmount} {data.sourceAsset}
-						</span>
-					</div>
-					<div className="flex justify-between">
-						<span className="text-muted-foreground">Settlement</span>
-						<span className="font-medium">{data.settlementCurrency}</span>
+						<span className="text-muted-foreground">Merchant received</span>
+						<span className="font-medium">{data.settlementToken}</span>
 					</div>
 					<div className="flex justify-between">
 						<span className="text-muted-foreground">Merchant</span>
@@ -62,30 +54,30 @@ export function SettlementProof({ data }: { data: SettlementProofData }) {
 			<Card>
 				<CardHeader>
 					<CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-						Onchain Proof — Market Order
+						Onchain Proof — Reserve Settlement
 					</CardTitle>
 					<CardDescription>
-						This payment generated a real Uniswap V3 swap on X Layer. Every &ldquo;Pay with
-						Avela&rdquo; builds market volume for tokenized stock pools.
+						Your {data.collateralAsset} position stayed locked in AvelaVault. The merchant was paid
+						from the stablecoin reserve — no sale, no swap. Both events share one paymentId.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-3">
 					<div className="flex justify-between">
-						<span className="text-muted-foreground">Swap</span>
-						<span className="font-mono text-sm">
-							{data.sourceAsset} → {data.settlementCurrency}
-						</span>
+						<span className="text-muted-foreground">Collateral</span>
+						<span className="font-medium">{data.collateralAsset} (locked, untouched)</span>
 					</div>
 					<div className="flex justify-between">
-						<span className="text-muted-foreground">Pool</span>
+						<span className="text-muted-foreground">Payment ID</span>
 						<span className="font-mono text-sm">
-							{data.poolUsed.slice(0, 6)}...{data.poolUsed.slice(-4)}
+							{data.paymentId.slice(0, 10)}...{data.paymentId.slice(-8)}
 						</span>
 					</div>
-					<div className="flex justify-between">
-						<span className="text-muted-foreground">Block</span>
-						<span className="font-mono text-sm">{data.blockNumber}</span>
-					</div>
+					{data.blockNumber ? (
+						<div className="flex justify-between">
+							<span className="text-muted-foreground">Block</span>
+							<span className="font-mono text-sm">{data.blockNumber}</span>
+						</div>
+					) : null}
 					<div className="flex justify-between">
 						<span className="text-muted-foreground">Transaction</span>
 						<a

@@ -5,6 +5,7 @@ describe("VaultAdapter interface", () => {
 	it("getLockedBalance returns expected shape", async () => {
 		const testAdapter: VaultAdapter = {
 			getLockedBalance: async () => 1000000000000000000n,
+			isWhitelisted: async () => true,
 		};
 
 		const balance = await testAdapter.getLockedBalance(

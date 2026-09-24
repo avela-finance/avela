@@ -2,7 +2,9 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
+import { DepositModal } from "@/components/portfolio/deposit-modal";
 import { PositionCard } from "@/components/portfolio/position-card";
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 
 interface Position {
@@ -24,13 +26,19 @@ export default function PortfolioPage() {
 	const [loading, setLoading] = useState(true);
 	const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [depositOpen, setDepositOpen] = useState(false);
+	const [accessToken, setAccessToken] = useState<string | null>(null);
+	const [refreshKey, setRefreshKey] = useState(0);
 
 	useEffect(() => {
+		void refreshKey; // re-fetch after a deposit completes
+
 		async function fetchPortfolio() {
 			try {
 				setLoading(true);
 				setError(null);
 				const token = await getAccessToken();
+				setAccessToken(token);
 
 				const response = await api.get<PortfolioData>("/accounts/me/portfolio", { token });
 				setPortfolio(response.data);
@@ -44,17 +52,27 @@ export default function PortfolioPage() {
 		}
 
 		fetchPortfolio();
-	}, [getAccessToken]);
+	}, [getAccessToken, refreshKey]);
 
 	const positions = portfolio?.positions ?? [];
 	const isEmpty = !loading && positions.length === 0;
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="text-3xl font-bold">Portfolio</h1>
-				<p className="text-muted-foreground mt-1">Your locked positions and spending power</p>
+			<div className="flex items-start justify-between">
+				<div>
+					<h1 className="text-3xl font-bold">Portfolio</h1>
+					<p className="text-muted-foreground mt-1">Your locked positions and spending power</p>
+				</div>
+				<Button onClick={() => setDepositOpen(true)}>Deposit</Button>
 			</div>
+
+			<DepositModal
+				open={depositOpen}
+				token={accessToken}
+				onClose={() => setDepositOpen(false)}
+				onDeposited={() => setRefreshKey((k) => k + 1)}
+			/>
 
 			{error && (
 				<div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">

@@ -6,7 +6,8 @@ export const STABLECOINS: Record<SettlementStablecoin, string> = {
 } as const;
 
 export const STABLECOIN_DECIMALS: Record<SettlementStablecoin, number> = {
-	USDG: 18,
+	// Verified onchain via cast decimals() on X Layer (chain 196): both return 6.
+	USDG: 6,
 	USDC: 6,
 } as const;
 
@@ -19,7 +20,8 @@ const MVP_ASSETS: Asset[] = [
 		assetType: "index",
 		haircut: 0.5,
 		settlementStablecoin: "USDG",
-		poolAddress: "0x0000000000000000000000000000000000000000", // TODO: verify exact Uniswap V3 pool address
+		// Uniswap V3 USDG/wSPYx, fee 500. Verified onchain (token0=USDG, token1=wSPYx).
+		poolAddress: "0x07c40850d14064d20eb0afdef9574675392f2c11",
 		enabled: true,
 	},
 	{
@@ -30,7 +32,8 @@ const MVP_ASSETS: Asset[] = [
 		assetType: "index",
 		haircut: 0.5,
 		settlementStablecoin: "USDC",
-		poolAddress: "0x0000000000000000000000000000000000000000", // TODO: verify exact Uniswap V3 pool address
+		// Uniswap V3 wQQQx/USDC, fee 500. Verified onchain (token0=wQQQx, token1=USDC).
+		poolAddress: "0x2bd90724ffc80ba22ec7af8cfd2b4b51ff395b04",
 		enabled: true,
 	},
 	{
@@ -41,7 +44,8 @@ const MVP_ASSETS: Asset[] = [
 		assetType: "single_stock",
 		haircut: 0.5,
 		settlementStablecoin: "USDG",
-		poolAddress: "0x0000000000000000000000000000000000000000", // TODO: verify exact Uniswap V3 pool address
+		// Uniswap V3 USDG/wNVDAx, fee 500. Verified onchain (token0=USDG, token1=wNVDAx).
+		poolAddress: "0x2a2b11730c2b6d99a58034a869dd810d7300a7b2",
 		enabled: true,
 	},
 	{
@@ -52,7 +56,8 @@ const MVP_ASSETS: Asset[] = [
 		assetType: "single_stock",
 		haircut: 0.5,
 		settlementStablecoin: "USDC",
-		poolAddress: "0x0000000000000000000000000000000000000000", // TODO: verify exact Uniswap V3 pool address
+		// Uniswap V3 USDC/wGOOGLx, fee 500. Verified onchain (token0=USDC, token1=wGOOGLx).
+		poolAddress: "0x9f6273e2669cd812e76788b698374c43637c87c2",
 		enabled: true,
 	},
 	{
@@ -63,7 +68,8 @@ const MVP_ASSETS: Asset[] = [
 		assetType: "single_stock",
 		haircut: 0.5,
 		settlementStablecoin: "USDG",
-		poolAddress: "0x0000000000000000000000000000000000000000", // TODO: verify exact Uniswap V3 pool address
+		// Uniswap V3 USDG/wAAPLx, fee 500. Verified onchain (token0=USDG, token1=wAAPLx).
+		poolAddress: "0xc44bd9c8589026d28d1632d7b86b2efb6cdc8fd2",
 		enabled: true,
 	},
 ];

@@ -20,6 +20,12 @@ services:
         value: https://rpc.xlayer.tech
       - key: PORT
         value: 3001
+      - key: AVELA_VAULT_ADDRESS
+        sync: false
+      - key: AVELA_ROUTER_ADDRESS
+        sync: false
+      - key: SIGNER_PRIVATE_KEY
+        sync: false
       - key: ALLOWED_ORIGINS
         sync: false
       - key: WHATSAPP_API_TOKEN

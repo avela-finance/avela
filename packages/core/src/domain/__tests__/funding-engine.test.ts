@@ -138,6 +138,7 @@ function buildDeps(overrides: Partial<ExecutePaymentDeps> = {}): ExecutePaymentD
 				callLog.push("vaultAdapter.getLockedBalance");
 				return 1000000000000000000n;
 			},
+			isWhitelisted: async () => true,
 		},
 		routerAdapter: {
 			executePayment: async () => {
@@ -207,6 +208,7 @@ describe("executePayment", () => {
 		const deps = buildDeps({
 			vaultAdapter: {
 				getLockedBalance: async () => 0n,
+				isWhitelisted: async () => true,
 			},
 		});
 

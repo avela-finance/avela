@@ -1,12 +1,26 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { SettlementProofData } from "@/components/checkout/settlement-proof";
 import { SettlementProof } from "@/components/checkout/settlement-proof";
+import { api } from "@/lib/api";
+
+type ReceiptResponse = {
+	paymentId: string;
+	accountId: string;
+	amount: number;
+	collateralAsset: string;
+	settlementToken: string;
+	settlementTxHash: string;
+	recipientAddress: string;
+	timestamp: string;
+};
 
 export default function ReceiptPage() {
 	const params = useParams<{ paymentId: string }>();
+	const { getAccessToken } = usePrivy();
 	const [data, setData] = useState<SettlementProofData | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -14,41 +28,22 @@ export default function ReceiptPage() {
 	useEffect(() => {
 		async function fetchReceipt() {
 			try {
-				const response = await fetch(`/api/payments/${params.paymentId}`);
-				if (!response.ok) {
-					throw new Error("Payment not found");
-				}
-				type PaymentResponse = {
-					data: {
-						id: string;
-						amount: number;
-						recipientAddress: string;
-						createdAt: string;
-						fundingDecision?: {
-							asset?: string;
-							amountIn?: string;
-							stablecoin?: string;
-							pool?: string;
-						};
-						settlement?: {
-							txHash?: string;
-							blockNumber?: number;
-							settledAt?: string;
-						};
-					};
-				};
-				const { data: payment } = (await response.json()) as PaymentResponse;
+				const token = await getAccessToken();
+				const { data: receipt } = await api.get<ReceiptResponse>(
+					`/payments/${params.paymentId}/receipt`,
+					{ token },
+				);
 				setData({
-					paymentId: payment.id,
-					amount: payment.amount,
-					sourceAsset: payment.fundingDecision?.asset ?? "Unknown",
-					sourceAmount: payment.fundingDecision?.amountIn ?? "0",
-					settlementCurrency: payment.fundingDecision?.stablecoin ?? "USDG",
-					txHash: payment.settlement?.txHash ?? "",
-					blockNumber: payment.settlement?.blockNumber ?? 0,
-					poolUsed: payment.fundingDecision?.pool ?? "",
-					recipientAddress: payment.recipientAddress,
-					timestamp: payment.settlement?.settledAt ?? payment.createdAt,
+					paymentId: receipt.paymentId,
+					amount: Number(receipt.amount),
+					collateralAsset: receipt.collateralAsset,
+					settlementToken: receipt.settlementToken,
+					txHash: receipt.settlementTxHash,
+					recipientAddress: receipt.recipientAddress,
+					timestamp:
+						typeof receipt.timestamp === "string"
+							? receipt.timestamp
+							: new Date(receipt.timestamp).toISOString(),
 				});
 			} catch (err) {
 				setError(err instanceof Error ? err.message : "Failed to load receipt");
@@ -57,7 +52,7 @@ export default function ReceiptPage() {
 			}
 		}
 		fetchReceipt();
-	}, [params.paymentId]);
+	}, [params.paymentId, getAccessToken]);
 
 	if (loading) {
 		return (

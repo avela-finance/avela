@@ -27,6 +27,7 @@ function makeDeps(overrides = {}) {
 		updateAgentPermissions: vi.fn().mockResolvedValue(mockAgent),
 		revokeAgent: vi.fn().mockResolvedValue({ ...mockAgent, status: "revoked" }),
 		getAgentSpendingLog: vi.fn().mockResolvedValue([]),
+		getAgentsByAccount: vi.fn().mockResolvedValue([mockAgent]),
 		...overrides,
 	};
 }
@@ -249,5 +250,25 @@ describe("GET /agents/:id/spending-log", () => {
 
 		await app.request("/agents/01JAGENT0000000000000001/spending-log?limit=5");
 		expect(deps.getAgentSpendingLog).toHaveBeenCalledWith("01JAGENT0000000000000001", 5);
+	});
+});
+
+describe("GET /agents?accountId=", () => {
+	it("lists agents for an account", async () => {
+		const deps = makeDeps();
+		const app = makeApp(deps);
+
+		const res = await app.request("/agents?accountId=01JACCOUNT000000000000001");
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as { data: unknown[] };
+		expect(body.data).toHaveLength(1);
+		expect(deps.getAgentsByAccount).toHaveBeenCalledWith("01JACCOUNT000000000000001");
+	});
+
+	it("returns 401 without account context or accountId", async () => {
+		const app = makeApp(makeDeps());
+
+		const res = await app.request("/agents");
+		expect(res.status).toBe(401);
 	});
 });

@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import { z } from "zod";
+import type { AppVariables } from "../index.js";
+import { resolveAccountId } from "../middleware/account.js";
 
 const createPaymentIntentSchema = z.object({
-	accountId: z.string().min(1),
+	accountId: z.string().min(1).optional(),
 	amount: z.number().positive(),
 	recipientAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid EVM address"),
 	recipientUsername: z.string().optional(),
@@ -23,7 +25,7 @@ type PaymentDeps = {
 };
 
 export function paymentsRoutes(deps: PaymentDeps) {
-	const app = new Hono();
+	const app = new Hono<{ Variables: AppVariables }>();
 
 	app.post("/intent", async (c) => {
 		const body = await c.req.json();
@@ -42,7 +44,8 @@ export function paymentsRoutes(deps: PaymentDeps) {
 			);
 		}
 
-		const intent = await deps.createPaymentIntent(parsed.data);
+		const accountId = resolveAccountId(c, parsed.data.accountId);
+		const intent = await deps.createPaymentIntent({ ...parsed.data, accountId });
 		return c.json({ data: intent }, 201);
 	});
 

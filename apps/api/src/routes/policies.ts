@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
+import type { AppVariables } from "../index.js";
+import { resolveAccountId } from "../middleware/account.js";
 
 const updatePolicySchema = z.object({
 	dailyLimit: z.number().positive().nullable().optional(),
@@ -37,10 +39,10 @@ type PolicyDeps = {
 };
 
 export function policiesRoutes(deps: PolicyDeps) {
-	const app = new Hono();
+	const app = new Hono<{ Variables: AppVariables }>();
 
 	app.get("/", async (c) => {
-		const accountId = c.req.param("accountId") as string;
+		const accountId = resolveAccountId(c, c.req.param("accountId"));
 		const policy = await deps.getPolicy(accountId);
 
 		if (!policy) {
@@ -55,7 +57,7 @@ export function policiesRoutes(deps: PolicyDeps) {
 	});
 
 	app.put("/", async (c) => {
-		const accountId = c.req.param("accountId") as string;
+		const accountId = resolveAccountId(c, c.req.param("accountId"));
 		const body = await c.req.json();
 		const parsed = updatePolicySchema.safeParse(body);
 
