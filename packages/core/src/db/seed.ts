@@ -61,9 +61,7 @@ async function main() {
 		await db
 			.delete(stablecoinBalancesTable)
 			.where(eq(stablecoinBalancesTable.accountId, accountId));
-		await db
-			.delete(spendingPoliciesTable)
-			.where(eq(spendingPoliciesTable.accountId, accountId));
+		await db.delete(spendingPoliciesTable).where(eq(spendingPoliciesTable.accountId, accountId));
 		console.log(`Cleared demo account ${accountId}`);
 	} else {
 		const account = await createAccount(db, DEMO_WALLET);

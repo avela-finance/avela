@@ -25,14 +25,7 @@ type DepositPlan = {
 	deposit: { to: string; data: string };
 };
 
-type Status =
-	| "idle"
-	| "planning"
-	| "approving"
-	| "depositing"
-	| "confirming"
-	| "done"
-	| "error";
+type Status = "idle" | "planning" | "approving" | "depositing" | "confirming" | "done" | "error";
 
 function toRaw(human: string, decimals: number): string {
 	// String-only decimal shift — no BigInt (web target is below ES2020).
@@ -69,11 +62,10 @@ export function DepositModal({
 			.get<{ symbol: string; name: string; address: string; decimals: number }[]>("/assets")
 			.then((res) => {
 				setAssets(res.data);
-				if (!symbol && res.data.length > 0) setSymbol(res.data[0]?.symbol ?? "");
+				setSymbol((current) => current || res.data[0]?.symbol || "");
 			})
 			.catch((err) => setError(err instanceof Error ? err.message : "Failed to load assets"));
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [open ]);
+	}, [open]);
 
 	if (!open) return null;
 
@@ -194,8 +186,7 @@ export function DepositModal({
 					</div>
 
 					<p className="text-center text-xs text-muted-foreground">
-						Two signatures: token approval, then vault deposit. Positions stay locked as
-						collateral.
+						Two signatures: token approval, then vault deposit. Positions stay locked as collateral.
 					</p>
 				</CardContent>
 			</Card>

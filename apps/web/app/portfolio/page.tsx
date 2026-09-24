@@ -31,6 +31,8 @@ export default function PortfolioPage() {
 	const [refreshKey, setRefreshKey] = useState(0);
 
 	useEffect(() => {
+		void refreshKey; // re-fetch after a deposit completes
+
 		async function fetchPortfolio() {
 			try {
 				setLoading(true);
@@ -55,7 +57,7 @@ export default function PortfolioPage() {
 	const positions = portfolio?.positions ?? [];
 	const isEmpty = !loading && positions.length === 0;
 
-		return (
+	return (
 		<div className="space-y-6">
 			<div className="flex items-start justify-between">
 				<div>

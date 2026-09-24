@@ -57,9 +57,8 @@ export function SettlementProof({ data }: { data: SettlementProofData }) {
 						Onchain Proof — Reserve Settlement
 					</CardTitle>
 					<CardDescription>
-						Your {data.collateralAsset} position stayed locked in AvelaVault. The merchant was
-						paid from the stablecoin reserve — no sale, no swap. Both events share one
-						paymentId.
+						Your {data.collateralAsset} position stayed locked in AvelaVault. The merchant was paid
+						from the stablecoin reserve — no sale, no swap. Both events share one paymentId.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-3">

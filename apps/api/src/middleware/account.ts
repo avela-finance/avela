@@ -8,9 +8,7 @@ import type { AppVariables } from "../index.js";
  * provisioning included) and expose it as `accountId` on the context.
  * Must run after authMiddleware.
  */
-export function createAccountMiddleware(
-	resolve: (privyUserId: string) => Promise<Account>,
-) {
+export function createAccountMiddleware(resolve: (privyUserId: string) => Promise<Account>) {
 	return createMiddleware<{ Variables: AppVariables }>(async (c, next) => {
 		const privyUserId = c.get("privyUserId");
 		if (!privyUserId) {

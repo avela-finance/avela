@@ -1,4 +1,4 @@
-import type { Account } from "@avela/core";
+import type { Account, MinimumBalance, PaymentStatus, PriceFloor } from "@avela/core";
 import {
 	calculateSpendingPower,
 	createAccount,
@@ -7,6 +7,7 @@ import {
 	createGetAccountByPhoneNumber,
 	createGetWhatsAppLink,
 	createIsUsernameAvailable,
+	createPaymentIntent,
 	createRegisterUsername,
 	createResolveUsername,
 	createWatcher,
@@ -17,11 +18,10 @@ import {
 	getAccount,
 	getAccountByWallet,
 	getAgent,
-	getAgentsByAccount,
 	getAgentSpendingLog,
+	getAgentsByAccount,
 	getAsset,
 	getDailySpending,
-	recordDeposit,
 	getPaymentHistory,
 	getPaymentIntent,
 	getPolicy,
@@ -29,6 +29,7 @@ import {
 	getReceipt,
 	getWatcher,
 	getWatchersByAccount,
+	recordDeposit,
 	recordSettlement,
 	registerAgent,
 	revokeAgent,
@@ -36,17 +37,15 @@ import {
 	updatePaymentStatus,
 	updatePolicy,
 	updateWatcher,
-	createPaymentIntent,
 } from "@avela/core";
-import type { MinimumBalance, PaymentStatus, PriceFloor } from "@avela/core";
 import { sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { encodeFunctionData } from "viem";
 import { createAdapters } from "./adapters.js";
 import { getEnv } from "./env.js";
-import { createWhatsAppClient } from "./integrations/whatsapp/client.js";
 import { handleButtonCallback } from "./integrations/whatsapp/callbacks.js";
+import { createWhatsAppClient } from "./integrations/whatsapp/client.js";
 import {
 	formatHelpMessage,
 	formatUnknownMessage,
@@ -57,7 +56,7 @@ import {
 	formatSpendingPowerMessage,
 } from "./integrations/whatsapp/notifications.js";
 import { createWebhookRoutes } from "./integrations/whatsapp/webhook.js";
-import { createAccountMiddleware, resolveAccountId } from "./middleware/account.js";
+import { createAccountMiddleware } from "./middleware/account.js";
 import { authMiddleware, getPrivyClient } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requestId } from "./middleware/request-id.js";
@@ -405,8 +404,7 @@ app.route(
 		getPaymentHistory: (accountId, limit) => getPaymentHistory(db, accountId, limit),
 		executePayment: runExecutePayment,
 		getReceipt: (paymentIntentId) => getReceipt(db, paymentIntentId),
-		updatePaymentStatus: (id, status) =>
-			updatePaymentStatus(db, id, status as PaymentStatus),
+		updatePaymentStatus: (id, status) => updatePaymentStatus(db, id, status as PaymentStatus),
 	}),
 );
 

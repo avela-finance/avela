@@ -38,7 +38,10 @@ export function createAdapters(env: Env): AppAdapters {
 	const vaultAdapter = createVaultAdapter(publicClient, env.AVELA_VAULT_ADDRESS);
 	const routerAdapter = createRouterAdapter(publicClient, walletClient, env.AVELA_ROUTER_ADDRESS);
 
-	const poolMap: Record<string, { poolAddress: `0x${string}`; stablecoinDecimals: number; assetDecimals: number }> = {};
+	const poolMap: Record<
+		string,
+		{ poolAddress: `0x${string}`; stablecoinDecimals: number; assetDecimals: number }
+	> = {};
 	for (const asset of getSupportedAssets()) {
 		poolMap[asset.address.toLowerCase()] = {
 			poolAddress: asset.poolAddress as `0x${string}`,
