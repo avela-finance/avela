@@ -2,8 +2,7 @@
 
 import { ArrowsClockwise, ChatCircle, Eyes, Receipt, Robot, Vault } from "@phosphor-icons/react";
 import { motion } from "motion/react";
-
-const APPLE_EASE = [0.32, 0.72, 0, 1] as const;
+import { APPLE_EASE } from "@/lib/motion";
 
 const features = [
 	{

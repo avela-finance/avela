@@ -2,13 +2,13 @@
 
 import { motion } from "motion/react";
 import { useState } from "react";
-
-const APPLE_EASE = [0.32, 0.72, 0, 1] as const;
+import { APPLE_EASE } from "@/lib/motion";
 
 const links = [
 	{ label: "How it works", href: "#how-it-works" },
 	{ label: "Features", href: "#features" },
 	{ label: "Assets", href: "#assets" },
+	{ label: "FAQ", href: "#faq" },
 ];
 
 export function Nav() {
@@ -40,13 +40,6 @@ export function Nav() {
 								{link.label}
 							</a>
 						))}
-						{/* TODO: link to #faq once the FAQ section ships in Task 1b. */}
-						<span
-							aria-disabled="true"
-							className="cursor-not-allowed text-sm font-medium opacity-40"
-						>
-							FAQ
-						</span>
 					</div>
 
 					<div className="flex items-center gap-2">
