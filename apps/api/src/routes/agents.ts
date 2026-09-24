@@ -73,7 +73,7 @@ export function agentsRoutes(deps: AgentDeps) {
 	app.get("/", async (c) => {
 		const accountId = resolveAccountId(c, c.req.query("accountId"));
 		const agents = await deps.getAgentsByAccount(accountId);
-		return c.json({ data: agents });
+		return c.json({ data: { agents } });
 	});
 
 	app.get("/:id", async (c) => {

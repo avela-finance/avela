@@ -18,6 +18,7 @@ describe("identity routes", () => {
 
 	it("creates a Hono app with routes", () => {
 		const routes = createIdentityRoutes({
+			getIdentityByAccount: async () => null,
 			registerUsername: async () => mockIdentity,
 			resolveUsername: async () => ({
 				accountId: "01JACCOUNT",
@@ -32,6 +33,7 @@ describe("identity routes", () => {
 describe("POST /register", () => {
 	function createApp(registerFn: () => Promise<typeof mockIdentity> = async () => mockIdentity) {
 		const routes = createIdentityRoutes({
+			getIdentityByAccount: async () => null,
 			registerUsername: registerFn,
 			resolveUsername: async () => null,
 			isUsernameAvailable: async () => true,
@@ -100,6 +102,7 @@ describe("POST /register", () => {
 describe("GET /available/:username", () => {
 	function createApp(available: boolean) {
 		const routes = createIdentityRoutes({
+			getIdentityByAccount: async () => null,
 			registerUsername: async () => {
 				throw new Error("not called");
 			},
@@ -139,6 +142,7 @@ describe("GET /available/:username", () => {
 describe("GET /resolve/:username", () => {
 	it("returns username and walletAddress for existing username", async () => {
 		const routes = createIdentityRoutes({
+			getIdentityByAccount: async () => null,
 			registerUsername: async () => {
 				throw new Error("not called");
 			},
@@ -163,6 +167,7 @@ describe("GET /resolve/:username", () => {
 
 	it("returns 404 for unknown username", async () => {
 		const routes = createIdentityRoutes({
+			getIdentityByAccount: async () => null,
 			registerUsername: async () => {
 				throw new Error("not called");
 			},
@@ -178,6 +183,7 @@ describe("GET /resolve/:username", () => {
 
 	it("returns 400 for invalid username param", async () => {
 		const routes = createIdentityRoutes({
+			getIdentityByAccount: async () => null,
 			registerUsername: async () => {
 				throw new Error("not called");
 			},
@@ -191,5 +197,43 @@ describe("GET /resolve/:username", () => {
 		expect(res.status).toBe(400);
 		const body = (await res.json()) as { error: { code: string } };
 		expect(body.error.code).toBe("INVALID_USERNAME");
+	});
+});
+
+describe("GET /identity/me", () => {
+	// Mounted with account context, mirroring production (/identity/me is
+	// auth-gated at mount; /resolve and /available stay public).
+	function makeAuthedApp(identity: unknown) {
+		const routes = createIdentityRoutes({
+			getIdentityByAccount: async () => identity as never,
+			registerUsername: async () => {
+				throw new Error("not called");
+			},
+			resolveUsername: async () => null,
+			isUsernameAvailable: async () => true,
+		});
+		const app = new Hono<{ Variables: { accountId?: string } }>();
+		app.use("*", async (c, next) => {
+			c.set("accountId", "01JACCOUNT");
+			await next();
+		});
+		app.route("/identity", routes);
+		return app;
+	}
+
+	it("returns the username when set", async () => {
+		const app = makeAuthedApp({ username: "samuel" });
+		const res = await app.request("/identity/me");
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as { data: { username: string | null } };
+		expect(body.data.username).toBe("samuel");
+	});
+
+	it("returns null username when unset", async () => {
+		const app = makeAuthedApp(null);
+		const res = await app.request("/identity/me");
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as { data: { username: string | null } };
+		expect(body.data.username).toBeNull();
 	});
 });
