@@ -1,10 +1,10 @@
 /**
  * Seed a demo account with positions, stablecoins, policy, agent, and watcher.
  *
- * Usage: bun run seed  (requires DATABASE_URL)
+ * Usage: bun run seed [--wallet 0x...] [--force]  (requires DATABASE_URL)
  *
- * Idempotent: exits early if the demo wallet already has an account.
- * Pass --force to wipe and reseed the demo account.
+ * Idempotent: exits early if the wallet already has an account.
+ * Pass --force to wipe and reseed that wallet's account.
  */
 import { eq } from "drizzle-orm";
 import { ulid } from "ulidx";
@@ -22,7 +22,19 @@ import {
 	watchersTable,
 } from "./schema.js";
 
-const DEMO_WALLET = "0x1234567890AbcdEF1234567890aBcdef12345678";
+const DEFAULT_DEMO_WALLET = "0x1234567890AbcdEF1234567890aBcdef12345678";
+
+function parseWalletArg(): string {
+	const idx = process.argv.indexOf("--wallet");
+	if (idx === -1) return DEFAULT_DEMO_WALLET;
+	const value = process.argv[idx + 1];
+	if (!value || !/^0x[a-fA-F0-9]{40}$/.test(value)) {
+		throw new Error("Usage: bun run seed [--wallet 0x...] [--force]");
+	}
+	return value;
+}
+
+const DEMO_WALLET = parseWalletArg();
 const DEMO_AGENT_WALLET = "0xAbcdEF1234567890AbcdEF1234567890AbcdEF12";
 const DEMO_MERCHANT = "0x000000000000000000000000000000000000dEaD";
 
