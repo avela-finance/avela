@@ -1,34 +1,38 @@
+import type { Position, SpendingPower } from "@avela/core";
 import { Hono } from "hono";
 import type { AppVariables } from "../index.js";
 import { authMiddleware } from "../middleware/auth.js";
 
-export const portfolioRoutes = new Hono<{ Variables: AppVariables }>();
+type PortfolioDeps = {
+	getPortfolio: (accountId: string) => Promise<Position[]>;
+	calculateSpendingPower: (accountId: string) => Promise<SpendingPower>;
+};
 
-portfolioRoutes.use("*", authMiddleware);
+export function createPortfolioRoutes(deps: PortfolioDeps) {
+	const app = new Hono<{ Variables: AppVariables }>();
 
-portfolioRoutes.get("/", async (c) => {
-	const accountId = c.req.param("id");
+	app.use("*", authMiddleware);
 
-	// TODO: wire up DB + price feed
-	// const db = getDb();
-	// const positions = await getPortfolio(db, accountId);
-	// const spendingPower = await calculateSpendingPower(db, priceFeed, accountId);
+	app.get("/", async (c) => {
+		const accountId = c.req.param("id") as string;
 
-	return c.json({
-		data: {
-			accountId,
-			positions: [],
-			spendingPower: {
-				perAsset: [],
-				stablecoinBalance: 0,
-				totalSpendingPower: 0,
-				calculatedAt: new Date().toISOString(),
+		const [positions, spendingPower] = await Promise.all([
+			deps.getPortfolio(accountId),
+			deps.calculateSpendingPower(accountId),
+		]);
+
+		return c.json({
+			data: {
+				accountId,
+				positions: positions.map((p) => ({ ...p, amount: p.amount.toString() })),
+				spendingPower,
 			},
-			message: "Portfolio placeholder — wire DB in next phase",
-		},
-		meta: {
-			requestId: c.get("requestId"),
-			timestamp: new Date().toISOString(),
-		},
+			meta: {
+				requestId: c.get("requestId"),
+				timestamp: new Date().toISOString(),
+			},
+		});
 	});
-});
+
+	return app;
+}

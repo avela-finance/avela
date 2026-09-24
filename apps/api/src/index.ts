@@ -1,5 +1,6 @@
 import {
 	calculateSpendingPower,
+	createAccount,
 	createDb,
 	createGetAccountByPhoneNumber,
 	createGetWhatsAppLink,
@@ -12,6 +13,7 @@ import {
 	evaluatePolicyRules,
 	executePayment,
 	getAccount,
+	getAccountByWallet,
 	getAgent,
 	getAgentsByAccount,
 	getAgentSpendingLog,
@@ -52,14 +54,14 @@ import {
 import { createWebhookRoutes } from "./integrations/whatsapp/webhook.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requestId } from "./middleware/request-id.js";
-import { accountRoutes } from "./routes/accounts.js";
+import { createAccountRoutes } from "./routes/accounts.js";
 import { agentsRoutes } from "./routes/agents.js";
-import { assetRoutes } from "./routes/assets.js";
+import { createAssetRoutes } from "./routes/assets.js";
 import { healthRoutes } from "./routes/health.js";
 import { createIdentityRoutes } from "./routes/identity.js";
 import { paymentsRoutes } from "./routes/payments.js";
 import { policiesRoutes } from "./routes/policies.js";
-import { portfolioRoutes } from "./routes/portfolio.js";
+import { createPortfolioRoutes } from "./routes/portfolio.js";
 import { watchersRoutes } from "./routes/watchers.js";
 
 export type AppVariables = {
@@ -248,9 +250,27 @@ async function runExecutePayment(intentId: string) {
 // --- Routes ---
 
 app.route("/health", healthRoutes);
-app.route("/accounts", accountRoutes);
-app.route("/assets", assetRoutes);
-app.route("/accounts/:id/portfolio", portfolioRoutes);
+app.route(
+	"/accounts",
+	createAccountRoutes({
+		createAccount: (walletAddress) => createAccount(db, walletAddress),
+		getAccount: (id) => getAccount(db, id),
+		getAccountByWallet: (walletAddress) => getAccountByWallet(db, walletAddress),
+	}),
+);
+app.route(
+	"/assets",
+	createAssetRoutes({
+		getPrice: (asset) => adapters.priceFeed.getPrice(asset.address, 196),
+	}),
+);
+app.route(
+	"/accounts/:id/portfolio",
+	createPortfolioRoutes({
+		getPortfolio: (accountId) => getPortfolio(db, accountId),
+		calculateSpendingPower: spendingPowerFor,
+	}),
+);
 
 app.route(
 	"/identity",
