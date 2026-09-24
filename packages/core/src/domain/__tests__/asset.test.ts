@@ -68,7 +68,8 @@ describe("asset registry", () => {
 	});
 
 	it("has correct stablecoin decimals", () => {
-		expect(STABLECOIN_DECIMALS.USDG).toBe(18);
+		// Both verified onchain via cast decimals() on X Layer (chain 196).
+		expect(STABLECOIN_DECIMALS.USDG).toBe(6);
 		expect(STABLECOIN_DECIMALS.USDC).toBe(6);
 	});
 });
