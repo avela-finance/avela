@@ -24,6 +24,7 @@
 		"lint": "biome lint .",
 		"format": "biome format --write .",
 		"check": "biome check .",
+		"seed": "bun packages/core/src/db/seed.ts",
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p apps/api/tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json && tsc --noEmit -p apps/site/tsconfig.json"
 	},
