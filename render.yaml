@@ -21,9 +21,9 @@ services:
       - key: PORT
         value: 3001
       - key: AVELA_VAULT_ADDRESS
-        value: 0x3479183bcbcC3643fDb6a26C7215e602095C2086
+        sync: false
       - key: AVELA_ROUTER_ADDRESS
-        value: 0x6986CF2784f112bc1610ee743F33246d9C4B869B
+        sync: false
       - key: SIGNER_PRIVATE_KEY
         sync: false
       - key: ALLOWED_ORIGINS
