@@ -39,6 +39,7 @@ import {
 	createPaymentIntent,
 } from "@avela/core";
 import type { MinimumBalance, PaymentStatus, PriceFloor } from "@avela/core";
+import { sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { encodeFunctionData } from "viem";
@@ -63,7 +64,7 @@ import { requestId } from "./middleware/request-id.js";
 import { createAccountRoutes } from "./routes/accounts.js";
 import { agentsRoutes } from "./routes/agents.js";
 import { createAssetRoutes } from "./routes/assets.js";
-import { healthRoutes } from "./routes/health.js";
+import { createHealthRoutes } from "./routes/health.js";
 import { createIdentityRoutes } from "./routes/identity.js";
 import { paymentsRoutes } from "./routes/payments.js";
 import { policiesRoutes } from "./routes/policies.js";
@@ -286,7 +287,14 @@ async function runExecutePayment(intentId: string) {
 
 // --- Routes ---
 
-app.route("/health", healthRoutes);
+app.route(
+	"/health",
+	createHealthRoutes({
+		checkDb: async () => {
+			await db.execute(sql`SELECT 1`);
+		},
+	}),
+);
 const ERC20_APPROVE_ABI = [
 	{
 		inputs: [
