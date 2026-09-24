@@ -1,6 +1,8 @@
 import type { Watcher, WatcherEvaluation } from "@avela/core";
 import { Hono } from "hono";
 import { z } from "zod";
+import type { AppVariables } from "../index.js";
+import { resolveAccountId } from "../middleware/account.js";
 
 const createWatcherSchema = z.object({
 	threshold: z.number().nonnegative(),
@@ -34,11 +36,11 @@ type WatcherDeps = {
 };
 
 export function watchersRoutes(deps: WatcherDeps) {
-	const app = new Hono();
+	const app = new Hono<{ Variables: AppVariables }>();
 
-	// POST / — Create watcher (accountId from parent route param)
+	// POST / — Create watcher (accountId from parent route param or auth context)
 	app.post("/", async (c) => {
-		const accountId = c.req.param("accountId") as string;
+		const accountId = resolveAccountId(c, c.req.param("accountId"));
 
 		let body: unknown;
 		try {
@@ -73,14 +75,14 @@ export function watchersRoutes(deps: WatcherDeps) {
 
 	// GET / — List watchers for account (accountId from parent route param)
 	app.get("/", async (c) => {
-		const accountId = c.req.param("accountId") as string;
+		const accountId = resolveAccountId(c, c.req.param("accountId"));
 		const watchers = await deps.getWatchersByAccount(accountId);
 		return c.json({ data: watchers });
 	});
 
 	// PUT /:id — Update watcher
 	app.put("/:id", async (c) => {
-		const accountId = c.req.param("accountId") as string;
+		const accountId = resolveAccountId(c, c.req.param("accountId"));
 		const id = c.req.param("id");
 
 		const existing = await deps.getWatcher(id);
@@ -124,7 +126,7 @@ export function watchersRoutes(deps: WatcherDeps) {
 
 	// DELETE /:id — Delete watcher
 	app.delete("/:id", async (c) => {
-		const accountId = c.req.param("accountId") as string;
+		const accountId = resolveAccountId(c, c.req.param("accountId"));
 		const id = c.req.param("id");
 
 		const existing = await deps.getWatcher(id);

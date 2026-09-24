@@ -2,9 +2,11 @@ import type { Agent, AgentPermission, AgentSpendingLog } from "@avela/core";
 import { AgentPermissionSchema } from "@avela/core";
 import { Hono } from "hono";
 import { z } from "zod";
+import type { AppVariables } from "../index.js";
+import { resolveAccountId } from "../middleware/account.js";
 
 const registerAgentSchema = z.object({
-	accountId: z.string().min(1),
+	accountId: z.string().min(1).optional(),
 	name: z.string().min(1).max(100),
 	walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
 	permissions: AgentPermissionSchema,
@@ -39,7 +41,7 @@ type AgentDeps = {
 };
 
 export function agentsRoutes(deps: AgentDeps) {
-	const app = new Hono();
+	const app = new Hono<{ Variables: AppVariables }>();
 
 	app.post("/", async (c) => {
 		const body = await c.req.json();
@@ -61,6 +63,7 @@ export function agentsRoutes(deps: AgentDeps) {
 		const { expiresAt, ...rest } = parsed.data;
 		const agent = await deps.registerAgent({
 			...rest,
+			accountId: resolveAccountId(c, rest.accountId),
 			expiresAt: expiresAt ? new Date(expiresAt) : undefined,
 		});
 
@@ -68,13 +71,7 @@ export function agentsRoutes(deps: AgentDeps) {
 	});
 
 	app.get("/", async (c) => {
-		const accountId = c.req.query("accountId");
-		if (!accountId) {
-			return c.json(
-				{ error: { code: "VALIDATION_ERROR", message: "accountId query param required" } },
-				400,
-			);
-		}
+		const accountId = resolveAccountId(c, c.req.query("accountId"));
 		const agents = await deps.getAgentsByAccount(accountId);
 		return c.json({ data: agents });
 	});

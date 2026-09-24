@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import type { AppVariables } from "../index.js";
-import { authMiddleware } from "../middleware/auth.js";
+import { resolveAccountId } from "../middleware/account.js";
 
 const createAccountSchema = z.object({
 	walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid Ethereum address"),
@@ -18,7 +18,7 @@ type AccountDeps = {
 export function createAccountRoutes(deps: AccountDeps) {
 	const app = new Hono<{ Variables: AppVariables }>();
 
-	app.use("*", authMiddleware);
+	// Auth + account context are applied at mount (see index.ts).
 
 	app.post("/", async (c) => {
 		const body = await c.req.json();
@@ -52,7 +52,7 @@ export function createAccountRoutes(deps: AccountDeps) {
 	});
 
 	app.get("/:id", async (c) => {
-		const id = c.req.param("id");
+		const id = resolveAccountId(c, c.req.param("id"));
 		const account = await deps.getAccount(id);
 
 		if (!account) {

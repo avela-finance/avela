@@ -1,7 +1,9 @@
+import type { Account } from "@avela/core";
 import {
 	calculateSpendingPower,
 	createAccount,
 	createDb,
+	createDefaultPolicy,
 	createGetAccountByPhoneNumber,
 	createGetWhatsAppLink,
 	createIsUsernameAvailable,
@@ -52,6 +54,8 @@ import {
 	formatSpendingPowerMessage,
 } from "./integrations/whatsapp/notifications.js";
 import { createWebhookRoutes } from "./integrations/whatsapp/webhook.js";
+import { createAccountMiddleware, resolveAccountId } from "./middleware/account.js";
+import { authMiddleware, getPrivyClient } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { requestId } from "./middleware/request-id.js";
 import { createAccountRoutes } from "./routes/accounts.js";
@@ -90,6 +94,37 @@ app.onError(errorHandler);
 
 const db = createDb(env.DATABASE_URL);
 const adapters = createAdapters(env);
+
+type PrivyLinkedAccount = { type: string; chainType?: string; address?: string };
+
+/**
+ * First-login provisioning: map the Privy user to their embedded Ethereum
+ * wallet, then look up or auto-create the Avela account (with default policy).
+ * Note: Privy getUser is rate-limited — cache or move to lazy resolution
+ * if per-request calls become a problem.
+ */
+async function resolvePrivyAccount(privyUserId: string): Promise<Account> {
+	const user = await getPrivyClient().getUser(privyUserId);
+	const wallet = (user.linkedAccounts as PrivyLinkedAccount[]).find(
+		(a) => a.type === "wallet" && a.chainType === "ethereum" && a.address,
+	);
+	if (!wallet?.address) {
+		throw new Error(`No Ethereum wallet linked to Privy user ${privyUserId}`);
+	}
+	const existing = await getAccountByWallet(db, wallet.address);
+	if (existing) return existing;
+	const account = await createAccount(db, wallet.address);
+	await createDefaultPolicy(db, account.id);
+	return account;
+}
+
+const accountMiddleware = createAccountMiddleware(resolvePrivyAccount);
+
+// All account- and payment-scoped routes require auth + account context.
+// (Asset prices and identity resolution stay public.)
+app.use("/accounts/*", authMiddleware, accountMiddleware);
+app.use("/payments/*", authMiddleware, accountMiddleware);
+app.use("/agents/*", authMiddleware, accountMiddleware);
 
 async function getAccountWalletAddress(accountId: string): Promise<string> {
 	const account = await getAccount(db, accountId);

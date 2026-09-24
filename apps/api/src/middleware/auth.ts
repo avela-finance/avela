@@ -5,7 +5,7 @@ import { getEnv } from "../env.js";
 
 let privyClient: PrivyClient | null = null;
 
-function getPrivyClient(): PrivyClient {
+export function getPrivyClient(): PrivyClient {
 	if (!privyClient) {
 		const env = getEnv();
 		privyClient = new PrivyClient(env.PRIVY_APP_ID, env.PRIVY_APP_SECRET);

@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { describe, expect, it, vi } from "vitest";
+import { authMiddleware } from "../../middleware/auth.js";
 import { createAccountRoutes } from "../accounts.js";
 import { createAssetRoutes } from "../assets.js";
 import { createPortfolioRoutes } from "../portfolio.js";
@@ -15,9 +16,10 @@ const mockAccount = {
 };
 
 describe("createAccountRoutes", () => {
-	it("requires auth (401 without token)", async () => {
+	it("requires auth (401 without token) when mounted behind authMiddleware", async () => {
 		const createAccount = vi.fn();
 		const app = new Hono();
+		app.use("/accounts/*", authMiddleware);
 		app.route(
 			"/accounts",
 			createAccountRoutes({
@@ -102,6 +104,7 @@ describe("createPortfolioRoutes", () => {
 		const getPortfolio = vi.fn();
 		const calculateSpendingPower = vi.fn();
 		const app = new Hono();
+		app.use("/accounts/*", authMiddleware);
 		app.route(
 			"/accounts/:id/portfolio",
 			createPortfolioRoutes({ getPortfolio, calculateSpendingPower }),

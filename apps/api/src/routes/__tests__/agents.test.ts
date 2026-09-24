@@ -265,10 +265,10 @@ describe("GET /agents?accountId=", () => {
 		expect(deps.getAgentsByAccount).toHaveBeenCalledWith("01JACCOUNT000000000000001");
 	});
 
-	it("returns 400 without accountId", async () => {
+	it("returns 401 without account context or accountId", async () => {
 		const app = makeApp(makeDeps());
 
 		const res = await app.request("/agents");
-		expect(res.status).toBe(400);
+		expect(res.status).toBe(401);
 	});
 });
