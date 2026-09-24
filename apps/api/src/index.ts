@@ -21,6 +21,7 @@ import {
 	getAgentSpendingLog,
 	getAsset,
 	getDailySpending,
+	recordDeposit,
 	getPaymentHistory,
 	getPaymentIntent,
 	getPolicy,
@@ -40,6 +41,7 @@ import {
 import type { MinimumBalance, PaymentStatus, PriceFloor } from "@avela/core";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { encodeFunctionData } from "viem";
 import { createAdapters } from "./adapters.js";
 import { getEnv } from "./env.js";
 import { createWhatsAppClient } from "./integrations/whatsapp/client.js";
@@ -285,12 +287,77 @@ async function runExecutePayment(intentId: string) {
 // --- Routes ---
 
 app.route("/health", healthRoutes);
+const ERC20_APPROVE_ABI = [
+	{
+		inputs: [
+			{ name: "spender", type: "address" },
+			{ name: "amount", type: "uint256" },
+		],
+		name: "approve",
+		outputs: [{ name: "", type: "bool" }],
+		stateMutability: "nonpayable",
+		type: "function",
+	},
+] as const;
+
+const VAULT_DEPOSIT_ABI = [
+	{
+		inputs: [
+			{ name: "token", type: "address" },
+			{ name: "amount", type: "uint256" },
+		],
+		name: "deposit",
+		outputs: [],
+		stateMutability: "nonpayable",
+		type: "function",
+	},
+] as const;
+
 app.route(
 	"/accounts",
 	createAccountRoutes({
 		createAccount: (walletAddress) => createAccount(db, walletAddress),
 		getAccount: (id) => getAccount(db, id),
 		getAccountByWallet: (walletAddress) => getAccountByWallet(db, walletAddress),
+		prepareDeposit: async ({ accountId, assetSymbol, amountRaw }) => {
+			const asset = getAsset(assetSymbol);
+			if (!asset) throw new Error(`Unknown asset: ${assetSymbol}`);
+			const amount = BigInt(amountRaw);
+			const whitelisted = await adapters.vaultAdapter.isWhitelisted(asset.address);
+			if (!whitelisted) throw new Error(`Asset not whitelisted in vault: ${assetSymbol}`);
+			return {
+				accountId,
+				assetSymbol,
+				token: asset.address,
+				vault: env.AVELA_VAULT_ADDRESS,
+				amountRaw,
+				amountDecimals: asset.decimals,
+				whitelisted,
+				approve: {
+					to: asset.address,
+					data: encodeFunctionData({
+						abi: ERC20_APPROVE_ABI,
+						functionName: "approve",
+						args: [env.AVELA_VAULT_ADDRESS as `0x${string}`, amount],
+					}),
+				},
+				deposit: {
+					to: env.AVELA_VAULT_ADDRESS,
+					data: encodeFunctionData({
+						abi: VAULT_DEPOSIT_ABI,
+						functionName: "deposit",
+						args: [asset.address as `0x${string}`, amount],
+					}),
+				},
+			};
+		},
+		confirmDeposit: ({ accountId, assetSymbol, amountRaw, txHash }) =>
+			recordDeposit(db, {
+				accountId,
+				assetSymbol,
+				amount: BigInt(amountRaw),
+				depositTxHash: txHash,
+			}),
 	}),
 );
 app.route(
