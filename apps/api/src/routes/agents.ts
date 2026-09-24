@@ -29,6 +29,7 @@ type AgentDeps = {
 		expiresAt?: Date;
 	}) => Promise<Agent>;
 	getAgent: (agentId: string) => Promise<Agent | null>;
+	getAgentsByAccount: (accountId: string) => Promise<Agent[]>;
 	updateAgentPermissions: (
 		agentId: string,
 		permissions: Partial<AgentPermission>,
@@ -64,6 +65,18 @@ export function agentsRoutes(deps: AgentDeps) {
 		});
 
 		return c.json({ data: agent }, 201);
+	});
+
+	app.get("/", async (c) => {
+		const accountId = c.req.query("accountId");
+		if (!accountId) {
+			return c.json(
+				{ error: { code: "VALIDATION_ERROR", message: "accountId query param required" } },
+				400,
+			);
+		}
+		const agents = await deps.getAgentsByAccount(accountId);
+		return c.json({ data: agents });
 	});
 
 	app.get("/:id", async (c) => {

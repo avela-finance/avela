@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { ulid } from "ulidx";
+import type { Database } from "../db/client.js";
 import { whatsappLinksTable } from "../db/schema.js";
 import type { WhatsAppLink } from "./types.js";
 
@@ -10,7 +10,7 @@ export function validatePhoneNumber(phone: string): boolean {
 	return E164_REGEX.test(phone);
 }
 
-export function createLinkWhatsAppAccount(db: PostgresJsDatabase) {
+export function createLinkWhatsAppAccount(db: Database) {
 	return async function linkWhatsAppAccount(
 		accountId: string,
 		phoneNumber: string,
@@ -55,7 +55,7 @@ export function createLinkWhatsAppAccount(db: PostgresJsDatabase) {
 	};
 }
 
-export function createGetWhatsAppLink(db: PostgresJsDatabase) {
+export function createGetWhatsAppLink(db: Database) {
 	return async function getWhatsAppLink(accountId: string): Promise<WhatsAppLink | null> {
 		const [link] = await db
 			.select()
@@ -66,7 +66,7 @@ export function createGetWhatsAppLink(db: PostgresJsDatabase) {
 	};
 }
 
-export function createUnlinkWhatsAppAccount(db: PostgresJsDatabase) {
+export function createUnlinkWhatsAppAccount(db: Database) {
 	return async function unlinkWhatsAppAccount(accountId: string): Promise<void> {
 		await db
 			.update(whatsappLinksTable)
@@ -76,7 +76,7 @@ export function createUnlinkWhatsAppAccount(db: PostgresJsDatabase) {
 	};
 }
 
-export function createGetAccountByPhoneNumber(db: PostgresJsDatabase) {
+export function createGetAccountByPhoneNumber(db: Database) {
 	return async function getAccountByPhoneNumber(
 		phoneNumber: string,
 	): Promise<{ accountId: string } | null> {
