@@ -49,7 +49,7 @@ async function main() {
 
 	if (existing && !force) {
 		console.log(`Demo account already exists: ${existing.id} (use --force to reseed)`);
-		return;
+		process.exit(0);
 	}
 
 	let accountId: string;
@@ -114,6 +114,8 @@ async function main() {
 	console.log("Seeded spending-power watcher (alert below $5)");
 
 	console.log("Done.");
+	// Explicit exit: the pg pool keeps the event loop alive.
+	process.exit(0);
 }
 
 main().catch((err) => {
