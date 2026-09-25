@@ -1,9 +1,9 @@
 # Avela — Pay from your portfolio. Without selling your tokenized stocks.
 
-> **A programmable spending account for tokenized stocks.** Deposit tokenized equities, unlock spending power, and pay across global commerce — your stock positions stay in the market, the merchant gets paid in their currency. Humans *and* AI agents both operate the account, under rules you define.
+> **A programmable spending account for tokenized stocks.** Lock tokenized stocks as collateral, unlock spending power, and pay across global commerce — your positions stay in the market, the merchant gets paid in their currency. Agents and humans both operate the account, with intelligence and messaging built in.
 
 **Track:** OKX Dev Day 2026 — *Build a Market* (tokenized stocks / RWA as onchain building blocks)
-**Chain:** X Layer (chain ID `196`) · **Site:** [useavela.xyz](https://useavela.xyz) · **App:** `app.useavela.xyz`
+**Chain:** X Layer (chain ID `196`) · **Site:** [useavela.xyz](https://useavela.xyz) · **App:** [app.useavela.xyz](https://app.useavela.xyz) · **Explorer:** [X Layer](https://www.okx.com/web3/explorer/xlayer) · **Repo:** [avela-finance/avela](https://github.com/avela-finance/avela)
 
 ```text
 You hold wSPYx → Avela locks it in AvelaVault → haircut applied → spending power
