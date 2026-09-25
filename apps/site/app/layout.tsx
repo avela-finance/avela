@@ -50,6 +50,18 @@ export const metadata: Metadata = {
 	description:
 		"One programmable account to hold tokenized stocks, unlock spending power, and pay across commerce. Built on X Layer.",
 	metadataBase: new URL("https://useavela.xyz"),
+	icons: [
+		{
+			media: "(prefers-color-scheme: light)",
+			url: "/favicon-black.svg",
+			href: "/favicon-black.svg",
+		},
+		{
+			media: "(prefers-color-scheme: dark)",
+			url: "/favicon-white.svg",
+			href: "/favicon-white.svg",
+		},
+	],
 	openGraph: {
 		title: "Avela — Programmable Spending Account",
 		description:

@@ -1,8 +1,10 @@
 "use client";
 
-import { ArrowRight, CaretDown } from "@phosphor-icons/react";
+import { CaretDown } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { LogoMark } from "@/components/logo-mark";
+import { CtaButton } from "@/components/ui/cta-button";
 import { APPLE_EASE } from "@/lib/motion";
 
 const APP_URL = "https://app.useavela.xyz";
@@ -10,14 +12,23 @@ const APP_URL = "https://app.useavela.xyz";
 const sectionLinks = [
 	{ label: "How it works", href: "#how-it-works" },
 	{ label: "Assets", href: "#assets" },
+	{ label: "Global", href: "#global" },
 	{ label: "FAQ", href: "#faq" },
 ];
 
 const productItems = [
-	{ title: "Portfolio", desc: "Positions and live values", href: `${APP_URL}/portfolio` },
-	{ title: "Payments", desc: "Spend from spending power", href: `${APP_URL}/payments` },
-	{ title: "Agents", desc: "Scoped agent spending", href: `${APP_URL}/agents` },
-	{ title: "Watchers", desc: "Alerts that watch the market", href: `${APP_URL}/watchers` },
+	{
+		title: "Spend",
+		desc: "Pay from your portfolio, positions intact",
+		href: "#spend",
+	},
+	{
+		title: "Pay",
+		desc: "Claim a username, get paid at your link",
+		href: "#pay",
+	},
+	{ title: "Borrow", desc: "Unlock cash against your holdings", href: "#borrow" },
+	{ title: "Avela Card", desc: "One card for the portfolio — coming soon", href: "#card" },
 ];
 
 const linkMono =
@@ -89,9 +100,10 @@ export function Nav() {
 				>
 					<a
 						href="#top"
-						className="font-display rounded-sm text-lg font-bold tracking-tight text-foreground transition-colors duration-300 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+						className="font-display rounded-sm text-lg font-bold tracking-tight text-foreground transition-colors duration-300 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none flex items-center gap-2"
 					>
-						Avela
+						<LogoMark />
+						<span>Avela</span>
 					</a>
 
 					<div className="hidden items-center gap-7 md:flex">
@@ -156,13 +168,9 @@ export function Nav() {
 					</div>
 
 					<div className="flex items-center gap-2">
-						<a
-							href={APP_URL}
-							className="hidden items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors duration-300 hover:bg-primary/90 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none md:inline-flex"
-						>
+						<CtaButton variant="lime" size="sm" href={APP_URL} className="hidden md:inline-flex">
 							Try the app
-							<ArrowRight size={16} weight="duotone" aria-hidden="true" />
-						</a>
+						</CtaButton>
 						<button
 							type="button"
 							aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -263,8 +271,7 @@ export function Nav() {
 						</div>
 
 						<div className="mt-auto">
-							<motion.a
-								href={APP_URL}
+							<motion.div
 								initial={{ opacity: 0, y: 24 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{
@@ -272,11 +279,11 @@ export function Nav() {
 									ease: APPLE_EASE,
 									delay: (sectionLinks.length + 1) * 0.06,
 								}}
-								className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-6 py-3 text-base font-semibold text-primary-foreground active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 							>
-								Try the app
-								<ArrowRight size={16} weight="duotone" aria-hidden="true" />
-							</motion.a>
+								<CtaButton variant="lime" href={APP_URL} className="w-full justify-center">
+									Try the app
+								</CtaButton>
+							</motion.div>
 						</div>
 					</motion.div>
 				)}

@@ -20,6 +20,18 @@ export const metadata = {
 		"Pay from your tokenized stock portfolio without selling. Programmable policies, agent permissions, and WhatsApp access.",
 	manifest: "/manifest.json",
 	metadataBase: new URL("https://app.useavela.xyz"),
+	icons: [
+		{
+			media: "(prefers-color-scheme: light)",
+			url: "/favicon-black.svg",
+			href: "/favicon-black.svg",
+		},
+		{
+			media: "(prefers-color-scheme: dark)",
+			url: "/favicon-white.svg",
+			href: "/favicon-white.svg",
+		},
+	],
 };
 
 export const viewport = {
