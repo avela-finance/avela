@@ -140,13 +140,10 @@ export function FAQ() {
 	const [open, setOpen] = useState<number | null>(0);
 
 	return (
-		<section
-			id="faq"
-			className="scroll-mt-28 border-t border-border bg-background px-4 py-24 md:py-32"
-		>
+		<section id="faq" className="scroll-mt-28 bg-background px-4 py-24 md:py-32">
 			<div className="mx-auto max-w-6xl">
 				<div className="mb-14 text-center md:mb-20">
-					<h2 className="mx-auto max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance md:text-[64px] md:leading-[0.95]">
+					<h2 className="mx-auto max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance md:text-[60px] md:leading-[0.95]">
 						Frequently
 						<br />
 						asked questions.

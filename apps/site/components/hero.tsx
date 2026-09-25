@@ -1,56 +1,9 @@
 "use client";
 
 import { motion } from "motion/react";
+import { AppMockup } from "@/components/app-mockup";
 import { CtaButton } from "@/components/ui/cta-button";
 import { APPLE_EASE } from "@/lib/motion";
-
-function HeroPhone() {
-	return (
-		<div aria-hidden="true" className="relative mx-auto w-full max-w-[300px]">
-			<div className="absolute inset-x-8 top-16 bottom-8 rounded-full bg-feature-lime opacity-25 blur-3xl" />
-			<div className="relative rounded-[2.8rem] border border-border bg-card p-2 shadow-2xl">
-				<div className="flex flex-col gap-3.5 overflow-hidden rounded-[2.2rem] bg-background px-5 pt-4 pb-5">
-					<div className="flex items-center justify-between text-[11px] font-semibold tabular-nums">
-						<span>9:41</span>
-						<span className="h-4 w-16 rounded-full bg-foreground" />
-						<span className="flex gap-1 opacity-60">
-							<span className="h-1.5 w-1.5 rounded-full bg-foreground" />
-							<span className="h-1.5 w-1.5 rounded-full bg-foreground" />
-							<span className="h-1.5 w-1.5 rounded-full bg-foreground" />
-						</span>
-					</div>
-					<div className="flex flex-col items-center gap-1 text-center">
-						<span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-							Spendable
-						</span>
-						<span className="font-display text-[32px] font-bold leading-none tracking-tight tabular-nums">
-							$9,076.56
-						</span>
-						<span className="rounded-full bg-muted px-2.5 py-1 font-mono text-[10px] tabular-nums text-muted-foreground">
-							$19,176.56 portfolio
-						</span>
-					</div>
-					<div className="rounded-2xl bg-foreground px-4 py-3.5 text-background">
-						<span className="font-mono text-[10px] uppercase tracking-widest opacity-60">
-							Avela Card
-						</span>
-						<span className="mt-1.5 block font-mono text-sm tabular-nums">•••• 2312</span>
-					</div>
-					<div className="flex flex-col rounded-2xl bg-muted px-4 py-1">
-						<div className="flex items-center justify-between py-2 text-xs">
-							<span className="font-medium">Uber</span>
-							<span className="font-semibold tabular-nums">-$38.19</span>
-						</div>
-						<div className="flex items-center justify-between border-t border-border py-2 text-xs">
-							<span className="font-medium">Whole Foods</span>
-							<span className="font-semibold tabular-nums">-$86.14</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
-}
 
 export function Hero() {
 	return (
@@ -62,11 +15,10 @@ export function Hero() {
 					transition={{ duration: 0.6, ease: APPLE_EASE }}
 					className="flex flex-col items-center gap-5"
 				>
-					<span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 font-mono text-[11px] font-medium uppercase tracking-widest text-primary">
-						<span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-primary" />
-						Live on X Layer
+					<span className="inline-flex items-center rounded-full bg-primary px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-widest text-primary-foreground">
+						Tokenized stock spending account on X Layer
 					</span>
-					<h1 className="max-w-[720px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance text-foreground md:text-[64px] md:leading-[0.95]">
+					<h1 className="max-w-[720px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance text-foreground md:text-[60px] md:leading-[0.95]">
 						Make tokenized stocks
 						<br className="hidden sm:block" /> your everyday spend.
 					</h1>
@@ -100,9 +52,13 @@ export function Hero() {
 					initial={{ opacity: 0, y: 40 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.9, delay: 0.45, ease: APPLE_EASE }}
-					className="mt-10 w-full"
+					className="relative mt-10 w-full"
 				>
-					<HeroPhone />
+					<div
+						aria-hidden="true"
+						className="absolute -inset-x-16 top-24 bottom-0 rounded-full bg-feature-lime opacity-40 blur-3xl"
+					/>
+					<AppMockup className="relative" />
 				</motion.div>
 			</div>
 		</section>

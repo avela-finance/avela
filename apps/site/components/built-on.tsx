@@ -33,10 +33,7 @@ function PartnerRow({ hidden }: { hidden?: boolean }) {
 
 export function BuiltOn() {
 	return (
-		<section
-			aria-label="Built on"
-			className="dark overflow-hidden border-b border-border bg-background py-10"
-		>
+		<section aria-label="Built on" className="dark overflow-hidden bg-background py-10">
 			<div className="flex w-max animate-[marquee_36s_linear_infinite] motion-reduce:animate-none hover:[animation-play-state:paused]">
 				<PartnerRow />
 				<PartnerRow hidden />

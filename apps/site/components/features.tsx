@@ -45,16 +45,16 @@ const features = [
 
 export function Features() {
 	return (
-		<section
-			id="features"
-			className="dark bg-background px-4 py-24 border-t border-border scroll-mt-28"
-		>
-			<div className="max-w-5xl mx-auto">
-				<div className="mb-12 text-center">
-					<h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl md:text-[64px] md:leading-[0.95]">
+		<section id="features" className="dark scroll-mt-28 bg-background px-4 py-24 md:py-32">
+			<div className="mx-auto max-w-6xl">
+				<div className="mb-14 text-center md:mb-20">
+					<p className="font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground">
+						Platform
+					</p>
+					<h2 className="mx-auto mt-4 max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance text-foreground md:text-[60px] md:leading-[0.95]">
 						Built for intelligent spending
 					</h2>
-					<p className="mt-3 text-pretty text-muted-foreground">
+					<p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">
 						The account layer for people who live in their portfolio.
 					</p>
 				</div>
@@ -63,19 +63,21 @@ export function Features() {
 					{features.map((feature, i) => (
 						<motion.div
 							key={feature.title}
-							initial={{ opacity: 0, y: 16 }}
+							initial={{ opacity: 0, y: 24 }}
 							whileInView={{ opacity: 1, y: 0 }}
 							viewport={{ once: true, margin: "-40px" }}
-							transition={{ duration: 0.45, delay: i * 0.08, ease: APPLE_EASE }}
-							className="rounded-xl border border-border bg-muted/50 p-6 flex flex-col gap-2"
+							transition={{ duration: 0.6, delay: i * 0.06, ease: APPLE_EASE }}
+							className="group flex flex-col gap-4 rounded-[1.75rem] border border-border bg-card p-8 transition-[transform,border-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:border-primary/50"
 						>
-							<feature.icon
-								size={32}
-								weight="duotone"
-								className="text-primary"
-								aria-hidden="true"
-							/>
-							<h3 className="font-display text-sm font-bold leading-tight text-foreground">
+							<span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+								<feature.icon
+									size={24}
+									weight="duotone"
+									className="text-primary"
+									aria-hidden="true"
+								/>
+							</span>
+							<h3 className="font-display text-xl font-bold leading-tight tracking-tight text-balance">
 								{feature.title}
 							</h3>
 							<p className="text-sm leading-relaxed text-pretty text-muted-foreground">

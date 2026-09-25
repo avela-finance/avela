@@ -33,10 +33,10 @@ const assets = [
 
 export function SupportedAssets() {
 	return (
-		<section id="assets" className="bg-background px-4 py-24 border-t border-border scroll-mt-28">
+		<section id="assets" className="bg-background px-4 py-24 scroll-mt-28">
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
-					<h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl md:text-[64px] md:leading-[0.95]">
+					<h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl md:text-[60px] md:leading-[0.95]">
 						Supported assets
 					</h2>
 					<p className="mt-3 text-pretty text-muted-foreground">

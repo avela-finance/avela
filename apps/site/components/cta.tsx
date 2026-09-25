@@ -6,7 +6,7 @@ import { APPLE_EASE } from "@/lib/motion";
 
 export function CTA() {
 	return (
-		<section className="border-t border-border bg-background px-4 py-24 md:py-32">
+		<section className="bg-background px-4 py-24 md:py-32">
 			<motion.div
 				initial={{ opacity: 0, y: 24 }}
 				whileInView={{ opacity: 1, y: 0 }}
@@ -14,7 +14,7 @@ export function CTA() {
 				transition={{ duration: 0.8, ease: APPLE_EASE }}
 				className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center"
 			>
-				<h2 className="font-display text-5xl font-bold leading-[0.95] tracking-tight text-balance md:text-[64px]">
+				<h2 className="font-display text-5xl font-bold leading-[0.95] tracking-tight text-balance md:text-[60px]">
 					Spend from your portfolio.
 					<br />
 					Keep every share.

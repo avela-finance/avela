@@ -12,13 +12,14 @@ Reference only: the v0 exploration doc at `avela-v0/DESIGN.md` is non-normative.
 | `#FEFDF0` | Cream | `oklch(0.991 0.017 103.1)` | Light surfaces, text on dark, text on ink |
 | `#DDF837` | Lime | `oklch(0.928 0.202 117.8)` | Accent, dark-mode primary, focus rings |
 | `#F2C078` | Peach | `oklch(0.837 0.107 75.5)` | Warm highlight, feature surfaces |
+| (derived) | Olive | `oklch(0.53 0.12 118)` | Spend card surface (`bg-feature-olive`), approved Sep 2026 |
 | `#151700` | Warm black — SUPERSEDED by ink `#28211B` | — | Do not use; every former use now maps to ink |
 | (derived) | Dark elevated surface | `oklch(0.309 0.015 62.7)` | Dark card/popover/muted/secondary |
 
 Text rule: never pure black text on light, never pure white text on dark — always the ink/cream pair (`#28211B` / `#FEFDF0`).
 
 Dropped from v0: ice blue and lavender feature colors. Do not use them.
-TBD: a sixth sage color is reserved but undecided — do not invent one. Leave the slot empty until approved.
+TBD: reserved — filled by olive (approved Sep 2026 for the Spend card).
 
 ## Color mapping
 
@@ -113,7 +114,7 @@ Tailwind default type scale only. No custom sizes.
 
 Weights: Saans 400 body, 500 nav/labels/FAQ questions, 600 buttons/card titles; Gellix 700 all headings (h1/h2/h3) + hero + phone balance figures.
 
-Section headings: mobile keeps the type-scale step (`text-3xl`/`text-5xl`), desktop is always 64px (`md:text-[64px] md:leading-[0.95]`, Gellix 700, `tracking-tight`, `text-balance`). Hero h1 follows the same desktop size.
+Section headings: mobile keeps the type-scale step (`text-3xl`/`text-5xl`), desktop is always 60px (`md:text-[60px] md:leading-[0.95]`, Gellix 700, `tracking-tight`, `text-balance`). Hero h1 follows the same desktop size.
 
 Rules: `font-display` on every h1/h2/h3 and display figure; `leading-[0.9]` on hero-scale text (`text-5xl`+), `leading-tight` on smaller display text; `tracking-tight` on all headings, `tracking-wider` on uppercase labels, `text-wrap-balance` on headings, `text-wrap-pretty` on multi-line body, `tabular-nums` on financial figures (kept alongside Gellix on the balance figure).
 
@@ -123,7 +124,7 @@ All CTAs use `CtaButton` (`components/ui/cta-button.tsx`): full-rounded pill, `m
 
 ## Nav (site)
 
-Flat full-width bar (`h-16`, `max-w-6xl`), transparent over the dark hero with cream text; past 8px scroll gains ink/90 + blur + border-b (rAF-throttled listener).
+Fixed full-width bar (`fixed top-0 h-16`, always ink/90 + blur + border-b) — follows the page, never transparent, no scroll listener.
 Left: LogoMark + Gellix 700 wordmark. Links: Saans Mono 500, uppercase, `text-[13px]` tracking-widest — nothing else uses mono.
 PRODUCTS dropdown (Esc closes, click-outside closes, focus-visible rings) anchors to the on-page product blocks: Spend, Pay, Borrow → `#spend` / `#pay` / `#borrow`, Avela Card (coming soon) → `#card`. One-line desc each, lime title on hover.
 Right: lime `CtaButton` pill + hamburger. Mobile: overlay with staggered links, inline PRODUCTS group, CTA pinned bottom.
@@ -174,7 +175,7 @@ No hex literals in components or styles. All color goes through semantic tokens 
 
 | Placeholder | Location | Exact source | Swap with | Status |
 |-------------|----------|--------------|-----------|--------|
-| Phone spending-power mock | `apps/site/components/phone-moment.tsx` | CSS-built, static demo figures | Live web PWA screenshot | TODO |
+| App mockup (site) | `apps/site/components/app-mockup.tsx` | CSS-built app view (spending power, positions, balances) | Reference for web/ redesign | DONE |
 | CTA lifestyle photo | `apps/site/components/photo-cta.tsx` | `https://picsum.photos/seed/avela-cta/1920/1080` (1920×1080) | Commissioned lifestyle photography | TODO |
 | Social share image | `apps/site/app/` | — | Generated og-image | TODO |
 
