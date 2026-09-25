@@ -19,6 +19,7 @@ export const metadata = {
 	description:
 		"Pay from your tokenized stock portfolio without selling. Programmable policies, agent permissions, and WhatsApp access.",
 	manifest: "/manifest.json",
+	metadataBase: new URL("https://app.useavela.xyz"),
 };
 
 export const viewport = {

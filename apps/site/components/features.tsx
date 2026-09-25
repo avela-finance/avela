@@ -51,7 +51,7 @@ export function Features() {
 		>
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
-					<h2 className="text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
+					<h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl">
 						Built for intelligent spending
 					</h2>
 					<p className="mt-3 text-pretty text-muted-foreground">
@@ -75,7 +75,9 @@ export function Features() {
 								className="text-primary"
 								aria-hidden="true"
 							/>
-							<h3 className="text-sm font-semibold text-foreground">{feature.title}</h3>
+							<h3 className="font-display text-sm font-bold leading-tight text-foreground">
+								{feature.title}
+							</h3>
 							<p className="text-sm leading-relaxed text-pretty text-muted-foreground">
 								{feature.description}
 							</p>

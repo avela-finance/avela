@@ -104,6 +104,23 @@ export default function SettingsPage() {
 
 	const walletAddress = user?.wallet?.address ?? "Not connected";
 
+	// Payment link: short `pay.useavela.xyz/<user>` in production,
+	// same-origin `/pay/<user>` everywhere else (local, previews).
+	let paymentHref = "#";
+	let paymentLabel = "";
+	if (currentUsername) {
+		if (typeof window !== "undefined" && window.location.hostname.endsWith("useavela.xyz")) {
+			paymentHref = `https://pay.useavela.xyz/${currentUsername}`;
+			paymentLabel = `pay.useavela.xyz/${currentUsername}`;
+		} else {
+			paymentHref = `/pay/${currentUsername}`;
+			paymentLabel =
+				typeof window !== "undefined"
+					? `${window.location.origin}/pay/${currentUsername}`
+					: `app.useavela.xyz/pay/${currentUsername}`;
+		}
+	}
+
 	return (
 		<div className="space-y-6">
 			<div>
@@ -151,7 +168,12 @@ export default function SettingsPage() {
 						{currentUsername && (
 							<div className="space-y-2">
 								<p className="text-sm text-muted-foreground">Your payment link:</p>
-								<p className="font-mono text-sm text-primary">pay.useavela.xyz/{currentUsername}</p>
+								<a
+									href={paymentHref}
+									className="font-mono text-sm text-primary underline underline-offset-4"
+								>
+									{paymentLabel}
+								</a>
 							</div>
 						)}
 

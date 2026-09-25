@@ -20,7 +20,7 @@ export function PhoneMoment() {
 					transition={{ duration: 0.8, ease: APPLE_EASE }}
 					className="flex flex-col items-center gap-4 text-center"
 				>
-					<h2 className="max-w-[680px] text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
+					<h2 className="max-w-[680px] font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl">
 						One account. Every way to use it.
 					</h2>
 					<p className="max-w-lg text-pretty text-muted-foreground">
@@ -47,7 +47,7 @@ export function PhoneMoment() {
 								<span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
 									Spending power
 								</span>
-								<span className="text-4xl font-bold tracking-tight tabular-nums text-foreground">
+								<span className="font-display text-4xl font-bold leading-tight tracking-tight tabular-nums text-foreground">
 									$12,480.00
 								</span>
 								<span className="text-xs text-muted-foreground">Demo data</span>

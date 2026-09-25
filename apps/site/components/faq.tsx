@@ -45,7 +45,7 @@ export function FAQ() {
 		<section id="faq" className="dark scroll-mt-28 border-t border-border bg-background px-4 py-24">
 			<div className="mx-auto max-w-3xl">
 				<div className="mb-12 text-center">
-					<h2 className="text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
+					<h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl">
 						Frequently asked questions
 					</h2>
 					<p className="mt-3 text-pretty text-muted-foreground">

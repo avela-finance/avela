@@ -17,7 +17,7 @@ export function PhotoCTA() {
 			/>
 			<div aria-hidden="true" className="absolute inset-0 bg-background/70" />
 			<div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-4 py-32 text-center">
-				<h2 className="max-w-[680px] text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
+				<h2 className="max-w-[680px] font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl">
 					Start spending from your portfolio.
 				</h2>
 				<p className="max-w-lg text-pretty text-muted-foreground">

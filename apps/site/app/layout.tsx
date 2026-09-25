@@ -1,15 +1,33 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const geistMonoHeading = Geist_Mono({
-	subsets: ["latin"],
-	variable: "--font-heading",
+const gellix = localFont({
+	src: [
+		{ path: "../public/fonts/Gellix-TRIAL-SemiBold.woff2", weight: "600" },
+		{ path: "../public/fonts/Gellix-TRIAL-Bold.woff2", weight: "700" },
+	],
+	variable: "--font-display",
+	display: "swap",
+	preload: true,
+	fallback: ["'Gellix Fallback'", "system-ui", "sans-serif"],
 });
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const saans = localFont({
+	src: [
+		{ path: "../public/fonts/Saans-TRIAL-Regular.woff2", weight: "400" },
+		{ path: "../public/fonts/Saans-TRIAL-Medium.woff2", weight: "500" },
+		{ path: "../public/fonts/Saans-TRIAL-SemiBold.woff2", weight: "600" },
+		{ path: "../public/fonts/Saans-TRIAL-Bold.woff2", weight: "700" },
+	],
+	variable: "--font-sans",
+	display: "swap",
+	preload: true,
+	fallback: ["system-ui", "sans-serif"],
+});
 
 const fontMono = Geist_Mono({
 	subsets: ["latin"],
@@ -50,13 +68,7 @@ export default function RootLayout({
 	return (
 		<html
 			lang="en"
-			className={cn(
-				"antialiased",
-				fontMono.variable,
-				"font-sans",
-				geist.variable,
-				geistMonoHeading.variable,
-			)}
+			className={cn("antialiased", fontMono.variable, "font-sans", saans.variable, gellix.variable)}
 		>
 			<body>{children}</body>
 		</html>
