@@ -43,18 +43,10 @@ function CountryRow({ countries, reverse }: { countries: string[]; reverse?: boo
 			className="flex w-max animate-[marquee_40s_linear_infinite] gap-3 motion-reduce:animate-none"
 			style={reverse ? { animationDirection: "reverse" } : undefined}
 		>
-			{countries.map((country) => (
+			{[...countries, ...countries].map((country, i) => (
 				<span
-					key={country}
-					className="shrink-0 rounded-full border border-border px-5 py-2 font-mono text-xs tracking-widest whitespace-nowrap text-muted-foreground uppercase"
-				>
-					{country}
-				</span>
-			))}
-			{countries.map((country) => (
-				<span
-					key={`${country}-dup`}
-					aria-hidden="true"
+					key={`${country}-${i}`}
+					aria-hidden={i >= countries.length || undefined}
 					className="shrink-0 rounded-full border border-border px-5 py-2 font-mono text-xs tracking-widest whitespace-nowrap text-muted-foreground uppercase"
 				>
 					{country}
@@ -71,7 +63,7 @@ export function Global() {
 				<p className="font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground">
 					Global by default
 				</p>
-				<h2 className="mx-auto mt-4 max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance text-foreground md:text-[60px] md:leading-[0.95]">
+				<h2 className="mx-auto mt-4 max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance md:text-[60px] md:leading-[0.95]">
 					Available globally.
 				</h2>
 				<p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">

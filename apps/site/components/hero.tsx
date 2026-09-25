@@ -28,7 +28,7 @@ export function Hero() {
 					initial={{ opacity: 0, y: 12 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.6, delay: 0.15, ease: APPLE_EASE }}
-					className="max-w-xl text-base text-pretty text-muted-foreground"
+					className="max-w-xl text-sm text-pretty text-muted-foreground"
 				>
 					One account for your tokenized stocks. Unlock spending power and pay anywhere — your
 					positions never move.
@@ -38,7 +38,7 @@ export function Hero() {
 					initial={{ opacity: 0, y: 8 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5, delay: 0.3, ease: APPLE_EASE }}
-					className="flex flex-col items-center gap-3 sm:flex-row"
+					className="mt-2 flex flex-col items-center gap-3 sm:flex-row"
 				>
 					<CtaButton variant="lime" href="https://app.useavela.xyz">
 						Launch App
@@ -52,9 +52,13 @@ export function Hero() {
 					initial={{ opacity: 0, y: 40 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.9, delay: 0.45, ease: APPLE_EASE }}
-					className="mt-8 w-full"
+					className="relative mt-10 w-full"
 				>
-					<AppMockup />
+					<div
+						aria-hidden="true"
+						className="absolute -inset-x-16 top-24 bottom-0 rounded-full bg-feature-lime opacity-40 blur-3xl"
+					/>
+					<AppMockup className="relative" />
 				</motion.div>
 			</div>
 		</section>

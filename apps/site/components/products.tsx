@@ -83,7 +83,7 @@ export function Products() {
 					<p className="font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground">
 						Products
 					</p>
-					<h2 className="mt-4 max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance text-foreground md:text-[60px] md:leading-[0.95]">
+					<h2 className="mt-4 max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance md:text-[60px] md:leading-[0.95]">
 						Everything your portfolio can do.
 					</h2>
 					<p className="mt-4 max-w-xl text-pretty text-muted-foreground">
