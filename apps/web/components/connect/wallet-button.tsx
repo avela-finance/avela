@@ -56,7 +56,7 @@ export function WalletButton({ className }: WalletButtonProps) {
 		<button
 			type="button"
 			onClick={login}
-			aria-label="Connect wallet"
+			aria-label="Sign in"
 			className={cn(
 				"inline-flex items-center rounded-md px-4 py-2 text-sm font-medium",
 				"bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 ease-out",
@@ -65,7 +65,7 @@ export function WalletButton({ className }: WalletButtonProps) {
 				className,
 			)}
 		>
-			Connect Wallet
+			Sign in
 		</button>
 	);
 }

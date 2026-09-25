@@ -2,6 +2,7 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
+import { SignIn } from "@/components/connect/sign-in";
 import { WalletButton } from "@/components/connect/wallet-button";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -43,20 +44,7 @@ export function AppShell({ children }: AppShellProps) {
 	}
 
 	if (!authenticated) {
-		return (
-			<div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4">
-				<div className="text-center space-y-2">
-					<div className="flex items-center justify-center gap-2">
-						<LogoMark className="size-6" />
-						<h1 className="text-3xl font-semibold tracking-tight">Avela</h1>
-					</div>
-					<p className="text-muted-foreground text-sm max-w-xs">
-						Programmable spending account for tokenized stocks
-					</p>
-				</div>
-				<WalletButton />
-			</div>
-		);
+		return <SignIn />;
 	}
 
 	return (
