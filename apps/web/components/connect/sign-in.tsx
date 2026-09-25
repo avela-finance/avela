@@ -21,10 +21,10 @@ export function SignIn() {
 				</span>
 
 				<h1 className="mt-8 text-4xl font-bold leading-[1.05] tracking-tight text-balance text-foreground">
-					One account for tokenized stocks.
+					One pocket for tokenized stocks.
 				</h1>
 				<p className="mt-3 max-w-xs text-sm leading-relaxed text-pretty text-muted-foreground">
-					Hold, spend, and automate — your tokenized stocks stay intact, without selling.
+					Hold, spend, and automate — your positions stay intact.
 				</p>
 
 				<button
