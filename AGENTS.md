@@ -51,8 +51,21 @@ Read PRD.md and SPEC.md before making architectural decisions. They contain veri
 - **Upstash QStash** — Background jobs (settlement polling, approval expiry)
 - **Zustand** — Client-side state (apps/web)
 - **TanStack Query** — Server state management (apps/web)
-- **WhatsApp Business API** — Messaging access (MVP)
-- **MCP** — Agent skill exposure
+
+## Messaging (WhatsApp Business API — MVP surface)
+
+- Integration lives in `apps/api/src/integrations/whatsapp/` — `client.ts`, `webhook.ts`, `messages.ts`, `notifications.ts`, `callbacks.ts`, `templates.ts`.
+- Domain logic in `packages/core/src/domain/whatsapp.ts`. Link table resolves phone → account.
+- Webhook mounted at `/webhooks/whatsapp` only when `WHATSAPP_VERIFY_TOKEN` is set — otherwise disabled with a console warning (see `apps/api/src/index.ts`).
+- Intents are pattern-matched (`balance`, `spending`, `payments`, `help`) — no NLP in MVP. Approval buttons carry `approve:<paymentId>` / `reject:<paymentId>` callbacks.
+- Full template table + interaction contract: `docs/messaging.md` + `docs/specs/whatsapp-access.md`.
+
+## MCP (agent skill exposure — `packages/mcp`)
+
+- MCP server (`@avela/mcp`, stdio transport, `@modelcontextprotocol/sdk`) exposes 4 tools: `avela.getBalance`, `avela.getPermissions`, `avela.createPaymentIntent`, `avela.getPaymentStatus`.
+- Entry: `packages/mcp/src/index.ts`. Tool handlers: `packages/mcp/src/tools/*.ts`. Tests: `packages/mcp/src/__tests__/tools.test.ts`.
+- Requires `DATABASE_URL`. Price-feed injection is config-driven (pool map from SPEC) — do not hardcode prices.
+- Tool schemas + agent wiring: `docs/mcp.md`. Permission model: `docs/agents.md` + `docs/specs/agent-permissions.md`.
 
 ## Workspace
 

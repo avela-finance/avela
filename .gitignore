@@ -48,3 +48,12 @@ contracts/out/
 
 # vercel
 .vercel/
+
+# building docs (internal planning — not code docs, not committed)
+docs/ideas/
+docs/specs/
+docs/plans/
+
+# personal / judge-private docs (never committed)
+docs/demo.md
+submission.md

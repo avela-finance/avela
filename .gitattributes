@@ -1,0 +1,5 @@
+# Vendored Foundry dependencies — exclude from GitHub language stats
+# (forge-std + openzeppelin-contracts are committed as regular files, not
+# submodules, so without this GitHub counts them as repo code and reports
+# Solidity ~61%. This keeps language stats reflecting first-party code.)
+contracts/lib/** linguist-vendored=true
