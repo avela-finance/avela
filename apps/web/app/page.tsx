@@ -7,14 +7,7 @@ import { ActivityFeed } from "@/components/account/activity-feed";
 import { PortfolioSummary } from "@/components/account/portfolio-summary";
 import { SpendingPowerCard } from "@/components/account/spending-power-card";
 import { api } from "@/lib/api";
-
-interface Position {
-	assetSymbol: string;
-	assetName: string;
-	positionValue: number;
-	spendingPower: number;
-	haircut: number;
-}
+import { type AccountView, toAccountView } from "@/lib/portfolio";
 
 interface ActivityItem {
 	id: string;
@@ -22,13 +15,6 @@ interface ActivityItem {
 	description: string;
 	amount: number | null;
 	timestamp: string;
-}
-
-interface AccountData {
-	totalSpendingPower: number;
-	portfolioValue: number;
-	stablecoinBalance: number;
-	positions: Position[];
 }
 
 interface PaymentData {
@@ -40,7 +26,7 @@ export default function DashboardPage() {
 
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(false);
-	const [spendingPower, setSpendingPower] = useState<AccountData | null>(null);
+	const [spendingPower, setSpendingPower] = useState<AccountView | null>(null);
 	const [activity, setActivity] = useState<ActivityItem[]>([]);
 
 	const load = useCallback(async () => {
@@ -50,11 +36,11 @@ export default function DashboardPage() {
 			const token = await getAccessToken();
 
 			const [accountRes, paymentsRes] = await Promise.all([
-				api.get<AccountData>("/accounts/me/portfolio", { token }),
+				api.get("/accounts/me/portfolio", { token }),
 				api.get<PaymentData>("/payments", { token }),
 			]);
 
-			setSpendingPower(accountRes.data);
+			setSpendingPower(toAccountView(accountRes.data));
 			const items = paymentsRes.data?.items;
 			setActivity(Array.isArray(items) ? items : []);
 		} catch {
