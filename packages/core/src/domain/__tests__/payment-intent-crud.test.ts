@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import {
 	createPaymentIntent,
@@ -59,10 +59,9 @@ describeDb("payment intent CRUD (requires TEST_DATABASE_URL)", () => {
 		`);
 	});
 
-	afterEach(async () => {
-		await cleanDatabase(db);
-	});
-
+	// NOTE: no afterEach here — the fixture account created in beforeAll must
+	// survive across this file's tests. afterAll below removes all residue,
+	// and every other DB test file cleans in beforeEach, so ordering is safe.
 	afterAll(async () => {
 		await cleanDatabase(db);
 		await testClient.end();
