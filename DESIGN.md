@@ -87,6 +87,8 @@ Display: Gellix 700 (WhatFont-verified against the reference: 95px/86px hero, 64
 | `apps/site/public/fonts/Saans-TRIAL-Medium.woff2` | 500 | Nav/labels/FAQ questions |
 | `apps/site/public/fonts/Saans-TRIAL-SemiBold.woff2` | 600 | Buttons/card titles |
 | `apps/site/public/fonts/Saans-TRIAL-Bold.woff2` | 700 | Emphasis in body |
+| `apps/site/public/fonts/SaansMono-TRIAL-Regular.woff2` | 400 | Nav links (mono caps) |
+| `apps/site/public/fonts/SaansMono-TRIAL-Medium.woff2` | 500 | Nav links (mono caps) |
 
 Loaded via `next/font/local` in `apps/site/app/layout.tsx`: Gellix as `--font-display` (fallback `'Gellix Fallback'`, system-ui, sans-serif), Saans as `--font-sans` (fallback system-ui, sans-serif), both `display: swap`, preloaded. `@theme inline` maps `--font-display: var(--font-display)` (class `font-display`).
 
@@ -112,6 +114,13 @@ Tailwind default type scale only. No custom sizes.
 Weights: Saans 400 body, 500 nav/labels/FAQ questions, 600 buttons/card titles; Gellix 700 all headings (h1/h2/h3) + hero + phone balance figures.
 
 Rules: `font-display` on every h1/h2/h3 and display figure; `leading-[0.9]` on hero-scale text (`text-5xl`+), `leading-tight` on smaller display text; `tracking-tight` on all headings, `tracking-wider` on uppercase labels, `text-wrap-balance` on headings, `text-wrap-pretty` on multi-line body, `tabular-nums` on financial figures (kept alongside Gellix on the balance figure).
+
+## Nav (site)
+
+Flat full-width bar (`h-16`, `max-w-6xl`), transparent over the dark hero with cream text; past 8px scroll gains ink/90 + blur + border-b (rAF-throttled listener).
+Left: Gellix 700 wordmark. Links: Saans Mono 500, uppercase, `text-[13px]` tracking-widest — nothing else uses mono.
+PRODUCTS dropdown (Esc closes, click-outside closes, focus-visible rings): Portfolio, Payments, Agents, Watchers → `app.useavela.xyz/<route>`, one-line desc each, lime title on hover.
+Right: lime "Try the app" pill + hamburger. Mobile: overlay with staggered links, inline PRODUCTS group, CTA pinned bottom.
 
 ## Spacing
 

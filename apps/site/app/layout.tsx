@@ -29,6 +29,17 @@ const saans = localFont({
 	fallback: ["system-ui", "sans-serif"],
 });
 
+const navMono = localFont({
+	src: [
+		{ path: "../public/fonts/SaansMono-TRIAL-Regular.woff2", weight: "400" },
+		{ path: "../public/fonts/SaansMono-TRIAL-Medium.woff2", weight: "500" },
+	],
+	variable: "--font-navmono",
+	display: "swap",
+	preload: true,
+	fallback: ["ui-monospace", "monospace"],
+});
+
 const fontMono = Geist_Mono({
 	subsets: ["latin"],
 	variable: "--font-mono",
@@ -68,7 +79,14 @@ export default function RootLayout({
 	return (
 		<html
 			lang="en"
-			className={cn("antialiased", fontMono.variable, "font-sans", saans.variable, gellix.variable)}
+			className={cn(
+				"antialiased",
+				fontMono.variable,
+				"font-sans",
+				saans.variable,
+				gellix.variable,
+				navMono.variable,
+			)}
 		>
 			<body>{children}</body>
 		</html>
