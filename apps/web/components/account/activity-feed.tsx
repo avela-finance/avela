@@ -1,6 +1,10 @@
 "use client";
 
 import { Receipt } from "@phosphor-icons/react";
+import { motion } from "motion/react";
+import Link from "next/link";
+import { APPLE_EASE } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 type ActivityType = "payment_settled" | "payment_failed" | "deposit" | "alert";
 
@@ -24,11 +28,11 @@ const TYPE_LABELS: Record<ActivityType, string> = {
 	alert: "Alert",
 };
 
-const TYPE_COLORS: Record<ActivityType, string> = {
-	payment_settled: "text-primary bg-primary/10",
-	payment_failed: "text-destructive bg-destructive/10",
-	deposit: "text-secondary-foreground bg-secondary/10",
-	alert: "text-accent-foreground bg-accent/10",
+const TYPE_DOT: Record<ActivityType, string> = {
+	payment_settled: "bg-primary",
+	payment_failed: "bg-destructive",
+	deposit: "bg-foreground",
+	alert: "bg-accent-foreground",
 };
 
 function formatTime(timestamp: string): string {
@@ -53,81 +57,87 @@ function formatTime(timestamp: string): string {
 
 export function ActivityFeed({ items, loading = false }: ActivityFeedProps) {
 	if (loading) {
-		const skeletonIds = ["skeleton-1", "skeleton-2", "skeleton-3", "skeleton-4"];
 		return (
-			<div className="rounded-lg border border-border bg-muted/50 p-6">
-				<h3 className="text-lg font-semibold mb-4">Activity</h3>
-				<div className="space-y-3">
-					{skeletonIds.map((id) => (
-						<div
-							key={id}
-							className="flex items-start gap-3 pb-3 border-b border-border last:border-0"
-						>
-							<div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
-							<div className="flex-1 space-y-2">
-								<div className="h-4 w-32 animate-pulse rounded bg-muted" />
-								<div className="h-3 w-48 animate-pulse rounded bg-muted" />
-							</div>
+			<section aria-label="Activity" className="rounded-2xl border border-border bg-card p-6">
+				<p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+					Activity
+				</p>
+				<div className="mt-5 space-y-4">
+					{["skeleton-1", "skeleton-2", "skeleton-3", "skeleton-4"].map((id) => (
+						<div key={id} className="flex items-center gap-3">
+							<div className="h-2 w-2 animate-pulse rounded-full bg-muted" />
+							<div className="h-4 flex-1 animate-pulse rounded bg-muted" />
 							<div className="h-4 w-16 animate-pulse rounded bg-muted" />
 						</div>
 					))}
 				</div>
-			</div>
-		);
-	}
-
-	if (items.length === 0) {
-		return (
-			<div className="rounded-lg border border-border bg-muted/50 p-6">
-				<h3 className="text-lg font-semibold mb-4">Activity</h3>
-				<div role="status" className="flex flex-col items-center py-8 text-center">
-					<Receipt size={32} weight="duotone" className="text-muted-foreground" aria-hidden />
-					<p className="mt-3 text-sm font-semibold">No activity yet</p>
-					<p className="mt-1 max-w-xs text-sm text-muted-foreground">
-						Payments and alerts will appear here
-					</p>
-				</div>
-			</div>
+			</section>
 		);
 	}
 
 	return (
-		<div className="rounded-lg border border-border bg-muted/50 p-6">
-			<h3 className="text-lg font-semibold mb-4">Activity</h3>
-			<div className="space-y-0">
-				{items.map((item) => (
-					<div
-						key={item.id}
-						className="flex items-start gap-3 py-3 border-b border-border last:border-0"
-					>
-						<div
-							className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${TYPE_COLORS[item.type].split(" ")[0]}`}
-						/>
-						<div className="flex-1 min-w-0">
-							<div className="flex items-start justify-between gap-2">
-								<div>
-									<p className="font-medium text-sm">{TYPE_LABELS[item.type]}</p>
-									<p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-								</div>
-								<div className="flex-shrink-0 text-right">
-									{item.amount !== null && (
-										<p className="font-mono text-sm font-semibold tabular-nums">
-											$
-											{item.amount.toLocaleString("en-US", {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 2,
-											})}
-										</p>
-									)}
-									<p className="text-xs text-muted-foreground mt-0.5">
-										{formatTime(item.timestamp)}
-									</p>
-								</div>
-							</div>
-						</div>
-					</div>
-				))}
+		<motion.section
+			initial={{ opacity: 0, y: 12 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.5, delay: 0.16, ease: APPLE_EASE }}
+			aria-label="Activity"
+			className="rounded-2xl border border-border bg-card p-6"
+		>
+			<div className="flex items-baseline justify-between gap-3">
+				<p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+					Activity
+				</p>
+				<Link
+					href="/payments"
+					className="rounded-sm text-xs font-semibold text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				>
+					View all
+				</Link>
 			</div>
-		</div>
+
+			{items.length === 0 ? (
+				<div role="status" className="flex flex-col items-center py-10 text-center">
+					<span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
+						<Receipt size={24} weight="duotone" className="text-muted-foreground" aria-hidden />
+					</span>
+					<p className="mt-4 text-sm font-semibold text-foreground">No activity yet</p>
+					<p className="mt-1 max-w-xs text-sm text-muted-foreground">
+						Payments and alerts will appear here
+					</p>
+				</div>
+			) : (
+				<ol className="mt-2">
+					{items.map((item) => (
+						<li
+							key={item.id}
+							className="flex items-start gap-3 border-b border-border py-3.5 last:border-0 last:pb-0"
+						>
+							<span
+								aria-hidden="true"
+								className={cn("mt-[7px] h-2 w-2 shrink-0 rounded-full", TYPE_DOT[item.type])}
+							/>
+							<div className="min-w-0 flex-1">
+								<p className="text-sm font-semibold text-foreground">{TYPE_LABELS[item.type]}</p>
+								<p className="mt-0.5 truncate text-xs text-muted-foreground">{item.description}</p>
+							</div>
+							<div className="shrink-0 text-right">
+								{item.amount !== null && (
+									<p className="font-mono text-sm font-semibold tabular-nums text-foreground">
+										$
+										{item.amount.toLocaleString("en-US", {
+											minimumFractionDigits: 2,
+											maximumFractionDigits: 2,
+										})}
+									</p>
+								)}
+								<p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+									{formatTime(item.timestamp)}
+								</p>
+							</div>
+						</li>
+					))}
+				</ol>
+			)}
+		</motion.section>
 	);
 }
