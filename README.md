@@ -129,7 +129,7 @@ Network: **X Layer mainnet** · RPC `https://rpc.xlayer.tech` · Chain ID `196` 
 
 | Contract | Address | Model |
 |---|---|---|
-| **AvelaVault** | `0x3479183bcbcc3643fdb6a26c7215e602095c2086` | Non-custodial. Multi-asset (5 whitelisted xStocks, one contract). `deposit` / `withdraw` (withdrawal permissionless to depositor only — no admin can move user funds). Emits `PositionLocked` / `PositionReleased`. |
+| **AvelaVault** | `0x3479183bcbcC3643fDb6a26C7215e602095C2086` | Non-custodial. Multi-asset (5 whitelisted xStocks, one contract). `deposit` / `withdraw` (withdrawal permissionless to depositor only — no admin can move user funds). Emits `PositionLocked` / `PositionReleased`. |
 | **AvelaPaymentRouter** | `0x6986CF2784f112bc1610ee743F33246d9C4B869B` | Custodial (stated MVP limitation — single backend EOA signer, Phase 2 → multisig). Multi-stablecoin (`USDG`/`USDC` via token param). `executePayment(token, merchant, amount, paymentId, collateralOwner)` with `paymentId` replay protection. Emits `PaymentExecuted`. |
 
 Source: [`contracts/src/AvelaVault.sol`](contracts/src/AvelaVault.sol), [`contracts/src/AvelaPaymentRouter.sol`](contracts/src/AvelaPaymentRouter.sol). Tests: `forge test`. Deploy: `forge script script/Deploy.s.sol --rpc-url $XLAYER_RPC_URL --broadcast` (see [`contracts/README.md`](contracts/README.md)).
@@ -232,8 +232,8 @@ Open: site `http://localhost:3001` · web `http://localhost:3000` (Next default)
 ```bash
 onchainos token search --query "wSPYx" --chains "196"
 onchainos token liquidity --address 0xe7e553cd128f0011777323a0b44a7b96ea1cb540 --chain "196"
-cast code 0x3479183bcbcc3643fdb6a26c7215e602095c2086 --rpc-url https://rpc.xlayer.tech
-cast call 0x3479183bcbcc3643fdb6a26c7215e602095c2086 \
+cast code 0x3479183bcbcC3643fDb6a26C7215e602095C2086 --rpc-url https://rpc.xlayer.tech
+cast call 0x3479183bcbcC3643fDb6a26C7215e602095C2086 \
   "getLockedBalance(address,address)(uint256)" <wallet> <token> \
   --rpc-url https://rpc.xlayer.tech
 ```
@@ -329,7 +329,7 @@ One MVP watcher — *"alert when spending power drops below $X"* — proving the
 
 ## Checkout demo
 
-Demo merchant: product page → cart → *"Pay with Avela"* → preview (amount, collateral asset, settlement stablecoin, gas) → confirm → Funding Engine settles → receipt with tx hash + explorer link. Mobile-viewport PWA, sub-30s flow, clear insufficient-power error state. Pages live under `apps/web/src/app/checkout/`.
+Demo merchant: product page → cart → *"Pay with Avela"* → preview (amount, collateral asset, settlement stablecoin, gas) → confirm → Funding Engine settles → receipt with tx hash + explorer link. Mobile-viewport PWA, sub-30s flow, clear insufficient-power error state. Pages live under `apps/web/app/checkout/`.
 
 ---
 
