@@ -13,8 +13,9 @@ interface SpendingPowerCardProps {
 	loading?: boolean;
 }
 
-function money(n: number) {
-	return n.toLocaleString("en-US", {
+function money(n: number | null | undefined) {
+	const v = typeof n === "number" && Number.isFinite(n) ? n : 0;
+	return v.toLocaleString("en-US", {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
 	});

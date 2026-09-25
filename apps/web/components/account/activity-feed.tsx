@@ -121,13 +121,15 @@ export function ActivityFeed({ items, loading = false }: ActivityFeedProps) {
 								<p className="mt-0.5 truncate text-xs text-muted-foreground">{item.description}</p>
 							</div>
 							<div className="shrink-0 text-right">
-								{item.amount !== null && (
+								{item.amount !== null && item.amount !== undefined && (
 									<p className="font-mono text-sm font-semibold tabular-nums text-foreground">
 										$
-										{item.amount.toLocaleString("en-US", {
-											minimumFractionDigits: 2,
-											maximumFractionDigits: 2,
-										})}
+										{Number.isFinite(item.amount)
+											? item.amount.toLocaleString("en-US", {
+													minimumFractionDigits: 2,
+													maximumFractionDigits: 2,
+												})
+											: "0.00"}
 									</p>
 								)}
 								<p className="mt-0.5 font-mono text-[11px] text-muted-foreground">

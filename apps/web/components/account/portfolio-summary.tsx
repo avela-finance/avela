@@ -18,16 +18,21 @@ interface PortfolioSummaryProps {
 	loading?: boolean;
 }
 
-function money(n: number) {
-	return n.toLocaleString("en-US", {
+function money(n: number | null | undefined) {
+	const v = typeof n === "number" && Number.isFinite(n) ? n : 0;
+	return v.toLocaleString("en-US", {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
 	});
 }
 
-function glyph(symbol: string) {
-	const clean = symbol.replace(/^w/i, "");
-	return clean.slice(0, 2).toUpperCase();
+function num(n: number | null | undefined) {
+	return typeof n === "number" && Number.isFinite(n) ? n : 0;
+}
+
+function glyph(symbol: string | null | undefined) {
+	const clean = (symbol ?? "").replace(/^w/i, "");
+	return (clean.slice(0, 2) || "?").toUpperCase();
 }
 
 export function PortfolioSummary({ positions, loading = false }: PortfolioSummaryProps) {
@@ -92,10 +97,9 @@ export function PortfolioSummary({ positions, loading = false }: PortfolioSummar
 			) : (
 				<ul className="mt-5 space-y-5">
 					{positions.map((position) => {
-						const ratio =
-							position.positionValue > 0
-								? Math.min(1, Math.max(0, position.spendingPower / position.positionValue))
-								: 0;
+						const value = num(position.positionValue);
+						const unlocked = num(position.spendingPower);
+						const ratio = value > 0 ? Math.min(1, Math.max(0, unlocked / value)) : 0;
 						return (
 							<li key={position.assetSymbol}>
 								<div className="flex items-center gap-3">

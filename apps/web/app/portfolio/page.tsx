@@ -54,7 +54,8 @@ export default function PortfolioPage() {
 		fetchPortfolio();
 	}, [getAccessToken, refreshKey]);
 
-	const positions = portfolio?.positions ?? [];
+	const rawPositions = portfolio?.positions;
+	const positions = Array.isArray(rawPositions) ? rawPositions : [];
 	const isEmpty = !loading && positions.length === 0;
 
 	return (
