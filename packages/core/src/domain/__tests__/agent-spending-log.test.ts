@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import { getAgentSpendingLog, logAgentSpending, registerAgent } from "../agent.js";
 import { DEMO_AGENT_PERMISSION } from "../types.js";
@@ -26,6 +26,10 @@ describeDb("agent spending log (requires TEST_DATABASE_URL)", () => {
 			permissions: DEMO_AGENT_PERMISSION,
 		});
 		testAgentId = agent.id;
+	});
+
+	afterEach(async () => {
+		await cleanDatabase(db);
 	});
 
 	afterAll(async () => {

@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import {
 	createPaymentIntent,
@@ -57,6 +57,10 @@ describeDb("payment intent CRUD (requires TEST_DATABASE_URL)", () => {
 			VALUES ('01JACCOUNT0000000000000', '0xTESTWALLET000000000000000000000000000000', 'active')
 			ON CONFLICT (id) DO NOTHING
 		`);
+	});
+
+	afterEach(async () => {
+		await cleanDatabase(db);
 	});
 
 	afterAll(async () => {

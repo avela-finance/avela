@@ -2,9 +2,10 @@ import { sql } from "drizzle-orm";
 import type { Database } from "../../db/client.js";
 
 // Child tables first — parents (accounts, payment_intents) last.
-// Every DB integration test file must call cleanDatabase in beforeEach or
-// afterEach: files share one database and run with fixed IDs, so any residue
-// causes unique/FK violations in other files.
+// Every DB integration test file must call cleanDatabase in BOTH beforeEach
+// AND afterEach: files share one database and run with fixed IDs, so any
+// residue causes unique/FK violations in other files. beforeEach-only leaves
+// the last test's rows behind; afterEach-only inherits the previous file's.
 const TABLES_IN_DELETE_ORDER = [
 	"agent_spending_log",
 	"agents",

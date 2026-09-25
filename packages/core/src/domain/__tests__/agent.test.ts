@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import {
 	getAgent,
@@ -22,6 +22,10 @@ describeDb("agent CRUD (requires TEST_DATABASE_URL)", () => {
 	beforeEach(async () => {
 		await cleanDatabase(db);
 		await testClient`INSERT INTO accounts (id, wallet_address, status, created_at, updated_at) VALUES ('01JACCOUNT0000000000000', '0x1234567890abcdef1234567890abcdef12345678', 'active', NOW(), NOW())`;
+	});
+
+	afterEach(async () => {
+		await cleanDatabase(db);
 	});
 
 	afterAll(async () => {

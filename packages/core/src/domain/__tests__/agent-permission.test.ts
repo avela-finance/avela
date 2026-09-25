@@ -5,6 +5,7 @@ import * as schema from "../../db/schema.js";
 import { registerAgent, revokeAgent } from "../agent.js";
 import { evaluateAgentPermission } from "../agent-permission.js";
 import { DEMO_AGENT_PERMISSION } from "../types.js";
+import { cleanDatabase } from "./helpers.js";
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL;
 const describeDb = TEST_DB_URL ? describe : describe.skip;
@@ -19,6 +20,10 @@ describeDb("evaluateAgentPermission", () => {
 	let restrictedRecipientAgentId: string;
 
 	beforeAll(async () => {
+		// Fixture account must exist: agents.account_id has a real FK.
+		// Wallet is unique to this file so no other file can collide with it.
+		await cleanDatabase(db);
+		await testClient`INSERT INTO accounts (id, wallet_address, status, created_at, updated_at) VALUES ('01JACCOUNT000000000000001', '0x7777777777777777777777777777777777777777', 'active', NOW(), NOW()) ON CONFLICT (id) DO NOTHING`;
 		const activeAgent = await registerAgent(db, {
 			accountId: "01JACCOUNT000000000000001",
 			name: "Active Bot",
@@ -58,6 +63,7 @@ describeDb("evaluateAgentPermission", () => {
 	});
 
 	afterAll(async () => {
+		await cleanDatabase(db);
 		await testClient.end();
 	});
 

@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import { createWatcher, updateWatcher } from "../watcher.js";
 import { evaluateAllActiveWatchers, evaluateWatcher } from "../watcher-evaluator.js";
@@ -44,6 +44,10 @@ describeDb("evaluateWatcher (requires TEST_DATABASE_URL)", () => {
 		spendingPowerResponses = [];
 		alertsSent = [];
 		spendingPowerCallCount = 0;
+	});
+
+	afterEach(async () => {
+		await cleanDatabase(db);
 	});
 
 	afterAll(async () => {
@@ -149,6 +153,10 @@ describeDb("evaluateAllActiveWatchers (requires TEST_DATABASE_URL)", () => {
 		`;
 		spendingPowerResponses = [];
 		alertsSent = [];
+	});
+
+	afterEach(async () => {
+		await cleanDatabase(db);
 	});
 
 	afterAll(async () => {

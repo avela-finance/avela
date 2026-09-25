@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { afterAll, afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { PriceFeedAdapter } from "../../adapters/price-feed.js";
 import * as schema from "../../db/schema.js";
 import { createAccount } from "../account.js";
@@ -10,6 +10,10 @@ import { cleanDatabase } from "./helpers.js";
 
 const testClient = postgres(process.env.TEST_DATABASE_URL ?? "postgres://localhost:5432/skipped");
 const db = drizzle(testClient, { schema });
+
+beforeEach(async () => {
+	await cleanDatabase(db);
+});
 
 afterEach(async () => {
 	await cleanDatabase(db);
