@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
 	bigint,
 	boolean,
@@ -38,7 +39,10 @@ export const stablecoinBalancesTable = pgTable("stablecoin_balances", {
 		.notNull()
 		.references(() => accountsTable.id),
 	stablecoin: varchar("stablecoin", { length: 10 }).notNull(),
-	amount: bigint("amount", { mode: "bigint" }).notNull().default(0n),
+	// NOTE: default expressed as raw SQL, not 0n — drizzle-kit crashes
+	// ("Do not know how to serialize a BigInt") when a JS bigint literal
+	// appears in the schema snapshot during `drizzle-kit push`.
+	amount: bigint("amount", { mode: "bigint" }).notNull().default(sql`0`),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

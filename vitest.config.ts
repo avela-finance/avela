@@ -10,7 +10,10 @@ export default defineConfig({
 		exclude: ["**/node_modules/**", "**/.next/**", "resources/**", "contracts/**"],
 		// DB integration tests share one database with fixed IDs — run test
 		// files serially so parallel workers can't collide on the same rows.
+		// NOTE: `poolOptions.forks.singleFork` was removed in Vitest 4 and is
+		// silently ignored (v5 logs a deprecation warning) — fileParallelism
+		// is the supported switch.
 		pool: "forks",
-		poolOptions: { forks: { singleFork: true } },
+		fileParallelism: false,
 	},
 });
