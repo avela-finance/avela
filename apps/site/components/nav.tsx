@@ -75,7 +75,7 @@ export function Nav() {
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.8, ease: APPLE_EASE }}
-				className="dark fixed top-0 right-0 left-0 z-50 border-b border-border bg-background/90 backdrop-blur-xl"
+				className="dark fixed top-0 right-0 left-0 z-50 bg-transparent"
 			>
 				<nav
 					aria-label="Primary"

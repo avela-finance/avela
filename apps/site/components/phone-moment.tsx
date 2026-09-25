@@ -7,13 +7,13 @@ import { APPLE_EASE } from "@/lib/motion";
 export function PhoneMoment() {
 	return (
 		<section className="scroll-mt-28 bg-background px-4 py-24 md:py-32">
-			<div className="mx-auto flex max-w-5xl flex-col items-center gap-12">
+			<div className="mx-auto flex max-w-5xl flex-col items-center gap-8">
 				<motion.div
 					initial={{ opacity: 0, y: 24 }}
 					whileInView={{ opacity: 1, y: 0 }}
 					viewport={{ once: true, margin: "-50px" }}
 					transition={{ duration: 0.8, ease: APPLE_EASE }}
-					className="flex flex-col items-center gap-4 text-center"
+					className="flex flex-col items-center gap-5 text-center"
 				>
 					<p className="font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground">
 						The app
@@ -31,13 +31,9 @@ export function PhoneMoment() {
 					whileInView={{ opacity: 1, y: 0 }}
 					viewport={{ once: true, margin: "-50px" }}
 					transition={{ duration: 0.8, ease: APPLE_EASE }}
-					className="relative w-full"
+					className="w-full"
 				>
-					<div
-						aria-hidden="true"
-						className="absolute inset-x-24 top-24 bottom-0 rounded-full bg-feature-lime opacity-25 blur-3xl"
-					/>
-					<AppMockup className="relative" />
+					<AppMockup />
 				</motion.div>
 			</div>
 		</section>

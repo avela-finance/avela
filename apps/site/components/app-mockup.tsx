@@ -31,9 +31,9 @@ const actions = [
  */
 export function AppMockup({ className }: { className?: string }) {
 	return (
-		<div aria-hidden="true" className={cn("relative mx-auto w-full max-w-[340px]", className)}>
-			<div className="relative rounded-[3rem] border border-border bg-card p-2.5 shadow-2xl">
-				<div className="flex flex-col gap-4 overflow-hidden rounded-[2.4rem] bg-background px-5 pt-4 pb-6">
+		<div aria-hidden="true" className={cn("relative mx-auto w-full max-w-[320px]", className)}>
+			<div className="relative rounded-[3rem] border border-border bg-card p-2">
+				<div className="flex flex-col gap-3 overflow-hidden rounded-[2.4rem] bg-background px-4 pt-3 pb-4">
 					<div className="flex items-center justify-between text-xs font-semibold tabular-nums">
 						<span>9:41</span>
 						<span className="h-5 w-20 rounded-full bg-foreground" />
@@ -63,12 +63,12 @@ export function AppMockup({ className }: { className?: string }) {
 						<span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
 							Spending power
 						</span>
-						<span className="font-display text-4xl font-bold leading-none tracking-tight tabular-nums">
+						<span className="font-display text-3xl font-bold leading-none tracking-tight tabular-nums">
 							$12,473<span className="opacity-40">.82</span>
 						</span>
 					</div>
 
-					<div className="flex items-center justify-between gap-2 rounded-2xl bg-foreground px-4 py-2.5 text-xs font-medium text-background">
+					<div className="flex items-center justify-between gap-2 rounded-2xl bg-foreground px-4 py-2 text-xs font-medium text-background">
 						<span className="flex items-center gap-1.5">
 							<Vault size={14} weight="duotone" /> 2 positions locked
 						</span>
@@ -79,22 +79,22 @@ export function AppMockup({ className }: { className?: string }) {
 						{actions.map((a) => (
 							<span
 								key={a.label}
-								className="flex flex-col items-center gap-1.5 rounded-2xl bg-muted py-3 text-xs font-medium"
+								className="flex flex-col items-center gap-1 rounded-2xl bg-muted py-2.5 text-xs font-medium"
 							>
 								<a.icon size={18} weight="duotone" /> {a.label}
 							</span>
 						))}
 					</div>
 
-					<div className="flex flex-col gap-3.5 rounded-2xl bg-muted px-4 py-3.5">
+					<div className="flex flex-col gap-2.5 rounded-2xl bg-muted px-4 py-3">
 						<span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
 							Portfolio
 						</span>
 						{positions.map((row) => (
-							<div key={row.symbol} className="flex flex-col gap-1.5">
+							<div key={row.symbol} className="flex flex-col gap-1">
 								<div className="flex items-baseline justify-between gap-2">
 									<span className="font-mono text-xs font-medium">
-										{row.symbol} <span className="opacity-50">· {row.name}</span>
+										{row.symbol} <span className="opacity-70">· {row.name}</span>
 									</span>
 									<span className="text-xs font-semibold tabular-nums">{row.value}</span>
 								</div>
@@ -109,13 +109,13 @@ export function AppMockup({ className }: { className?: string }) {
 					</div>
 
 					<div className="flex flex-col rounded-2xl bg-muted px-4 py-1">
-						<div className="flex items-center justify-between py-2 text-xs">
+						<div className="flex items-center justify-between py-1.5 text-xs">
 							<span className="flex items-center gap-2 font-medium">
 								<Wallet size={16} weight="duotone" /> Reserve balance
 							</span>
 							<span className="font-semibold tabular-nums">$8,124.05</span>
 						</div>
-						<div className="flex items-center justify-between border-t border-border py-2 text-xs">
+						<div className="flex items-center justify-between border-t border-border py-1.5 text-xs">
 							<span className="flex items-center gap-2 font-medium">
 								<TrendUp size={16} weight="duotone" /> Vault value
 							</span>
@@ -123,7 +123,7 @@ export function AppMockup({ className }: { className?: string }) {
 						</div>
 					</div>
 
-					<div className="flex items-center justify-around rounded-full bg-muted px-4 py-2.5 text-[10px] font-medium text-muted-foreground">
+					<div className="flex items-center justify-around rounded-full bg-muted px-4 py-2 text-[10px] font-medium text-muted-foreground">
 						<span className="flex flex-col items-center gap-0.5 text-foreground">
 							<House size={18} weight="fill" /> Home
 						</span>
