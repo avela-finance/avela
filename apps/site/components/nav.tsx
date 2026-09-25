@@ -19,7 +19,7 @@ const sectionLinks = [
 const productItems = [
 	{
 		title: "Spend",
-		desc: "Pay from your portfolio, positions intact",
+		desc: "Pay from tokenized stocks, positions intact",
 		href: "#spend",
 	},
 	{
@@ -27,10 +27,14 @@ const productItems = [
 		desc: "Claim a username, get paid at your link",
 		href: "#pay",
 	},
-	{ title: "Borrow", desc: "Unlock cash against your holdings", href: "#borrow" },
-	{ title: "Agents", desc: "Scoped spending for humans and AI", href: "#agents" },
-	{ title: "Avela Card", desc: "One card for the portfolio — coming soon", href: "#card" },
-	{ title: "Avela Business", desc: "Team treasury — coming soon", href: "#business" },
+	{ title: "Borrow", desc: "Unlock cash against tokenized stocks", href: "#borrow" },
+	{ title: "Agents", desc: "Stock-backed allowances for humans and AI", href: "#agents" },
+	{ title: "Avela Card", desc: "One card backed by tokenized stocks — coming soon", href: "#card" },
+	{
+		title: "Avela Business",
+		desc: "Team treasury on tokenized stocks — coming soon",
+		href: "#business",
+	},
 ];
 
 const linkMono =

@@ -43,10 +43,18 @@ function CountryRow({ countries, reverse }: { countries: string[]; reverse?: boo
 			className="flex w-max animate-[marquee_40s_linear_infinite] gap-3 motion-reduce:animate-none"
 			style={reverse ? { animationDirection: "reverse" } : undefined}
 		>
-			{[...countries, ...countries].map((country, i) => (
+			{countries.map((country) => (
 				<span
-					key={`${country}-${i}`}
-					aria-hidden={i >= countries.length || undefined}
+					key={country}
+					className="shrink-0 rounded-full border border-border px-5 py-2 font-mono text-xs tracking-widest whitespace-nowrap text-muted-foreground uppercase"
+				>
+					{country}
+				</span>
+			))}
+			{countries.map((country) => (
+				<span
+					key={`${country}-dup`}
+					aria-hidden="true"
 					className="shrink-0 rounded-full border border-border px-5 py-2 font-mono text-xs tracking-widest whitespace-nowrap text-muted-foreground uppercase"
 				>
 					{country}
