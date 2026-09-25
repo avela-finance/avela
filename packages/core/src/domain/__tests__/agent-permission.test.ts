@@ -2,9 +2,11 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
+import { createAccount } from "../account.js";
 import { registerAgent, revokeAgent } from "../agent.js";
 import { evaluateAgentPermission } from "../agent-permission.js";
 import { DEMO_AGENT_PERMISSION } from "../types.js";
+import { cleanDatabase } from "./helpers.js";
 
 const TEST_DB_URL = process.env.TEST_DATABASE_URL;
 const describeDb = TEST_DB_URL ? describe : describe.skip;
@@ -19,6 +21,8 @@ describeDb("evaluateAgentPermission", () => {
 	let restrictedRecipientAgentId: string;
 
 	beforeAll(async () => {
+		await cleanDatabase(db);
+		await createAccount(db, "0x1234567890abcdef1234567890abcdef12345678");
 		const activeAgent = await registerAgent(db, {
 			accountId: "01JACCOUNT000000000000001",
 			name: "Active Bot",
@@ -58,6 +62,7 @@ describeDb("evaluateAgentPermission", () => {
 	});
 
 	afterAll(async () => {
+		await cleanDatabase(db);
 		await testClient.end();
 	});
 
