@@ -55,7 +55,8 @@ export default function DashboardPage() {
 			]);
 
 			setSpendingPower(accountRes.data);
-			setActivity(paymentsRes.data?.items ?? []);
+			const items = paymentsRes.data?.items;
+			setActivity(Array.isArray(items) ? items : []);
 		} catch {
 			setError(true);
 			setSpendingPower({
@@ -110,7 +111,10 @@ export default function DashboardPage() {
 			/>
 
 			<div className="grid gap-5 lg:grid-cols-2">
-				<PortfolioSummary positions={spendingPower?.positions ?? []} loading={loading} />
+				<PortfolioSummary
+					positions={Array.isArray(spendingPower?.positions) ? spendingPower.positions : []}
+					loading={loading}
+				/>
 				<ActivityFeed items={activity} loading={loading} />
 			</div>
 		</div>

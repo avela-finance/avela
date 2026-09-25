@@ -30,7 +30,8 @@ export default function AgentsPage() {
 				setError(null);
 				const token = await getAccessToken();
 				const response = await api.get<AgentsResponse>("/agents", { token });
-				setAgents(response.data.agents ?? []);
+				const list = response.data?.agents;
+				setAgents(Array.isArray(list) ? list : []);
 			} catch (err) {
 				console.error("Failed to fetch agents:", err);
 				setError(err instanceof Error ? err.message : "Failed to load agents");
@@ -87,10 +88,10 @@ export default function AgentsPage() {
 						<AgentCard
 							key={agent.id}
 							id={agent.id}
-							name={agent.name}
-							status={agent.status}
-							maxPerTransaction={agent.permissions.maxPerTransaction}
-							maxPerDay={agent.permissions.maxPerDay}
+							name={agent.name ?? "Agent"}
+							status={agent.status ?? "active"}
+							maxPerTransaction={agent.permissions?.maxPerTransaction}
+							maxPerDay={agent.permissions?.maxPerDay}
 							dailySpent={agent.dailySpent}
 						/>
 					))}

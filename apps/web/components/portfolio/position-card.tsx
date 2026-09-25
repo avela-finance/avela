@@ -13,16 +13,21 @@ type PositionCardProps = {
 	spendingPower: number;
 };
 
-function money(n: number, digits = 2) {
-	return n.toLocaleString("en-US", {
+function money(n: number | null | undefined, digits = 2) {
+	const v = typeof n === "number" && Number.isFinite(n) ? n : 0;
+	return v.toLocaleString("en-US", {
 		minimumFractionDigits: digits,
 		maximumFractionDigits: digits,
 	});
 }
 
-function glyph(symbol: string) {
-	const clean = symbol.replace(/^w/i, "");
-	return clean.slice(0, 2).toUpperCase();
+function num(n: number | null | undefined) {
+	return typeof n === "number" && Number.isFinite(n) ? n : 0;
+}
+
+function glyph(symbol: string | null | undefined) {
+	const clean = (symbol ?? "").replace(/^w/i, "");
+	return (clean.slice(0, 2) || "?").toUpperCase();
 }
 
 export function PositionCard({
@@ -33,7 +38,9 @@ export function PositionCard({
 	haircut,
 	spendingPower,
 }: PositionCardProps) {
-	const ratio = positionValue > 0 ? Math.min(1, Math.max(0, spendingPower / positionValue)) : 0;
+	const value = num(positionValue);
+	const unlocked = num(spendingPower);
+	const ratio = value > 0 ? Math.min(1, Math.max(0, unlocked / value)) : 0;
 
 	return (
 		<motion.div

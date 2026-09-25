@@ -1,10 +1,11 @@
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | null | undefined): string {
+	const n = typeof amount === "number" && Number.isFinite(amount) ? amount : 0;
 	return new Intl.NumberFormat("en-US", {
 		style: "currency",
 		currency: "USD",
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
-	}).format(amount);
+	}).format(n);
 }
 
 export function formatAddress(address: string): string {

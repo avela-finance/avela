@@ -8,9 +8,9 @@ type AgentCardProps = {
 	id: string;
 	name: string;
 	status: "active" | "suspended" | "expired" | "revoked";
-	maxPerTransaction: number;
-	maxPerDay: number;
-	dailySpent: number;
+	maxPerTransaction: number | null | undefined;
+	maxPerDay: number | null | undefined;
+	dailySpent: number | null | undefined;
 };
 
 const statusConfig = {
