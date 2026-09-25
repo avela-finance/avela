@@ -14,7 +14,7 @@ export function CTA() {
 				transition={{ duration: 0.8, ease: APPLE_EASE }}
 				className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center"
 			>
-				<h2 className="font-display text-5xl font-bold leading-[0.95] tracking-tight text-balance md:text-[60px]">
+				<h2 className="font-display text-5xl font-bold leading-[0.95] tracking-tight text-balance text-foreground md:text-[60px]">
 					Spend from your portfolio.
 					<br />
 					Keep every share.

@@ -6,6 +6,9 @@ import { LogoMark } from "@/components/logo-mark";
 
 const APP_URL = "https://app.useavela.xyz";
 
+const legalLink =
+	"font-mono text-sm text-muted-foreground transition-colors duration-300 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
+
 const columns = [
 	{
 		heading: "Product",
@@ -38,7 +41,7 @@ export function Footer() {
 					<div className="flex flex-col items-start gap-5">
 						<a
 							href="#top"
-							className="font-display text-2xl font-bold tracking-tight rounded-sm transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none flex items-center gap-2"
+							className="font-display text-2xl font-bold tracking-tight rounded-sm text-foreground transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none flex items-center gap-2"
 						>
 							<LogoMark />
 							<span>Avela</span>
@@ -84,30 +87,24 @@ export function Footer() {
 							Legal
 						</h3>
 						<ul className="mt-5 flex flex-col gap-4">
-							{/* TODO: point Privacy and Terms at real pages once published. Disabled spans until then. */}
+							{/* TODO: point Privacy, Terms, and Support at real pages once published. */}
 							<li>
-								<span
-									aria-disabled="true"
-									className="cursor-not-allowed font-mono text-sm opacity-40"
-								>
+								{/* biome-ignore lint/a11y/useValidAnchor: placeholder href until the legal page ships */}
+								<a href="#" className={legalLink}>
 									Privacy
-								</span>
+								</a>
 							</li>
 							<li>
-								<span
-									aria-disabled="true"
-									className="cursor-not-allowed font-mono text-sm opacity-40"
-								>
+								{/* biome-ignore lint/a11y/useValidAnchor: placeholder href until the legal page ships */}
+								<a href="#" className={legalLink}>
 									Terms
-								</span>
+								</a>
 							</li>
 							<li>
-								<span
-									aria-disabled="true"
-									className="cursor-not-allowed font-mono text-sm opacity-40"
-								>
+								{/* biome-ignore lint/a11y/useValidAnchor: placeholder href until the legal page ships */}
+								<a href="#" className={legalLink}>
 									Support
-								</span>
+								</a>
 							</li>
 						</ul>
 					</nav>

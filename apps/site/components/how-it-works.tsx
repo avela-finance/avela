@@ -75,7 +75,7 @@ export function HowItWorks() {
 
 						<div className="mt-auto pt-10">
 							<span className={NUMBER_PILL}>01</span>
-							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight">
+							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight text-foreground">
 								Deposit
 							</h3>
 							<p className="mt-3 max-w-md text-pretty text-sm leading-relaxed opacity-80 md:text-base">
@@ -95,7 +95,7 @@ export function HowItWorks() {
 					>
 						<div className="flex flex-col gap-1">
 							<span className={NUMBER_PILL}>02</span>
-							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight">
+							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight text-foreground">
 								Unlock
 							</h3>
 							<p className="mt-3 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -141,7 +141,7 @@ export function HowItWorks() {
 					>
 						<div className="flex flex-col gap-1">
 							<span className={NUMBER_PILL}>03</span>
-							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight">
+							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight text-foreground">
 								Spend
 							</h3>
 							<p className="mt-3 max-w-md text-pretty text-sm leading-relaxed opacity-80 md:text-base">
@@ -182,7 +182,7 @@ export function HowItWorks() {
 					>
 						<div className="flex flex-col gap-1">
 							<span className={NUMBER_PILL}>04</span>
-							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight">
+							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight text-foreground">
 								Automate
 							</h3>
 							<p className="mt-3 max-w-md text-pretty text-sm leading-relaxed opacity-80 md:text-base">

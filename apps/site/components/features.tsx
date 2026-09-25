@@ -77,7 +77,7 @@ export function Features() {
 									aria-hidden="true"
 								/>
 							</span>
-							<h3 className="font-display text-xl font-bold leading-tight tracking-tight text-balance">
+							<h3 className="font-display text-xl font-bold leading-tight tracking-tight text-balance text-foreground">
 								{feature.title}
 							</h3>
 							<p className="text-sm leading-relaxed text-pretty text-muted-foreground">
