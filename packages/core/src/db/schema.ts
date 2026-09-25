@@ -37,8 +37,11 @@ export const stablecoinBalancesTable = pgTable("stablecoin_balances", {
 	accountId: varchar("account_id", { length: 26 })
 		.notNull()
 		.references(() => accountsTable.id),
+	// Note: no .default() here — drizzle-kit push crashes serializing BigInt
+	// defaults ("Do not know how to serialize a BigInt"). Writers must pass
+	// an explicit amount.
 	stablecoin: varchar("stablecoin", { length: 10 }).notNull(),
-	amount: bigint("amount", { mode: "bigint" }).notNull().default(0n),
+	amount: bigint("amount", { mode: "bigint" }).notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
