@@ -64,7 +64,10 @@ GET  /identity/resolve/:username       — Resolve to account (public)
 ### Payment Link Page (apps/web)
 
 ```
-Route: /pay/:username
+Route: /pay/:username (on app.useavela.xyz)
+Short link: pay.useavela.xyz/:username — DNS alias to the same deployment
+(avela-web), rewritten to /pay/:username by apps/web/middleware.ts.
+Root pay.useavela.xyz/ redirects to https://app.useavela.xyz.
 - Resolves username to account
 - Shows: recipient display name or username
 - Optional: pre-filled amount via query param (?amount=25)

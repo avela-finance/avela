@@ -120,6 +120,6 @@ apps/site/
 
 ## Open Questions
 
-- Domain: useavela.xyz already registered? Deployment: Vercel?
+- Domain: useavela.xyz registered on Vercel (live). `app.useavela.xyz` → avela-web, `api.useavela.xyz` → Render `avela-api` via CNAME.
 - Design reference: use avela-v0 site as starting point, or fresh design?
 - Asset logos: source from xStocks branding or create custom?
