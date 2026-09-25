@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { WalletButton } from "@/components/connect/wallet-button";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Sidebar } from "@/components/layout/sidebar";
+import { LogoMark } from "@/components/logo-mark";
 import { cn } from "@/lib/utils";
 
 interface AppShellProps {
@@ -45,7 +46,10 @@ export function AppShell({ children }: AppShellProps) {
 		return (
 			<div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4">
 				<div className="text-center space-y-2">
-					<h1 className="text-3xl font-semibold tracking-tight">Avela</h1>
+					<div className="flex items-center justify-center gap-2">
+						<LogoMark className="size-6" />
+						<h1 className="text-3xl font-semibold tracking-tight">Avela</h1>
+					</div>
 					<p className="text-muted-foreground text-sm max-w-xs">
 						Programmable spending account for tokenized stocks
 					</p>
@@ -67,7 +71,10 @@ export function AppShell({ children }: AppShellProps) {
 						scrolled ? "border-b border-border" : "border-b border-transparent",
 					)}
 				>
-					<span className="text-lg font-semibold tracking-tight">Avela</span>
+					<span className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+						<LogoMark />
+						Avela
+					</span>
 					<WalletButton />
 				</header>
 

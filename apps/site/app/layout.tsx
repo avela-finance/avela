@@ -29,6 +29,17 @@ const saans = localFont({
 	fallback: ["system-ui", "sans-serif"],
 });
 
+const navMono = localFont({
+	src: [
+		{ path: "../public/fonts/SaansMono-TRIAL-Regular.woff2", weight: "400" },
+		{ path: "../public/fonts/SaansMono-TRIAL-Medium.woff2", weight: "500" },
+	],
+	variable: "--font-navmono",
+	display: "swap",
+	preload: true,
+	fallback: ["ui-monospace", "monospace"],
+});
+
 const fontMono = Geist_Mono({
 	subsets: ["latin"],
 	variable: "--font-mono",
@@ -39,6 +50,18 @@ export const metadata: Metadata = {
 	description:
 		"One programmable account to hold tokenized stocks, unlock spending power, and pay across commerce. Built on X Layer.",
 	metadataBase: new URL("https://useavela.xyz"),
+	icons: [
+		{
+			media: "(prefers-color-scheme: light)",
+			url: "/favicon-black.svg",
+			href: "/favicon-black.svg",
+		},
+		{
+			media: "(prefers-color-scheme: dark)",
+			url: "/favicon-white.svg",
+			href: "/favicon-white.svg",
+		},
+	],
 	openGraph: {
 		title: "Avela — Programmable Spending Account",
 		description:
@@ -68,7 +91,14 @@ export default function RootLayout({
 	return (
 		<html
 			lang="en"
-			className={cn("antialiased", fontMono.variable, "font-sans", saans.variable, gellix.variable)}
+			className={cn(
+				"antialiased",
+				fontMono.variable,
+				"font-sans",
+				saans.variable,
+				gellix.variable,
+				navMono.variable,
+			)}
 		>
 			<body>{children}</body>
 		</html>

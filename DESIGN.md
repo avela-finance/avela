@@ -87,6 +87,8 @@ Display: Gellix 700 (WhatFont-verified against the reference: 95px/86px hero, 64
 | `apps/site/public/fonts/Saans-TRIAL-Medium.woff2` | 500 | Nav/labels/FAQ questions |
 | `apps/site/public/fonts/Saans-TRIAL-SemiBold.woff2` | 600 | Buttons/card titles |
 | `apps/site/public/fonts/Saans-TRIAL-Bold.woff2` | 700 | Emphasis in body |
+| `apps/site/public/fonts/SaansMono-TRIAL-Regular.woff2` | 400 | Nav links (mono caps) |
+| `apps/site/public/fonts/SaansMono-TRIAL-Medium.woff2` | 500 | Nav links (mono caps) |
 
 Loaded via `next/font/local` in `apps/site/app/layout.tsx`: Gellix as `--font-display` (fallback `'Gellix Fallback'`, system-ui, sans-serif), Saans as `--font-sans` (fallback system-ui, sans-serif), both `display: swap`, preloaded. `@theme inline` maps `--font-display: var(--font-display)` (class `font-display`).
 
@@ -111,7 +113,20 @@ Tailwind default type scale only. No custom sizes.
 
 Weights: Saans 400 body, 500 nav/labels/FAQ questions, 600 buttons/card titles; Gellix 700 all headings (h1/h2/h3) + hero + phone balance figures.
 
+Section headings: mobile keeps the type-scale step (`text-3xl`/`text-5xl`), desktop is always 64px (`md:text-[64px] md:leading-[0.95]`, Gellix 700, `tracking-tight`, `text-balance`). Hero h1 follows the same desktop size.
+
 Rules: `font-display` on every h1/h2/h3 and display figure; `leading-[0.9]` on hero-scale text (`text-5xl`+), `leading-tight` on smaller display text; `tracking-tight` on all headings, `tracking-wider` on uppercase labels, `text-wrap-balance` on headings, `text-wrap-pretty` on multi-line body, `tabular-nums` on financial figures (kept alongside Gellix on the balance figure).
+
+## Buttons (site)
+
+All CTAs use `CtaButton` (`components/ui/cta-button.tsx`): full-rounded pill, `md` size `px-8 py-4 text-base` (`sm` for nav: `px-5 py-2.5 text-sm`), semibold label plus arrow in a light circle (`bg-black/10` on lime, `bg-white/20` on ink). Variants: `lime` (dark surfaces), `ink` (light surfaces), `cream` (dark-surface secondary). No rectangular buttons, no bare links as primary CTAs.
+
+## Nav (site)
+
+Flat full-width bar (`h-16`, `max-w-6xl`), transparent over the dark hero with cream text; past 8px scroll gains ink/90 + blur + border-b (rAF-throttled listener).
+Left: LogoMark + Gellix 700 wordmark. Links: Saans Mono 500, uppercase, `text-[13px]` tracking-widest — nothing else uses mono.
+PRODUCTS dropdown (Esc closes, click-outside closes, focus-visible rings) anchors to the on-page product blocks: Spend, Pay, Borrow → `#spend` / `#pay` / `#borrow`, Avela Card (coming soon) → `#card`. One-line desc each, lime title on hover.
+Right: lime `CtaButton` pill + hamburger. Mobile: overlay with staggered links, inline PRODUCTS group, CTA pinned bottom.
 
 ## Spacing
 
@@ -162,3 +177,9 @@ No hex literals in components or styles. All color goes through semantic tokens 
 | Phone spending-power mock | `apps/site/components/phone-moment.tsx` | CSS-built, static demo figures | Live web PWA screenshot | TODO |
 | CTA lifestyle photo | `apps/site/components/photo-cta.tsx` | `https://picsum.photos/seed/avela-cta/1920/1080` (1920×1080) | Commissioned lifestyle photography | TODO |
 | Social share image | `apps/site/app/` | — | Generated og-image | TODO |
+
+## Shared CTA + Global (site)
+
+CtaButton (`apps/site/components/ui/cta-button.tsx`): pill (`rounded-full`, `px-7 py-3.5`, `text-base font-semibold`, label + ArrowRight size 18 in contrasting circle). Variants: `lime` (`bg-accent`), `ink` (`bg-primary`, light sections), `cream` (`bg-primary-foreground`, dark sections). `sm` size for nav. All: `active:scale-[0.98]`, focus rings, APPLE_EASE.
+Products dropdown: Spend (/payments) · Pay Links (/settings) · Agents (/agents) · Watchers (/watchers) → `app.useavela.xyz`. No borrow, no card.
+Global (`components/global.tsx`, `id="global"`, after SupportedAssets): mono "GLOBAL COVERAGE" eyebrow, Gellix "One account, everywhere.", X Layer + USDG/USDC body, bordered mono region chips (Africa / Southeast Asia / Latin America, built-for framing).

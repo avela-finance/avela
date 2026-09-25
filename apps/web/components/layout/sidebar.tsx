@@ -11,6 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoMark } from "@/components/logo-mark";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
 
@@ -39,9 +40,10 @@ export function Sidebar() {
 			<div className="flex h-14 items-center px-6 border-b border-border">
 				<Link
 					href="/"
-					className="rounded-sm text-lg font-semibold tracking-tight transition-transform duration-150 active:scale-[0.98]"
+					className="rounded-sm text-lg font-semibold tracking-tight transition-transform duration-150 active:scale-[0.98] flex items-center gap-2"
 				>
-					Avela
+					<LogoMark />
+					<span>Avela</span>
 				</Link>
 			</div>
 
