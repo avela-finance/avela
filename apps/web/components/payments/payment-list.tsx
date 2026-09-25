@@ -30,7 +30,9 @@ export function PaymentList({ payments }: { payments: Payment[] }) {
 							<p className="text-muted-foreground text-xs">{formatDate(payment.createdAt)}</p>
 						</div>
 						<div className="ml-4 flex flex-shrink-0 flex-col items-end gap-1">
-							<span className="text-sm font-semibold">{formatCurrency(payment.amount)}</span>
+							<span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+								{formatCurrency(payment.amount)}
+							</span>
 							<PaymentStatusBadge status={payment.status} />
 						</div>
 					</Link>

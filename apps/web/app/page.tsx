@@ -75,10 +75,14 @@ export default function DashboardPage() {
 	}, [load]);
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-5">
 			<div>
-				<h1 className="text-3xl font-bold text-balance">Dashboard</h1>
-				<p className="text-muted-foreground mt-1">Manage your spending power and portfolio</p>
+				<p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+					Avela · X Layer
+				</p>
+				<h1 className="mt-1.5 text-3xl font-bold tracking-tight text-balance text-foreground">
+					Overview
+				</h1>
 			</div>
 
 			{error && !loading && (
@@ -105,7 +109,7 @@ export default function DashboardPage() {
 				loading={loading}
 			/>
 
-			<div className="grid gap-6 lg:grid-cols-2">
+			<div className="grid gap-5 lg:grid-cols-2">
 				<PortfolioSummary positions={spendingPower?.positions ?? []} loading={loading} />
 				<ActivityFeed items={activity} loading={loading} />
 			</div>

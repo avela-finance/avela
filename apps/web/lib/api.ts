@@ -41,6 +41,8 @@ type RequestOptions = {
 	params?: Record<string, string | undefined>;
 	body?: unknown;
 	token?: string | null;
+	/** Abort the request after this many ms (default 20000). Prevents a hung backend from wedging the UI. */
+	timeoutMs?: number;
 };
 
 async function request<T>(
@@ -58,11 +60,25 @@ async function request<T>(
 		headers.Authorization = `Bearer ${options.token}`;
 	}
 
-	const res = await fetch(url, {
-		method,
-		headers,
-		body: options.body ? JSON.stringify(options.body) : undefined,
-	});
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 20000);
+
+	let res: Response;
+	try {
+		res = await fetch(url, {
+			method,
+			headers,
+			body: options.body ? JSON.stringify(options.body) : undefined,
+			signal: controller.signal,
+		});
+	} catch (err) {
+		if (err instanceof DOMException && err.name === "AbortError") {
+			throw new Error("Request timed out — please try again");
+		}
+		throw err;
+	} finally {
+		clearTimeout(timeout);
+	}
 
 	if (!res.ok) {
 		const errorBody = await res.json().catch(() => null);

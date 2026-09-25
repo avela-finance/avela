@@ -58,11 +58,15 @@ export default function PortfolioPage() {
 	const isEmpty = !loading && positions.length === 0;
 
 	return (
-		<div className="space-y-6">
-			<div className="flex items-start justify-between">
+		<div className="space-y-5">
+			<div className="flex items-start justify-between gap-3">
 				<div>
-					<h1 className="text-3xl font-bold">Portfolio</h1>
-					<p className="text-muted-foreground mt-1">Your locked positions and spending power</p>
+					<p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+						{positions.length > 0
+							? `${positions.length} position${positions.length === 1 ? "" : "s"} locked`
+							: "Vault positions"}
+					</p>
+					<h1 className="mt-1.5 text-3xl font-bold tracking-tight text-foreground">Portfolio</h1>
 				</div>
 				<Button onClick={() => setDepositOpen(true)}>Deposit</Button>
 			</div>
@@ -81,7 +85,7 @@ export default function PortfolioPage() {
 			)}
 
 			{loading ? (
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 					{Array.from({ length: 3 }).map((_, i) => (
 						<div
 							// biome-ignore lint/suspicious/noArrayIndexKey: skeleton keys are stable
@@ -113,7 +117,7 @@ export default function PortfolioPage() {
 					</p>
 				</div>
 			) : (
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 					{positions.map((position) => (
 						<PositionCard
 							key={position.assetSymbol}
