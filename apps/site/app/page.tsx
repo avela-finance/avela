@@ -19,8 +19,8 @@ export default function LandingPage() {
 			<BuiltOn />
 			<HowItWorks />
 			<Products />
-			<PhoneMoment />
 			<Features />
+			<PhoneMoment />
 			<SupportedAssets />
 			<Global />
 			<FAQ />
