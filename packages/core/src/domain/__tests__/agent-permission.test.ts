@@ -22,9 +22,9 @@ describeDb("evaluateAgentPermission", () => {
 
 	beforeAll(async () => {
 		await cleanDatabase(db);
-		await createAccount(db, "0x1234567890abcdef1234567890abcdef12345678");
+		const fixtureAccount = await createAccount(db, "0x1234567890abcdef1234567890abcdef12345678");
 		const activeAgent = await registerAgent(db, {
-			accountId: "01JACCOUNT000000000000001",
+			accountId: fixtureAccount.id,
 			name: "Active Bot",
 			walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
 			permissions: DEMO_AGENT_PERMISSION,
@@ -32,7 +32,7 @@ describeDb("evaluateAgentPermission", () => {
 		activeAgentId = activeAgent.id;
 
 		const revokedAgent = await registerAgent(db, {
-			accountId: "01JACCOUNT000000000000001",
+			accountId: fixtureAccount.id,
 			name: "Revoked Bot",
 			walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
 			permissions: DEMO_AGENT_PERMISSION,
@@ -41,7 +41,7 @@ describeDb("evaluateAgentPermission", () => {
 		await revokeAgent(db, revokedAgentId);
 
 		const expiredAgent = await registerAgent(db, {
-			accountId: "01JACCOUNT000000000000001",
+			accountId: fixtureAccount.id,
 			name: "Expired Bot",
 			walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
 			permissions: DEMO_AGENT_PERMISSION,
@@ -50,7 +50,7 @@ describeDb("evaluateAgentPermission", () => {
 		expiredAgentId = expiredAgent.id;
 
 		const restrictedAgent = await registerAgent(db, {
-			accountId: "01JACCOUNT000000000000001",
+			accountId: fixtureAccount.id,
 			name: "Restricted Bot",
 			walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
 			permissions: {

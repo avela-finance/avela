@@ -79,7 +79,7 @@ describe("position operations", () => {
 	});
 
 	it("recordWithdrawal rejects insufficient balance", async () => {
-		const account = await createAccount(db, "0xdddddddddddddddddddddddddddddddddddddd");
+		const account = await createAccount(db, "0xdddddddddddddddddddddddddddddddddddddddd");
 		const position = await recordDeposit(db, {
 			accountId: account.id,
 			assetSymbol: "wQQQx",
