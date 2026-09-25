@@ -6,25 +6,13 @@ import { DepositModal } from "@/components/portfolio/deposit-modal";
 import { PositionCard } from "@/components/portfolio/position-card";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-
-interface Position {
-	assetSymbol: string;
-	assetName: string;
-	amount: string;
-	positionValue: number;
-	haircut: number;
-	spendingPower: number;
-}
-
-interface PortfolioData {
-	positions: Position[];
-}
+import { type PositionView, toAccountView } from "@/lib/portfolio";
 
 export default function PortfolioPage() {
 	const { getAccessToken } = usePrivy();
 
 	const [loading, setLoading] = useState(true);
-	const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
+	const [positions, setPositions] = useState<PositionView[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	const [depositOpen, setDepositOpen] = useState(false);
 	const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -40,12 +28,12 @@ export default function PortfolioPage() {
 				const token = await getAccessToken();
 				setAccessToken(token);
 
-				const response = await api.get<PortfolioData>("/accounts/me/portfolio", { token });
-				setPortfolio(response.data);
+				const response = await api.get("/accounts/me/portfolio", { token });
+				setPositions(toAccountView(response.data).positions);
 			} catch (err) {
 				console.error("Failed to fetch portfolio:", err);
 				setError(err instanceof Error ? err.message : "Failed to load portfolio");
-				setPortfolio({ positions: [] });
+				setPositions([]);
 			} finally {
 				setLoading(false);
 			}
@@ -54,8 +42,6 @@ export default function PortfolioPage() {
 		fetchPortfolio();
 	}, [getAccessToken, refreshKey]);
 
-	const rawPositions = portfolio?.positions;
-	const positions = Array.isArray(rawPositions) ? rawPositions : [];
 	const isEmpty = !loading && positions.length === 0;
 
 	return (
