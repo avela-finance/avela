@@ -1,6 +1,14 @@
 "use client";
 
-import { ArrowRight, Cardholder, HandCoins, LockKey, PaperPlaneTilt } from "@phosphor-icons/react";
+import {
+	ArrowRight,
+	Buildings,
+	Cardholder,
+	HandCoins,
+	LockKey,
+	PaperPlaneTilt,
+	Robot,
+} from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import { APPLE_EASE } from "@/lib/motion";
 
@@ -36,6 +44,16 @@ const products = [
 		linkLabel: "View portfolio",
 	},
 	{
+		id: "agents",
+		icon: Robot,
+		name: "Agents",
+		status: "Live",
+		headline: "Give your agent an allowance.",
+		copy: "AI agents spend within scoped permissions you define — per-transaction limits, asset restrictions, daily caps, always revocable. Built for humans and the agents working for them.",
+		link: "https://app.useavela.xyz/agents",
+		linkLabel: "Set up an agent",
+	},
+	{
 		id: "card",
 		icon: Cardholder,
 		name: "Avela Card",
@@ -45,22 +63,32 @@ const products = [
 		link: "https://app.useavela.xyz",
 		linkLabel: "Get notified",
 	},
+	{
+		id: "business",
+		icon: Buildings,
+		name: "Avela Business",
+		status: "Coming soon",
+		headline: "Treasury that spends itself.",
+		copy: "Team wallets with roles, approvals, and spending policies on top of tokenized-stock collateral. Avela Business is coming soon.",
+		link: "https://app.useavela.xyz",
+		linkLabel: "Get notified",
+	},
 ];
 
 export function Products() {
 	return (
-		<section
-			id="products"
-			className="scroll-mt-28 border-t border-border bg-background px-4 py-24 md:py-32"
-		>
+		<section id="products" className="scroll-mt-28 bg-background px-4 py-24 md:py-32">
 			<div className="mx-auto max-w-6xl">
 				<div className="mb-14 md:mb-20">
 					<p className="font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground">
 						Products
 					</p>
-					<h2 className="mt-4 max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance md:text-[64px] md:leading-[0.95]">
+					<h2 className="mt-4 max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance md:text-[60px] md:leading-[0.95]">
 						Everything your portfolio can do.
 					</h2>
+					<p className="mt-4 max-w-xl text-pretty text-muted-foreground">
+						One account for humans and AI agents — every surface scoped, receipted, and revocable.
+					</p>
 				</div>
 
 				<div className="flex flex-col">

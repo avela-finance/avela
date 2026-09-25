@@ -39,6 +39,7 @@
 	--sidebar-ring: oklch(0.709 0.01 56.259);
 	--feature-peach: oklch(0.837 0.107 75.5);
 	--feature-lime: oklch(0.928 0.202 117.8);
+	--feature-olive: oklch(0.53 0.12 118);
 }
 
 .dark {
@@ -113,6 +114,7 @@
 	--color-background: var(--background);
 	--color-feature-peach: var(--feature-peach);
 	--color-feature-lime: var(--feature-lime);
+	--color-feature-olive: var(--feature-olive);
 	--radius-sm: calc(var(--radius) * 0.6);
 	--radius-md: calc(var(--radius) * 0.8);
 	--radius-lg: var(--radius);

@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { APPLE_EASE } from "@/lib/motion";
 
 const CARD =
-	"relative flex min-h-[520px] flex-col overflow-hidden rounded-[2rem] p-8 md:min-h-[560px] md:p-10";
+	"relative flex min-h-[440px] flex-col overflow-hidden rounded-[2rem] p-6 md:min-h-[480px] md:p-8";
 
 const NUMBER_PILL =
 	"inline-flex h-9 w-9 items-center justify-center rounded-full border border-current font-mono text-xs tabular-nums opacity-70";
@@ -24,13 +24,10 @@ const receipts = [
 
 export function HowItWorks() {
 	return (
-		<section
-			id="how-it-works"
-			className="dark scroll-mt-28 border-t border-border bg-background px-4 py-24 md:py-32"
-		>
+		<section id="how-it-works" className="dark scroll-mt-28 bg-background px-4 py-24 md:py-32">
 			<div className="mx-auto max-w-6xl">
 				<div className="mb-14 text-center md:mb-20">
-					<h2 className="mx-auto max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance text-foreground md:text-[64px] md:leading-[0.95]">
+					<h2 className="mx-auto max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance text-foreground md:text-[60px] md:leading-[0.95]">
 						How Avela
 						<br />
 						works.
@@ -78,7 +75,7 @@ export function HowItWorks() {
 
 						<div className="mt-auto pt-10">
 							<span className={NUMBER_PILL}>01</span>
-							<h3 className="mt-5 font-display text-4xl font-bold leading-none tracking-tight">
+							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight">
 								Deposit
 							</h3>
 							<p className="mt-3 max-w-md text-pretty text-sm leading-relaxed opacity-80 md:text-base">
@@ -98,7 +95,7 @@ export function HowItWorks() {
 					>
 						<div className="flex flex-col gap-1">
 							<span className={NUMBER_PILL}>02</span>
-							<h3 className="mt-5 font-display text-4xl font-bold leading-none tracking-tight">
+							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight">
 								Unlock
 							</h3>
 							<p className="mt-3 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -140,11 +137,11 @@ export function HowItWorks() {
 						whileInView={{ opacity: 1, y: 0 }}
 						viewport={{ once: true, margin: "-60px" }}
 						transition={{ duration: 0.8, ease: APPLE_EASE }}
-						className={`${CARD} bg-secondary text-secondary-foreground`}
+						className={`${CARD} bg-feature-olive text-foreground`}
 					>
 						<div className="flex flex-col gap-1">
 							<span className={NUMBER_PILL}>03</span>
-							<h3 className="mt-5 font-display text-4xl font-bold leading-none tracking-tight">
+							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight">
 								Spend
 							</h3>
 							<p className="mt-3 max-w-md text-pretty text-sm leading-relaxed opacity-80 md:text-base">
@@ -185,7 +182,7 @@ export function HowItWorks() {
 					>
 						<div className="flex flex-col gap-1">
 							<span className={NUMBER_PILL}>04</span>
-							<h3 className="mt-5 font-display text-4xl font-bold leading-none tracking-tight">
+							<h3 className="mt-4 font-display text-3xl font-bold leading-none tracking-tight">
 								Automate
 							</h3>
 							<p className="mt-3 max-w-md text-pretty text-sm leading-relaxed opacity-80 md:text-base">

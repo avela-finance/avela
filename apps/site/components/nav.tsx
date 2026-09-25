@@ -28,34 +28,19 @@ const productItems = [
 		href: "#pay",
 	},
 	{ title: "Borrow", desc: "Unlock cash against your holdings", href: "#borrow" },
+	{ title: "Agents", desc: "Scoped spending for humans and AI", href: "#agents" },
 	{ title: "Avela Card", desc: "One card for the portfolio — coming soon", href: "#card" },
+	{ title: "Avela Business", desc: "Team treasury — coming soon", href: "#business" },
 ];
 
 const linkMono =
 	"font-navmono text-[13px] font-medium uppercase tracking-widest rounded-sm transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
 
 export function Nav() {
-	const [scrolled, setScrolled] = useState(false);
 	const [dropOpen, setDropOpen] = useState(false);
 	const [mobileOpen, setMobileOpen] = useState(false);
 	const [mobileProducts, setMobileProducts] = useState(false);
 	const dropRef = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		// rAF-throttled: scroll fires faster than paint; coalesce to one read per frame.
-		let ticking = false;
-		const onScroll = () => {
-			if (ticking) return;
-			ticking = true;
-			requestAnimationFrame(() => {
-				setScrolled(window.scrollY > 8);
-				ticking = false;
-			});
-		};
-		onScroll();
-		window.addEventListener("scroll", onScroll, { passive: true });
-		return () => window.removeEventListener("scroll", onScroll);
-	}, []);
 
 	useEffect(() => {
 		if (!dropOpen) return;
@@ -90,9 +75,7 @@ export function Nav() {
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.8, ease: APPLE_EASE }}
-				className={`dark fixed top-0 right-0 left-0 z-50 transition-colors duration-300 ${
-					scrolled ? "border-b border-border bg-background/90 backdrop-blur-xl" : "bg-transparent"
-				}`}
+				className="dark fixed top-0 right-0 left-0 z-50 border-b border-border bg-background/90 backdrop-blur-xl"
 			>
 				<nav
 					aria-label="Primary"
@@ -100,7 +83,7 @@ export function Nav() {
 				>
 					<a
 						href="#top"
-						className="font-display rounded-sm text-lg font-bold tracking-tight text-foreground transition-colors duration-300 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none flex items-center gap-2"
+						className="font-display rounded-sm text-xl font-bold tracking-tight text-foreground transition-colors duration-300 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none flex items-center gap-2"
 					>
 						<LogoMark />
 						<span>Avela</span>

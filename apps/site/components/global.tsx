@@ -58,15 +58,12 @@ function CountryRow({ countries, reverse }: { countries: string[]; reverse?: boo
 
 export function Global() {
 	return (
-		<section
-			id="global"
-			className="scroll-mt-28 overflow-hidden border-t border-border bg-background px-4 py-24 md:py-32"
-		>
+		<section id="global" className="scroll-mt-28 overflow-hidden bg-background px-4 py-24 md:py-32">
 			<div className="mx-auto max-w-6xl text-center">
 				<p className="font-mono text-xs font-medium uppercase tracking-widest text-muted-foreground">
 					Global by default
 				</p>
-				<h2 className="mx-auto mt-4 max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance md:text-[64px] md:leading-[0.95]">
+				<h2 className="mx-auto mt-4 max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance md:text-[60px] md:leading-[0.95]">
 					Available globally.
 				</h2>
 				<p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">

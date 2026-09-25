@@ -11,6 +11,8 @@ const columns = [
 		heading: "Product",
 		links: [
 			{ label: "Products", href: "#products" },
+			{ label: "Agents", href: "#agents" },
+			{ label: "Business", href: "#business" },
 			{ label: "How it works", href: "#how-it-works" },
 			{ label: "Assets", href: "#assets" },
 			{ label: "FAQ", href: "#faq" },
@@ -30,13 +32,13 @@ const columns = [
 
 export function Footer() {
 	return (
-		<footer className="border-t border-border bg-background px-4 pt-16 pb-8">
-			<div className="mx-auto max-w-6xl">
+		<footer className="dark bg-background pt-16 pb-8">
+			<div className="mx-auto max-w-6xl px-4">
 				<div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
 					<div className="flex flex-col items-start gap-5">
 						<a
 							href="#top"
-							className="font-display text-xl font-bold tracking-tight rounded-sm transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none flex items-center gap-2"
+							className="font-display text-2xl font-bold tracking-tight rounded-sm transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none flex items-center gap-2"
 						>
 							<LogoMark />
 							<span>Avela</span>
@@ -110,8 +112,10 @@ export function Footer() {
 						</ul>
 					</nav>
 				</div>
+			</div>
 
-				<div className="mt-16 flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+			<div className="mt-16 border-t border-border">
+				<div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
 					<p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
 						© 2026 Avela. All rights reserved.
 					</p>
