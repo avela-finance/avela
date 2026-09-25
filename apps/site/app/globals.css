@@ -157,6 +157,17 @@
 	}
 }
 
+/* Partner marquee: right-to-left loop. Track holds two copies;
+   translating -50% loops seamlessly. */
+@keyframes marquee {
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(-50%);
+	}
+}
+
 /* Translucent chrome goes solid when transparency is reduced. */
 @media (prefers-reduced-transparency: reduce) {
 	.backdrop-blur-xl,

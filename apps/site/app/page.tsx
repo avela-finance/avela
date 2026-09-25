@@ -1,12 +1,14 @@
 import { BuiltOn } from "@/components/built-on";
+import { CTA } from "@/components/cta";
 import { FAQ } from "@/components/faq";
 import { Features } from "@/components/features";
 import { Footer } from "@/components/footer";
+import { Global } from "@/components/global";
 import { Hero } from "@/components/hero";
 import { HowItWorks } from "@/components/how-it-works";
 import { Nav } from "@/components/nav";
 import { PhoneMoment } from "@/components/phone-moment";
-import { PhotoCTA } from "@/components/photo-cta";
+import { Products } from "@/components/products";
 import { SupportedAssets } from "@/components/supported-assets";
 
 export default function LandingPage() {
@@ -14,13 +16,15 @@ export default function LandingPage() {
 		<main id="top">
 			<Nav />
 			<Hero />
+			<BuiltOn />
 			<HowItWorks />
+			<Products />
 			<PhoneMoment />
 			<Features />
 			<SupportedAssets />
+			<Global />
 			<FAQ />
-			<BuiltOn />
-			<PhotoCTA />
+			<CTA />
 			<Footer />
 		</main>
 	);

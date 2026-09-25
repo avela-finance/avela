@@ -1,45 +1,45 @@
+"use client";
+
+import { Asterisk } from "@phosphor-icons/react";
+
+const partners = [
+	{ label: "X Layer", href: "https://www.okx.com/xlayer" },
+	{ label: "OKX", href: "https://www.okx.com" },
+	{ label: "Uniswap V3", href: "https://uniswap.org" },
+	{ label: "Privy", href: "https://privy.io" },
+	{ label: "xStocks", href: "https://xstocks.com" },
+];
+
+function PartnerRow({ hidden }: { hidden?: boolean }) {
+	return (
+		<div aria-hidden={hidden || undefined} className="flex shrink-0 items-center">
+			{partners.map((partner) => (
+				<span key={partner.label} className="flex shrink-0 items-center">
+					<a
+						href={partner.href}
+						target="_blank"
+						rel="noopener noreferrer"
+						tabIndex={hidden ? -1 : undefined}
+						className="rounded-sm px-8 font-display text-2xl font-bold tracking-tight whitespace-nowrap text-foreground transition-colors duration-300 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:text-3xl"
+					>
+						{partner.label}
+					</a>
+					<Asterisk size={24} weight="bold" aria-hidden="true" className="shrink-0 text-primary" />
+				</span>
+			))}
+		</div>
+	);
+}
+
 export function BuiltOn() {
 	return (
-		<section className="dark bg-background px-4 py-16 border-t border-border">
-			<div className="max-w-5xl mx-auto text-center">
-				<p className="text-xs uppercase tracking-widest text-muted-foreground mb-6">Built on</p>
-				<div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-					<a
-						href="https://www.okx.com/xlayer"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="transition-colors hover:text-foreground"
-					>
-						X Layer
-					</a>
-					<span className="text-border">·</span>
-					<a
-						href="https://www.okx.com"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="transition-colors hover:text-foreground"
-					>
-						OKX
-					</a>
-					<span className="text-border">·</span>
-					<a
-						href="https://uniswap.org"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="transition-colors hover:text-foreground"
-					>
-						Uniswap V3
-					</a>
-					<span className="text-border">·</span>
-					<a
-						href="https://privy.io"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="transition-colors hover:text-foreground"
-					>
-						Privy
-					</a>
-				</div>
+		<section
+			aria-label="Built on"
+			className="dark overflow-hidden border-b border-border bg-background py-10"
+		>
+			<div className="flex w-max animate-[marquee_36s_linear_infinite] motion-reduce:animate-none hover:[animation-play-state:paused]">
+				<PartnerRow />
+				<PartnerRow hidden />
 			</div>
 		</section>
 	);

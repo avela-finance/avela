@@ -51,11 +51,11 @@ export function Features() {
 		>
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
-					<h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl">
+					<h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl md:text-[64px] md:leading-[0.95]">
 						Built for intelligent spending
 					</h2>
 					<p className="mt-3 text-pretty text-muted-foreground">
-						Every feature designed for the portfolio-native consumer.
+						The account layer for people who live in their portfolio.
 					</p>
 				</div>
 

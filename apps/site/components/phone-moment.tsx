@@ -20,8 +20,8 @@ export function PhoneMoment() {
 					transition={{ duration: 0.8, ease: APPLE_EASE }}
 					className="flex flex-col items-center gap-4 text-center"
 				>
-					<h2 className="max-w-[680px] font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl">
-						One account. Every way to use it.
+					<h2 className="max-w-[680px] font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl md:text-[64px] md:leading-[0.95]">
+						One account. Available globally.
 					</h2>
 					<p className="max-w-lg text-pretty text-muted-foreground">
 						Spending power, positions, and receipts in one place.
