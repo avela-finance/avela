@@ -17,7 +17,7 @@ export function Hero() {
 					<span className="inline-block rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium tracking-wider text-primary uppercase">
 						Built on X Layer
 					</span>
-					<h1 className="max-w-[680px] text-5xl font-bold tracking-tight text-balance text-foreground md:text-6xl">
+					<h1 className="max-w-[680px] font-display text-5xl font-bold leading-[0.9] tracking-tight text-balance text-foreground md:text-6xl">
 						Make your tokenized stocks
 						<br className="hidden sm:block" /> your everyday spend.
 					</h1>

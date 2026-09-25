@@ -31,7 +31,7 @@ export function HowItWorks() {
 		>
 			<div className="max-w-5xl mx-auto">
 				<div className="mb-12 text-center">
-					<h2 className="text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
+					<h2 className="font-display text-3xl font-bold leading-tight tracking-tight text-balance text-foreground sm:text-4xl">
 						How it works
 					</h2>
 					<p className="mt-3 text-pretty text-muted-foreground">
@@ -50,7 +50,9 @@ export function HowItWorks() {
 							className="flex flex-col gap-3"
 						>
 							<span className="font-mono text-sm tabular-nums text-primary">{step.number}</span>
-							<h3 className="text-lg font-semibold text-balance text-foreground">{step.title}</h3>
+							<h3 className="font-display text-lg font-bold leading-tight text-balance text-foreground">
+								{step.title}
+							</h3>
 							<p className="text-sm leading-relaxed text-pretty text-muted-foreground">
 								{step.description}
 							</p>

@@ -77,7 +77,22 @@ Declared in `:root`, wired through `@theme inline` as `--color-feature-*` (same 
 
 ## Typography
 
-Geist only. Body/UI: Geist Sans (`--font-sans`, `font-sans`). Headings/code-data: Geist Mono — layouts set `--font-heading` via `Geist_Mono({ variable: "--font-heading" })`, wired in `@theme inline` as `--font-heading: var(--font-heading)` (class `font-heading`).
+Display: Gellix 700 (WhatFont-verified against the reference: 95px/86px hero, 64px/65px sections, tight leading). Body/UI: Saans 400/500/600 (`--font-sans`, `font-sans`). Data/numbers: Geist Mono retained (`--font-mono`, `font-mono`) — layouts keep `Geist_Mono({ variable: "--font-mono" })`, wired in `@theme inline` as `--font-mono: var(--font-mono)`. The old `--font-heading` Geist Mono mapping stays in `@theme inline` for compat but nothing uses it — all headings are Gellix.
+
+| File | Weight | Role |
+|------|--------|------|
+| `apps/site/public/fonts/Gellix-TRIAL-SemiBold.woff2` | 600 | Display semibold |
+| `apps/site/public/fonts/Gellix-TRIAL-Bold.woff2` | 700 | Display bold (headings, hero, balance figures) |
+| `apps/site/public/fonts/Saans-TRIAL-Regular.woff2` | 400 | Body |
+| `apps/site/public/fonts/Saans-TRIAL-Medium.woff2` | 500 | Nav/labels/FAQ questions |
+| `apps/site/public/fonts/Saans-TRIAL-SemiBold.woff2` | 600 | Buttons/card titles |
+| `apps/site/public/fonts/Saans-TRIAL-Bold.woff2` | 700 | Emphasis in body |
+
+Loaded via `next/font/local` in `apps/site/app/layout.tsx`: Gellix as `--font-display` (fallback `'Gellix Fallback'`, system-ui, sans-serif), Saans as `--font-sans` (fallback system-ui, sans-serif), both `display: swap`, preloaded. `@theme inline` maps `--font-display: var(--font-display)` (class `font-display`).
+
+woff2 only — per Vercel `next/font/local` recommendation (self-hosted woff2 is the smallest, fastest format; no .ttf/.otf ship). All files upright, no italics in this design.
+
+> TRIAL-LICENSE WARNING: these are Gellix Trial / Saans Trial files. A commercial license must be purchased before production use.
 
 Tailwind default type scale only. No custom sizes.
 
@@ -94,9 +109,9 @@ Tailwind default type scale only. No custom sizes.
 | `text-5xl` | 48px | Hero heading (mobile) |
 | `text-6xl` | 60px | Hero heading (desktop) |
 
-Weights: 400 body, 500 nav/labels/FAQ questions, 600 section headings/card titles/buttons, 700 hero + stat numbers only.
+Weights: Saans 400 body, 500 nav/labels/FAQ questions, 600 buttons/card titles; Gellix 700 all headings (h1/h2/h3) + hero + phone balance figures.
 
-Rules: `tracking-tight` on all headings, `tracking-wider` on uppercase labels, `text-wrap-balance` on headings, `text-wrap-pretty` on multi-line body, `tabular-nums` on financial figures.
+Rules: `font-display` on every h1/h2/h3 and display figure; `leading-[0.9]` on hero-scale text (`text-5xl`+), `leading-tight` on smaller display text; `tracking-tight` on all headings, `tracking-wider` on uppercase labels, `text-wrap-balance` on headings, `text-wrap-pretty` on multi-line body, `tabular-nums` on financial figures (kept alongside Gellix on the balance figure).
 
 ## Spacing
 
